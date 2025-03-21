@@ -369,21 +369,45 @@ function addQueryToChat(query, explanation = null) {
     queryElement.className = 'message message-system';
     
     const queryContent = document.createElement('div');
-    queryContent.className = 'message-content';
+    queryContent.className = 'message-content markdown-body';
+    
+    // Create markdown content with explanation and SQL code block
+    let markdownContent = '';
     
     // Add explanation if provided
     if (explanation) {
-        const explanationElement = document.createElement('div');
-        explanationElement.className = 'mb-2';
-        explanationElement.textContent = explanation;
-        queryContent.appendChild(explanationElement);
+        markdownContent += `${explanation}\n\n`;
     }
     
-    // Add query with syntax highlighting
-    const queryCode = document.createElement('div');
-    queryCode.className = 'message-query';
-    queryCode.textContent = query;
-    queryContent.appendChild(queryCode);
+    // Add query as SQL code block with syntax highlighting
+    markdownContent += `\`\`\`sql\n${query}\n\`\`\``;
+    
+    // Parse markdown and sanitize HTML
+    try {
+        const parsedContent = marked.parse(markdownContent);
+        queryContent.innerHTML = DOMPurify.sanitize(parsedContent);
+        
+        // Initialize highlight.js on code blocks
+        setTimeout(() => {
+            queryContent.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+        }, 0);
+    } catch (e) {
+        console.error('Error parsing markdown:', e);
+        // Fallback to basic formatting if markdown parsing fails
+        if (explanation) {
+            const explanationElement = document.createElement('div');
+            explanationElement.className = 'mb-2';
+            explanationElement.textContent = explanation;
+            queryContent.appendChild(explanationElement);
+        }
+        
+        const queryCode = document.createElement('div');
+        queryCode.className = 'message-query';
+        queryCode.textContent = query;
+        queryContent.appendChild(queryCode);
+    }
     
     queryElement.appendChild(queryContent);
     messagesContainer.appendChild(queryElement);
