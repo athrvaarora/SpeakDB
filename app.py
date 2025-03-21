@@ -450,43 +450,43 @@ def get_required_credentials():
             'url_option': True,
             'url_field': 'connection_string',
             'url_example': 'mysql://username:password@host:3306/database_name',
-            'terminal_command': 'mysql -h host -P 3306 -u username -p database_name',
+            'terminal_command': 'mysql -h localhost -P 3306 -u username -p database_name',
             'env_variables': [
-                'MARIADB_HOST=host',
+                'MARIADB_HOST=localhost',
                 'MARIADB_PORT=3306',
                 'MARIADB_USER=username',
                 'MARIADB_PASSWORD=your_password',
                 'MARIADB_DATABASE=database_name',
-                'MARIADB_URL=mysql://username:password@host:3306/database_name'
+                'MARIADB_URL=mysql://username:password@localhost:3306/database_name'
             ]
         },
         'sqlserver': {
             'fields': ['server_address', 'username', 'password', 'database_name'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'mssql://username:password@server_address/database_name',
-            'terminal_command': 'sqlcmd -S server_address -U username -P password -d database_name',
+            'url_example': 'mssql://username:password@localhost/database_name',
+            'terminal_command': 'sqlcmd -S localhost -U username -P password -d database_name',
             'env_variables': [
-                'MSSQL_SERVER=server_address',
+                'MSSQL_SERVER=localhost',
                 'MSSQL_USER=username',
                 'MSSQL_PASSWORD=your_password',
                 'MSSQL_DATABASE=database_name',
-                'MSSQL_CONNECTION_STRING=mssql://username:password@server_address/database_name'
+                'MSSQL_CONNECTION_STRING=mssql://username:password@localhost/database_name'
             ]
         },
         'oracle': {
             'fields': ['host', 'port', 'service_name', 'username', 'password'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'oracle://username:password@host:1521/service_name',
-            'terminal_command': 'sqlplus username/password@//host:1521/service_name',
+            'url_example': 'oracle://username:password@localhost:1521/service_name',
+            'terminal_command': 'sqlplus username/password@//localhost:1521/service_name',
             'env_variables': [
-                'ORACLE_HOST=host',
+                'ORACLE_HOST=localhost',
                 'ORACLE_PORT=1521',
                 'ORACLE_SERVICE_NAME=service_name',
                 'ORACLE_USERNAME=username',
                 'ORACLE_PASSWORD=your_password',
-                'ORACLE_CONNECTION_STRING=oracle://username:password@host:1521/service_name'
+                'ORACLE_CONNECTION_STRING=oracle://username:password@localhost:1521/service_name'
             ]
         },
         'sqlite': {
@@ -598,12 +598,12 @@ def get_required_credentials():
             'fields': ['hostname', 'port', 'username', 'password', 'database_name'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'mongodb://username:password@hostname:port/database_name',
-            'terminal_command': 'mongo "mongodb://username:password@hostname:port/database_name"',
+            'url_example': 'mongodb://username:password@localhost:27017/database_name',
+            'terminal_command': 'mongo "mongodb://username:password@localhost:27017/database_name"',
             'env_variables': [
-                'MONGO_URI=mongodb://username:password@hostname:port/database_name',
-                'MONGO_HOST=hostname',
-                'MONGO_PORT=port',
+                'MONGO_URI=mongodb://username:password@localhost:27017/database_name',
+                'MONGO_HOST=localhost',
+                'MONGO_PORT=27017',
                 'MONGO_USER=username',
                 'MONGO_PASSWORD=your_password',
                 'MONGO_DATABASE=database_name'
@@ -625,27 +625,27 @@ def get_required_credentials():
             'fields': ['hostname', 'port', 'password'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'redis://:password@hostname:port',
-            'terminal_command': 'redis-cli -h hostname -p port -a password',
+            'url_example': 'redis://:password@localhost:6379',
+            'terminal_command': 'redis-cli -h localhost -p 6379 -a password',
             'env_variables': [
-                'REDIS_HOST=hostname',
-                'REDIS_PORT=port',
+                'REDIS_HOST=localhost',
+                'REDIS_PORT=6379',
                 'REDIS_PASSWORD=your_password',
-                'REDIS_URL=redis://:password@hostname:port'
+                'REDIS_URL=redis://:password@localhost:6379'
             ]
         },
         'elasticsearch': {
             'fields': ['hostname', 'port', 'username', 'password'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'https://username:password@hostname:port',
-            'terminal_command': 'curl -X GET "hostname:port/_search" -H "Content-Type: application/json" -d\'{"query": {"match_all": {}}}\'',
+            'url_example': 'https://username:password@localhost:9200',
+            'terminal_command': 'curl -X GET "localhost:9200/_search" -H "Content-Type: application/json" -d\'{"query": {"match_all": {}}}\'',
             'env_variables': [
-                'ELASTICSEARCH_HOST=hostname',
-                'ELASTICSEARCH_PORT=port',
+                'ELASTICSEARCH_HOST=localhost',
+                'ELASTICSEARCH_PORT=9200',
                 'ELASTICSEARCH_USERNAME=username',
                 'ELASTICSEARCH_PASSWORD=your_password',
-                'ELASTICSEARCH_URL=https://username:password@hostname:port'
+                'ELASTICSEARCH_URL=https://username:password@localhost:9200'
             ]
         },
         'dynamodb': {
@@ -665,24 +665,25 @@ def get_required_credentials():
             'fields': ['hostname', 'username', 'password', 'bucket_name'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'couchbase://username:password@hostname/bucket_name',
-            'terminal_command': 'cbc-pillowfight -U couchbase://hostname/bucket_name -u username -P password',
+            'url_example': 'couchbase://username:password@localhost:8091/bucket_name',
+            'terminal_command': 'cbc-pillowfight -U couchbase://localhost:8091/bucket_name -u username -P password',
             'env_variables': [
-                'COUCHBASE_HOST=hostname',
+                'COUCHBASE_HOST=localhost',
+                'COUCHBASE_PORT=8091',
                 'COUCHBASE_USERNAME=username',
                 'COUCHBASE_PASSWORD=your_password',
                 'COUCHBASE_BUCKET=bucket_name',
-                'COUCHBASE_URL=couchbase://username:password@hostname/bucket_name'
+                'COUCHBASE_URL=couchbase://username:password@localhost:8091/bucket_name'
             ]
         },
         'neo4j': {
             'fields': ['bolt_url', 'username', 'password'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'bolt://hostname:7687',
-            'terminal_command': 'cypher-shell -a bolt_url -u username -p password',
+            'url_example': 'bolt://localhost:7687',
+            'terminal_command': 'cypher-shell -a bolt://localhost:7687 -u username -p password',
             'env_variables': [
-                'NEO4J_BOLT_URL=bolt://hostname:7687',
+                'NEO4J_BOLT_URL=bolt://localhost:7687',
                 'NEO4J_USERNAME=username',
                 'NEO4J_PASSWORD=your_password'
             ]
@@ -735,11 +736,11 @@ def get_required_credentials():
             'fields': ['uri', 'username', 'password', 'database'],
             'url_option': True,
             'url_field': 'uri',
-            'url_example': 'bolt://hostname:7687',
-            'terminal_command': 'cypher-shell -a bolt://hostname:7687 -u username -p password -d database',
+            'url_example': 'bolt://localhost:7687',
+            'terminal_command': 'cypher-shell -a bolt://localhost:7687 -u username -p password -d database',
             'notes': 'Neo4j database connection requires the Bolt URL (neo4j:// or bolt://), username, and password. Database name is optional.',
             'env_variables': [
-                'NEO4J_URI=bolt://hostname:7687',
+                'NEO4J_URI=bolt://localhost:7687',
                 'NEO4J_USERNAME=username',
                 'NEO4J_PASSWORD=your_password',
                 'NEO4J_DATABASE=your_database_name'
@@ -929,11 +930,11 @@ def get_required_credentials():
             'fields': ['hostname', 'port', 'username', 'password'],
             'url_option': True,
             'url_field': 'url',
-            'url_example': 'http://hostname:9090',
-            'terminal_command': 'curl -G \'http://hostname:9090/api/v1/query\' --data-urlencode \'query=up\'',
-            'notes': 'If authentication is enabled, include username and password. URL is in format: http://hostname:9090',
+            'url_example': 'http://localhost:9090',
+            'terminal_command': 'curl -G \'http://localhost:9090/api/v1/query\' --data-urlencode \'query=up\'',
+            'notes': 'If authentication is enabled, include username and password. URL is in format: http://localhost:9090',
             'env_variables': [
-                'PROMETHEUS_URL=http://hostname:9090',
+                'PROMETHEUS_URL=http://localhost:9090',
                 'PROMETHEUS_USERNAME=username',
                 'PROMETHEUS_PASSWORD=your_password'
             ]
