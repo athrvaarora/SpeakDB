@@ -137,7 +137,17 @@ class BaseRelationalConnector:
                 results = []
                 
                 for row in cursor.fetchall():
-                    results.append(dict(zip(columns, row)))
+                    # Create a row dict with proper type conversions
+                    row_dict = {}
+                    for i, value in enumerate(row):
+                        col_name = columns[i]
+                        # Handle Decimal values by converting to float
+                        from decimal import Decimal
+                        if isinstance(value, Decimal):
+                            row_dict[col_name] = float(value)
+                        else:
+                            row_dict[col_name] = value
+                    results.append(row_dict)
                 
                 return results, True, None
             else:
