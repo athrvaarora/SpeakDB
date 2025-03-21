@@ -3,15 +3,11 @@ import logging
 import json
 import uuid
 from datetime import datetime
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
-from flask_login import current_user, login_user, logout_user, login_required
-
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from openai_service import generate_query, format_response
 from database_connectors import get_connector, test_connection
-from models import db, User, Subscription, Chat, ChatMessage
+from models import db, Chat, ChatMessage
 from utils import DateTimeEncoder
-import auth
-import payments
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -32,108 +28,19 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 # Initialize the database
 db.init_app(app)
 
-# Initialize authentication
-auth.init_app(app)
-
-# Initialize payment services
-payments.init_app(app)
-
 with app.app_context():
     db.create_all()
 
 # Routes
 @app.route('/')
 def index():
-    """Render the landing page"""
-    if current_user.is_authenticated:
-        return redirect(url_for('select_database'))
-    return render_template('index.html')
-
-@app.route('/features')
-def features():
-    """Render the features page"""
-    return render_template('features.html')
-
-@app.route('/pricing')
-def pricing():
-    """Render the pricing page"""
-    return render_template('pricing.html')
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    """Handle user login"""
-    if current_user.is_authenticated:
-        return redirect(url_for('select_database'))
-    
-    error = None
-    if request.method == 'POST':
-        # This is a placeholder for email/password login
-        # For now, we're primarily using Firebase/Google authentication
-        email = request.form.get('email')
-        password = request.form.get('password')
-        
-        error = "Email/password login is not yet implemented. Please use Google login."
-    
-    next_url = request.args.get('next', url_for('select_database'))
-    return render_template('login.html', error=error, next=next_url)
-
-@app.route('/signup', methods=['GET', 'POST'])
-def signup():
-    """Handle user signup"""
-    if current_user.is_authenticated:
-        return redirect(url_for('select_database'))
-    
-    error = None
-    if request.method == 'POST':
-        # This is a placeholder for email/password signup
-        # For now, we're primarily using Firebase/Google authentication
-        name = request.form.get('name')
-        email = request.form.get('email')
-        password = request.form.get('password')
-        confirm_password = request.form.get('confirm_password')
-        
-        error = "Email/password signup is not yet implemented. Please use Google signup."
-    
-    next_url = request.args.get('next', url_for('select_database'))
-    plan = request.args.get('plan', 'free')
-    return render_template('signup.html', error=error, next=next_url, plan=plan)
-
-@app.route('/profile')
-@login_required
-def profile():
-    """Render the user profile page"""
-    chats = Chat.query.filter_by(user_id=current_user.id).order_by(Chat.created_at).all()
-    return render_template('profile.html', chats=chats)
-
-@app.route('/cancel-subscription', methods=['POST'])
-@login_required
-def cancel_subscription():
-    """Cancel a user's subscription"""
-    if current_user.subscription and current_user.subscription.stripe_subscription_id:
-        success, message = payments.cancel_subscription(current_user.subscription.stripe_subscription_id)
-        
-        if success:
-            current_user.subscription.status = 'canceled'
-            current_user.subscription.plan_type = 'free'
-            db.session.commit()
-            flash('Your subscription has been cancelled. You will have access until the end of your billing period.', 'success')
-        else:
-            flash(f'Error cancelling subscription: {message}', 'danger')
-    else:
-        flash('No active subscription found.', 'warning')
-    
-    return redirect(url_for('profile'))
-
-@app.route('/select-database')
-@login_required
-def select_database():
-    """Render the database selection page"""
-    # Clear any existing session data when selecting a database
+    """Render the landing page with database selection"""
+    # Clear any existing session data when landing on homepage
     if 'database_credentials' in session:
         session.pop('database_credentials')
     if 'chat_id' in session:
         session.pop('chat_id')
-    return render_template('select_database.html')
+    return render_template('index.html')
 
 @app.route('/test_env_db')
 def test_env_db():
