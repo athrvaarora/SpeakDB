@@ -3,10 +3,13 @@ import logging
 import json
 import uuid
 from datetime import datetime
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
+from forms import LoginForm, SignupForm
 from openai_service import generate_query, format_response
 from database_connectors import get_connector, test_connection
-from models import db, Chat, ChatMessage
+from models import db, Chat, ChatMessage, User
 from utils import DateTimeEncoder
 
 # Configure logging
@@ -28,19 +31,108 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 # Initialize the database
 db.init_app(app)
 
+# Initialize Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+# User loader for Flask-Login
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(user_id)
+
 with app.app_context():
     db.create_all()
 
 # Routes
 @app.route('/')
 def index():
-    """Render the landing page with database selection"""
-    # Clear any existing session data when landing on homepage
+    """Render the landing page"""
+    return render_template('landing.html')
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    """Render the database selection dashboard (protected)"""
+    # Clear any existing session data when landing on dashboard
     if 'database_credentials' in session:
         session.pop('database_credentials')
     if 'chat_id' in session:
         session.pop('chat_id')
     return render_template('index.html')
+    
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """Handle user login"""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        
+        # Check if user exists and password is correct
+        if not user or not user.check_password(form.password.data):
+            flash('Please check your login details and try again.', 'danger')
+            return render_template('login.html', form=form)
+            
+        # Log in the user
+        login_user(user, remember=form.remember.data)
+        
+        # Get the next page from the query string
+        next_page = request.args.get('next')
+        
+        # Redirect to next page or dashboard
+        if next_page:
+            return redirect(next_page)
+        return redirect(url_for('dashboard'))
+        
+    return render_template('login.html', form=form)
+    
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    """Handle user registration"""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+        
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        
+        # Check if username or email already exists
+        user_by_username = User.query.filter_by(username=username).first()
+        user_by_email = User.query.filter_by(email=email).first()
+        
+        if user_by_username:
+            flash('Username already exists. Please choose a different one.', 'danger')
+            return render_template('signup.html')
+            
+        if user_by_email:
+            flash('Email already exists. Please use a different email or log in.', 'danger')
+            return render_template('signup.html')
+            
+        # Create new user
+        new_user = User(username=username, email=email, password=password)
+        
+        # Add user to database
+        db.session.add(new_user)
+        db.session.commit()
+        
+        flash('Account created successfully! You can now log in.', 'success')
+        return redirect(url_for('login'))
+        
+    return render_template('signup.html')
+    
+@app.route('/logout')
+@login_required
+def logout():
+    """Handle user logout"""
+    logout_user()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('index'))
 
 @app.route('/test_env_db')
 def test_env_db():
@@ -147,11 +239,12 @@ def test_db_connection():
         })
 
 @app.route('/chat')
+@login_required
 def chat():
     """Render the chat interface"""
     # Ensure we have database credentials and a chat ID
     if 'database_credentials' not in session or 'chat_id' not in session:
-        return redirect(url_for('index'))
+        return redirect(url_for('dashboard'))
     
     return render_template('chat.html')
 
@@ -190,11 +283,12 @@ def get_chat_history():
         })
 
 @app.route('/get_previous_chats', methods=['GET'])
+@login_required
 def get_previous_chats():
-    """Get a list of previous chat sessions"""
+    """Get a list of previous chat sessions for the current user"""
     try:
-        # Query the database for all chats, ordered by most recent first
-        chats = db.session.query(Chat).order_by(Chat.updated_at.desc()).all()
+        # Query the database for chats belonging to the current user, ordered by most recent first
+        chats = db.session.query(Chat).filter(Chat.user_id == current_user.id).order_by(Chat.updated_at.desc()).all()
         
         # Convert the chats to dictionaries
         chat_list = [chat.to_dict() for chat in chats]
@@ -216,16 +310,17 @@ def get_previous_chats():
         })
 
 @app.route('/load_chat/<chat_id>', methods=['GET'])
+@login_required
 def load_chat(chat_id):
     """Load a specific chat session"""
     try:
-        # Check if the chat exists
-        chat = db.session.query(Chat).filter(Chat.id == chat_id).first()
+        # Check if the chat exists and belongs to the current user
+        chat = db.session.query(Chat).filter(Chat.id == chat_id, Chat.user_id == current_user.id).first()
         
         if not chat:
             return jsonify({
                 'success': False,
-                'message': f"Chat with ID {chat_id} not found"
+                'message': f"Chat with ID {chat_id} not found or does not belong to you"
             })
         
         # Store the chat ID in the session

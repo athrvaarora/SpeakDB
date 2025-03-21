@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800px" height="500px" viewBox="0 0 800 500" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <defs>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="gradient-blue">
+            <stop stop-color="#6366F1" offset="0%"></stop>
+            <stop stop-color="#4338CA" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="gradient-pink">
+            <stop stop-color="#F472B6" offset="0%"></stop>
+            <stop stop-color="#EC4899" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="gradient-green">
+            <stop stop-color="#34D399" offset="0%"></stop>
+            <stop stop-color="#10B981" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="gradient-yellow">
+            <stop stop-color="#FBBF24" offset="0%"></stop>
+            <stop stop-color="#F59E0B" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <!-- Background -->
+        <rect fill="#F9FAFB" x="0" y="0" width="800" height="500" rx="10"></rect>
+        
+        <!-- Step 1: Connect -->
+        <g transform="translate(100, 100)">
+            <rect fill="#FFFFFF" stroke="#E5E7EB" stroke-width="2" x="0" y="0" width="150" height="150" rx="8"></rect>
+            <circle fill="url(#gradient-blue)" cx="75" cy="50" r="25"></circle>
+            <path d="M75,35 L75,65 M60,50 L90,50" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"></path>
+            <text font-family="Arial" font-size="16" font-weight="bold" fill="#111827" text-anchor="middle" x="75" y="100">Connect</text>
+            <text font-family="Arial" font-size="12" fill="#6B7280" text-anchor="middle" x="75" y="120">Your Database</text>
+            
+            <rect fill="#F3F4F6" x="25" y="135" width="100" height="5" rx="2.5"></rect>
+        </g>
+        
+        <!-- Arrow 1 -->
+        <g transform="translate(260, 150)">
+            <line x1="0" y1="0" x2="40" y2="0" stroke="#D1D5DB" stroke-width="2" stroke-linecap="round"></line>
+            <polygon fill="#D1D5DB" points="40,0 30,-5 30,5"></polygon>
+        </g>
+        
+        <!-- Step 2: Ask -->
+        <g transform="translate(310, 100)">
+            <rect fill="#FFFFFF" stroke="#E5E7EB" stroke-width="2" x="0" y="0" width="150" height="150" rx="8"></rect>
+            <circle fill="url(#gradient-pink)" cx="75" cy="50" r="25"></circle>
+            <path d="M75,42 C67,42 61,47 61,54 C61,57 62,60 64,62 L61,68 L68,65 C70,67 72,68 75,68 C83,68 89,62 89,54 C89,47 83,42 75,42" stroke="#FFFFFF" stroke-width="2" fill="#FFFFFF"></path>
+            <text font-family="Arial" font-size="16" font-weight="bold" fill="#111827" text-anchor="middle" x="75" y="100">Ask</text>
+            <text font-family="Arial" font-size="12" fill="#6B7280" text-anchor="middle" x="75" y="120">Your Question</text>
+            
+            <rect fill="#F3F4F6" x="25" y="135" width="100" height="5" rx="2.5"></rect>
+        </g>
+        
+        <!-- Arrow 2 -->
+        <g transform="translate(470, 150)">
+            <line x1="0" y1="0" x2="40" y2="0" stroke="#D1D5DB" stroke-width="2" stroke-linecap="round"></line>
+            <polygon fill="#D1D5DB" points="40,0 30,-5 30,5"></polygon>
+        </g>
+        
+        <!-- Step 3: Results -->
+        <g transform="translate(520, 100)">
+            <rect fill="#FFFFFF" stroke="#E5E7EB" stroke-width="2" x="0" y="0" width="150" height="150" rx="8"></rect>
+            <circle fill="url(#gradient-green)" cx="75" cy="50" r="25"></circle>
+            <path d="M65,50 L72,57 L85,43" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
+            <text font-family="Arial" font-size="16" font-weight="bold" fill="#111827" text-anchor="middle" x="75" y="100">Get Results</text>
+            <text font-family="Arial" font-size="12" fill="#6B7280" text-anchor="middle" x="75" y="120">Instantly</text>
+            
+            <rect fill="#F3F4F6" x="25" y="135" width="100" height="5" rx="2.5"></rect>
+        </g>
+        
+        <!-- Flow down arrow -->
+        <g transform="translate(385, 260)">
+            <line x1="0" y1="0" x2="0" y2="40" stroke="#D1D5DB" stroke-width="2" stroke-linecap="round"></line>
+            <polygon fill="#D1D5DB" points="0,40 -5,30 5,30"></polygon>
+        </g>
+        
+        <!-- Step 4: Visualize -->
+        <g transform="translate(310, 310)">
+            <rect fill="#FFFFFF" stroke="#E5E7EB" stroke-width="2" x="0" y="0" width="150" height="150" rx="8"></rect>
+            <circle fill="url(#gradient-yellow)" cx="75" cy="50" r="25"></circle>
+            <path d="M65,60 L65,40 M75,60 L75,30 M85,60 L85,50" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"></path>
+            <text font-family="Arial" font-size="16" font-weight="bold" fill="#111827" text-anchor="middle" x="75" y="100">Visualize</text>
+            <text font-family="Arial" font-size="12" fill="#6B7280" text-anchor="middle" x="75" y="120">And Share</text>
+            
+            <rect fill="#F3F4F6" x="25" y="135" width="100" height="5" rx="2.5"></rect>
+        </g>
+        
+        <!-- Curved arrows completing the cycle -->
+        <path d="M310,385 C200,385 200,250 100,250 L100,260" stroke="#D1D5DB" stroke-width="2" stroke-linecap="round" stroke-dasharray="4,4" fill="none"></path>
+        <polygon fill="#D1D5DB" points="100,260 95,250 105,250"></polygon>
+    </g>
+</svg>
