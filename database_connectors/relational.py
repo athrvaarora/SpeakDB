@@ -129,32 +129,83 @@ class BaseRelationalConnector:
             self.connect()
             
             cursor = self.connection.cursor()
-            cursor.execute(query)
             
-            # Check if the query is a SELECT query
-            if query.strip().upper().startswith("SELECT"):
-                columns = [col[0] for col in cursor.description]
-                results = []
+            # Handle SQLite limitation of only executing one statement at a time
+            if ";" in query and isinstance(self.connection, sqlite3.Connection):
+                statements = [stmt.strip() for stmt in query.split(';') if stmt.strip()]
                 
-                for row in cursor.fetchall():
-                    # Create a row dict with proper type conversions
-                    row_dict = {}
-                    for i, value in enumerate(row):
-                        col_name = columns[i]
-                        # Handle Decimal values by converting to float
-                        from decimal import Decimal
-                        if isinstance(value, Decimal):
-                            row_dict[col_name] = float(value)
+                # For multiple statements, execute each one and return the results of the last statement
+                # This is typically used for schema-related queries
+                results = None
+                success = False
+                error_message = None
+                
+                for i, stmt in enumerate(statements):
+                    try:
+                        cursor.execute(stmt)
+                        
+                        # Process results for the statement
+                        if stmt.strip().upper().startswith("SELECT"):
+                            columns = [col[0] for col in cursor.description]
+                            stmt_results = []
+                            
+                            for row in cursor.fetchall():
+                                # Create a row dict with proper type conversions
+                                row_dict = {}
+                                for i, value in enumerate(row):
+                                    col_name = columns[i]
+                                    # Handle Decimal values by converting to float
+                                    from decimal import Decimal
+                                    if isinstance(value, Decimal):
+                                        row_dict[col_name] = float(value)
+                                    else:
+                                        row_dict[col_name] = value
+                                stmt_results.append(row_dict)
+                            
+                            results = stmt_results
+                            success = True
                         else:
-                            row_dict[col_name] = value
-                    results.append(row_dict)
+                            # For non-SELECT queries
+                            affected_rows = cursor.rowcount
+                            self.connection.commit()
+                            results = {"affected_rows": affected_rows}
+                            success = True
+                            
+                    except Exception as stmt_error:
+                        logger.error(f"Error executing statement {i+1}: {stmt_error}")
+                        error_message = f"Error executing statement {i+1}: {str(stmt_error)}"
+                        # Continue to next statement
                 
-                return results, True, None
+                return results, success, error_message
+            
             else:
-                # For non-SELECT queries
-                affected_rows = cursor.rowcount
-                self.connection.commit()
-                return {"affected_rows": affected_rows}, True, None
+                # Single statement execution
+                cursor.execute(query)
+                
+                # Check if the query is a SELECT query
+                if query.strip().upper().startswith("SELECT"):
+                    columns = [col[0] for col in cursor.description]
+                    results = []
+                    
+                    for row in cursor.fetchall():
+                        # Create a row dict with proper type conversions
+                        row_dict = {}
+                        for i, value in enumerate(row):
+                            col_name = columns[i]
+                            # Handle Decimal values by converting to float
+                            from decimal import Decimal
+                            if isinstance(value, Decimal):
+                                row_dict[col_name] = float(value)
+                            else:
+                                row_dict[col_name] = value
+                        results.append(row_dict)
+                    
+                    return results, True, None
+                else:
+                    # For non-SELECT queries
+                    affected_rows = cursor.rowcount
+                    self.connection.commit()
+                    return {"affected_rows": affected_rows}, True, None
                 
         except Exception as e:
             logger.exception(f"Error executing query: {query}")
