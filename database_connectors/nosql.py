@@ -456,21 +456,60 @@ class ElasticsearchConnector(BaseNoSQLConnector):
         """Connect to an Elasticsearch database"""
         if not self.client:
             try:
-                host = self.credentials.get("host", "localhost")
-                port = self.credentials.get("port", 9200)
-                username = self.credentials.get("username")
-                password = self.credentials.get("password")
+                # Get credentials from credentials dict or environment variables
+                host = self.credentials.get("host") or os.environ.get("ELASTICSEARCH_HOST", "localhost")
+                port = self.credentials.get("port") or os.environ.get("ELASTICSEARCH_PORT", "9200")
+                username = self.credentials.get("username") or os.environ.get("ELASTICSEARCH_USERNAME")
+                password = self.credentials.get("password") or os.environ.get("ELASTICSEARCH_PASSWORD")
+                cloud_id = self.credentials.get("cloud_id") or os.environ.get("ELASTICSEARCH_CLOUD_ID")
+                api_key = self.credentials.get("api_key") or os.environ.get("ELASTICSEARCH_API_KEY")
                 
-                hosts = [f"http://{host}:{port}"]
-                http_auth = None
+                # Log if using environment variables
+                if os.environ.get("ELASTICSEARCH_HOST") and not self.credentials.get("host"):
+                    logger.info("Using ELASTICSEARCH_HOST environment variable")
+                if os.environ.get("ELASTICSEARCH_PORT") and not self.credentials.get("port"):
+                    logger.info("Using ELASTICSEARCH_PORT environment variable")
+                if os.environ.get("ELASTICSEARCH_USERNAME") and not self.credentials.get("username"):
+                    logger.info("Using ELASTICSEARCH_USERNAME environment variable")
+                if os.environ.get("ELASTICSEARCH_PASSWORD") and not self.credentials.get("password"):
+                    logger.info("Using ELASTICSEARCH_PASSWORD environment variable")
+                if os.environ.get("ELASTICSEARCH_CLOUD_ID") and not self.credentials.get("cloud_id"):
+                    logger.info("Using ELASTICSEARCH_CLOUD_ID environment variable")
+                if os.environ.get("ELASTICSEARCH_API_KEY") and not self.credentials.get("api_key"):
+                    logger.info("Using ELASTICSEARCH_API_KEY environment variable")
                 
-                if username and password:
-                    http_auth = (username, password)
+                # Convert port to integer if it's a string
+                if isinstance(port, str):
+                    port = int(port)
                 
-                self.client = Elasticsearch(
-                    hosts=hosts,
-                    http_auth=http_auth
-                )
+                # Use cloud_id if provided
+                if cloud_id:
+                    if api_key:
+                        self.client = Elasticsearch(
+                            cloud_id=cloud_id,
+                            api_key=api_key
+                        )
+                    elif username and password:
+                        self.client = Elasticsearch(
+                            cloud_id=cloud_id,
+                            basic_auth=(username, password)
+                        )
+                    else:
+                        self.client = Elasticsearch(
+                            cloud_id=cloud_id
+                        )
+                else:
+                    # Use regular host/port configuration
+                    hosts = [f"http://{host}:{port}"]
+                    http_auth = None
+                    
+                    if username and password:
+                        http_auth = (username, password)
+                    
+                    self.client = Elasticsearch(
+                        hosts=hosts,
+                        http_auth=http_auth
+                    )
                 
                 # Test connection
                 self.client.info()
@@ -590,16 +629,42 @@ class DynamoDBConnector(BaseNoSQLConnector):
         """Connect to an Amazon DynamoDB database"""
         if not self.client:
             try:
-                access_key = self.credentials.get("access_key")
-                secret_key = self.credentials.get("secret_key")
-                region = self.credentials.get("region", "us-east-1")
+                # Get credentials from credentials dict or environment variables
+                access_key = self.credentials.get("access_key") or os.environ.get("AWS_ACCESS_KEY_ID")
+                secret_key = self.credentials.get("secret_key") or os.environ.get("AWS_SECRET_ACCESS_KEY")
+                region = self.credentials.get("region") or os.environ.get("AWS_REGION", "us-east-1")
+                endpoint_url = self.credentials.get("endpoint_url") or os.environ.get("AWS_DYNAMODB_ENDPOINT")
                 
-                self.client = boto3.resource(
-                    'dynamodb',
-                    aws_access_key_id=access_key,
-                    aws_secret_access_key=secret_key,
-                    region_name=region
-                )
+                # Log if using environment variables
+                if os.environ.get("AWS_ACCESS_KEY_ID") and not self.credentials.get("access_key"):
+                    logger.info("Using AWS_ACCESS_KEY_ID environment variable")
+                if os.environ.get("AWS_SECRET_ACCESS_KEY") and not self.credentials.get("secret_key"):
+                    logger.info("Using AWS_SECRET_ACCESS_KEY environment variable")
+                if os.environ.get("AWS_REGION") and not self.credentials.get("region"):
+                    logger.info("Using AWS_REGION environment variable")
+                if os.environ.get("AWS_DYNAMODB_ENDPOINT") and not self.credentials.get("endpoint_url"):
+                    logger.info("Using AWS_DYNAMODB_ENDPOINT environment variable")
+                
+                # Check for required credentials
+                if not access_key or not secret_key:
+                    raise ValueError("Access key and secret key are required for DynamoDB connection")
+                
+                # Create client with endpoint URL if specified
+                if endpoint_url:
+                    self.client = boto3.resource(
+                        'dynamodb',
+                        aws_access_key_id=access_key,
+                        aws_secret_access_key=secret_key,
+                        region_name=region,
+                        endpoint_url=endpoint_url
+                    )
+                else:
+                    self.client = boto3.resource(
+                        'dynamodb',
+                        aws_access_key_id=access_key,
+                        aws_secret_access_key=secret_key,
+                        region_name=region
+                    )
                 
                 # Test connection by listing tables
                 self.client.tables.all()
