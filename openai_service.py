@@ -1,7 +1,9 @@
 import os
 import json
 import logging
+import datetime
 from openai import OpenAI
+from utils import DateTimeEncoder
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -69,6 +71,8 @@ def generate_query(user_query, db_type, schema_info):
         logger.exception("Error generating query with GPT")
         return False, None, f"Error generating query: {str(e)}"
 
+# Using DateTimeEncoder from utils.py for JSON serialization of datetime objects
+
 def format_response(db_result, user_query):
     """
     Format the database query result to be more direct and straightforward
@@ -81,8 +85,8 @@ def format_response(db_result, user_query):
         str: A formatted response
     """
     try:
-        # Format raw results as JSON string with nice indentation
-        formatted_result = json.dumps(db_result, indent=2)
+        # Format raw results as JSON string with nice indentation using custom encoder
+        formatted_result = json.dumps(db_result, indent=2, cls=DateTimeEncoder)
         
         # Create a markdown-formatted response that just shows the query and raw results
         markdown_response = f"""
@@ -96,4 +100,10 @@ def format_response(db_result, user_query):
         return markdown_response
     except Exception as e:
         logger.exception("Error formatting response")
-        return f"Error formatting response: {str(e)}\n\nRaw result: {json.dumps(db_result, indent=2)}"
+        try:
+            # Try using the custom encoder for the error message too
+            raw_result = json.dumps(db_result, indent=2, cls=DateTimeEncoder)
+            return f"Error formatting response: {str(e)}\n\nRaw result: {raw_result}"
+        except:
+            # If that also fails, return a simpler error
+            return f"Error formatting response: {str(e)}\n\nCannot format raw result due to serialization issues."

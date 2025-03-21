@@ -7,6 +7,7 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 from openai_service import generate_query, format_response
 from database_connectors import get_connector, test_connection
 from models import db, Chat, ChatMessage
+from utils import DateTimeEncoder
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
