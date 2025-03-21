@@ -144,7 +144,7 @@ def get_chat_history():
         chat_id = session['chat_id']
         
         # Query the database for the chat messages
-        messages = ChatMessage.query.filter_by(chat_id=chat_id).order_by(ChatMessage.created_at).all()
+        messages = db.session.query(ChatMessage).filter(ChatMessage.chat_id == chat_id).order_by(ChatMessage.created_at).all()
         
         # Convert the messages to dictionaries
         message_list = [message.to_dict() for message in messages]
@@ -165,7 +165,7 @@ def get_previous_chats():
     """Get a list of previous chat sessions"""
     try:
         # Query the database for all chats, ordered by most recent first
-        chats = Chat.query.order_by(Chat.updated_at.desc()).all()
+        chats = db.session.query(Chat).order_by(Chat.updated_at.desc()).all()
         
         # Convert the chats to dictionaries
         chat_list = [chat.to_dict() for chat in chats]
@@ -186,7 +186,7 @@ def load_chat(chat_id):
     """Load a specific chat session"""
     try:
         # Check if the chat exists
-        chat = Chat.query.get(chat_id)
+        chat = db.session.query(Chat).filter(Chat.id == chat_id).first()
         
         if not chat:
             return jsonify({
@@ -325,7 +325,7 @@ def process_query():
         db.session.add(chat_message)
         
         # Update the timestamp on the chat
-        chat = Chat.query.get(chat_id)
+        chat = db.session.query(Chat).filter(Chat.id == chat_id).first()
         chat.updated_at = datetime.now()
         
         db.session.commit()
@@ -365,28 +365,116 @@ def get_required_credentials():
     
     # Define the credentials required for each database type
     credential_requirements = {
-        'postgresql': ['host', 'port', 'username', 'password', 'db_name'],
-        'mysql': ['host', 'username', 'password', 'db_name'],
-        'sqlserver': ['host', 'instance', 'username', 'password'],
-        'oracle': ['host', 'port', 'service_name', 'username', 'password'],
-        'sqlite': ['file_path'],
-        'redshift': ['cluster_id', 'region', 'username', 'password', 'db_name'],
-        'cloudsql': ['project_id', 'region', 'instance', 'username', 'password'],
-        'mariadb': ['host', 'username', 'password', 'db_name'],
-        'db2': ['host', 'port', 'username', 'password', 'db_name'],
-        'mongodb': ['host', 'port', 'username', 'password', 'auth_db'],
-        'cassandra': ['host', 'port', 'username', 'password', 'keyspace'],
-        'redis': ['host', 'port', 'password'],
-        'elasticsearch': ['host', 'port', 'username', 'password'],
-        'dynamodb': ['access_key', 'secret_key', 'region'],
-        'couchbase': ['host', 'username', 'password', 'bucket'],
-        'neo4j': ['uri', 'username', 'password'],
-        'snowflake': ['account', 'username', 'password', 'warehouse', 'db_name'],
-        'bigquery': ['project_id', 'dataset'],
-        'synapse': ['server', 'username', 'password', 'db_name'],
-        'cosmosdb': ['account_uri', 'primary_key'],
-        'firestore': ['project_id', 'collection'],
-        'influxdb': ['host', 'port', 'token', 'org', 'bucket']
+        'postgresql': {
+            'fields': ['host', 'port', 'username', 'password', 'db_name'],
+            'url_option': True,
+            'url_field': 'connection_string',
+            'url_example': 'postgresql://username:password@host:port/db_name'
+        },
+        'mysql': {
+            'fields': ['host', 'username', 'password', 'db_name'],
+            'url_option': True,
+            'url_field': 'connection_string',
+            'url_example': 'mysql://username:password@host/db_name'
+        },
+        'sqlserver': {
+            'fields': ['host', 'instance', 'username', 'password'],
+            'url_option': False
+        },
+        'oracle': {
+            'fields': ['host', 'port', 'service_name', 'username', 'password'],
+            'url_option': True,
+            'url_field': 'connection_string',
+            'url_example': 'oracle://username:password@host:port/service_name'
+        },
+        'sqlite': {
+            'fields': ['file_path'],
+            'url_option': False
+        },
+        'redshift': {
+            'fields': ['cluster_id', 'region', 'username', 'password', 'db_name'],
+            'url_option': True,
+            'url_field': 'connection_string',
+            'url_example': 'redshift://username:password@cluster_id.region.redshift.amazonaws.com:5439/db_name'
+        },
+        'cloudsql': {
+            'fields': ['project_id', 'region', 'instance', 'username', 'password'],
+            'url_option': False
+        },
+        'mariadb': {
+            'fields': ['host', 'username', 'password', 'db_name'],
+            'url_option': True,
+            'url_field': 'connection_string',
+            'url_example': 'mariadb://username:password@host/db_name'
+        },
+        'db2': {
+            'fields': ['host', 'port', 'username', 'password', 'db_name'],
+            'url_option': False
+        },
+        'mongodb': {
+            'fields': ['host', 'port', 'username', 'password', 'auth_db'],
+            'url_option': True,
+            'url_field': 'connection_string',
+            'url_example': 'mongodb://username:password@host:port/auth_db'
+        },
+        'cassandra': {
+            'fields': ['host', 'port', 'username', 'password', 'keyspace'],
+            'url_option': False
+        },
+        'redis': {
+            'fields': ['host', 'port', 'password'],
+            'url_option': True,
+            'url_field': 'connection_string',
+            'url_example': 'redis://:password@host:port'
+        },
+        'elasticsearch': {
+            'fields': ['host', 'port', 'username', 'password'],
+            'url_option': True,
+            'url_field': 'connection_string',
+            'url_example': 'https://username:password@host:port'
+        },
+        'dynamodb': {
+            'fields': ['access_key', 'secret_key', 'region'],
+            'url_option': False
+        },
+        'couchbase': {
+            'fields': ['host', 'username', 'password', 'bucket'],
+            'url_option': True,
+            'url_field': 'connection_string',
+            'url_example': 'couchbase://username:password@host/bucket'
+        },
+        'neo4j': {
+            'fields': ['uri', 'username', 'password'],
+            'url_option': False
+        },
+        'snowflake': {
+            'fields': ['account', 'username', 'password', 'warehouse', 'db_name'],
+            'url_option': True,
+            'url_field': 'connection_string',
+            'url_example': 'snowflake://username:password@account/db_name/warehouse'
+        },
+        'bigquery': {
+            'fields': ['project_id', 'dataset'],
+            'url_option': False
+        },
+        'synapse': {
+            'fields': ['server', 'username', 'password', 'db_name'],
+            'url_option': False
+        },
+        'cosmosdb': {
+            'fields': ['account_uri', 'primary_key'],
+            'url_option': False
+        },
+        'firestore': {
+            'fields': ['project_id', 'collection'],
+            'url_option': False
+        },
+        'influxdb': {
+            'fields': ['host', 'port', 'token', 'org', 'bucket'],
+            'url_option': True,
+            'url_field': 'connection_string',
+            'url_example': 'influxdb://host:port?token=token&org=org&bucket=bucket'
+        }
     }
     
     if db_type in credential_requirements:
