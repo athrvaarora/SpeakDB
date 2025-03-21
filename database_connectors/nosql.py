@@ -1,5 +1,6 @@
 import logging
 import json
+import os
 
 # Import NoSQL libraries with try/except to handle missing dependencies
 try:

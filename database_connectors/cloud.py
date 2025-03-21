@@ -80,8 +80,19 @@ class CosmosDBConnector(BaseCloudConnector):
         """Connect to an Azure Cosmos DB database"""
         if not self.client:
             try:
-                account_uri = self.credentials.get("account_uri")
-                primary_key = self.credentials.get("primary_key")
+                # Get credentials from provided credentials or environment variables
+                account_uri = self.credentials.get("account_uri") or os.environ.get("COSMOS_ACCOUNT_URI")
+                primary_key = self.credentials.get("primary_key") or os.environ.get("COSMOS_PRIMARY_KEY")
+                
+                # Log if using environment variables
+                if os.environ.get("COSMOS_ACCOUNT_URI") and not self.credentials.get("account_uri"):
+                    logger.info("Using COSMOS_ACCOUNT_URI environment variable")
+                    
+                if os.environ.get("COSMOS_PRIMARY_KEY") and not self.credentials.get("primary_key"):
+                    logger.info("Using COSMOS_PRIMARY_KEY environment variable")
+                
+                if not account_uri or not primary_key:
+                    raise ValueError("Cosmos DB account URI and primary key are required (either in credentials or as COSMOS_ACCOUNT_URI and COSMOS_PRIMARY_KEY environment variables)")
                 
                 self.client = CosmosClient(account_uri, credential=primary_key)
                 
@@ -182,8 +193,16 @@ class FirestoreConnector(BaseCloudConnector):
         """Connect to a Google Firestore database"""
         if not self.client:
             try:
-                project_id = self.credentials.get("project_id")
-                service_account_key = self.credentials.get("service_account_key")
+                # Get credentials from provided credentials or environment variables
+                project_id = self.credentials.get("project_id") or os.environ.get("FIREBASE_PROJECT_ID")
+                service_account_key = self.credentials.get("service_account_key") or os.environ.get("FIREBASE_SERVICE_ACCOUNT_KEY")
+                
+                # Log if using environment variables
+                if os.environ.get("FIREBASE_PROJECT_ID") and not self.credentials.get("project_id"):
+                    logger.info("Using FIREBASE_PROJECT_ID environment variable")
+                    
+                if os.environ.get("FIREBASE_SERVICE_ACCOUNT_KEY") and not self.credentials.get("service_account_key"):
+                    logger.info("Using FIREBASE_SERVICE_ACCOUNT_KEY environment variable")
                 
                 # Try different connection methods
                 if not firebase_admin:
@@ -378,13 +397,22 @@ class SupabaseConnector(BaseCloudConnector):
         """Connect to a Supabase project"""
         if not self.client:
             try:
-                # Get credentials
+                # Check for direct credentials first
                 supabase_url = self.credentials.get("supabase_url")
                 supabase_key = self.credentials.get("supabase_key")
                 
+                # Check for environment variables if credentials not provided
+                if not supabase_url:
+                    supabase_url = os.environ.get("SUPABASE_URL")
+                    logger.info("Using SUPABASE_URL environment variable")
+                
+                if not supabase_key:
+                    supabase_key = os.environ.get("SUPABASE_KEY") 
+                    logger.info("Using SUPABASE_KEY environment variable")
+                
                 # Validate credentials
                 if not supabase_url or not supabase_key:
-                    raise ValueError("Supabase URL and API key are required")
+                    raise ValueError("Supabase URL and API key are required (either in credentials or as environment variables SUPABASE_URL and SUPABASE_KEY)")
                 
                 # Check if supabase package is installed
                 if not create_client:
