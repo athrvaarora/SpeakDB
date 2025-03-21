@@ -1,0 +1,97 @@
+{% extends "layout.html" %}
+
+{% block title %}DB Chat - Natural Language Interface{% endblock %}
+
+{% block content %}
+<!-- Store database information -->
+{% set db_info = session.get('database_credentials', {}) %}
+{% set db_type = db_info.get('type', '') %}
+{% set db_name = db_info.get('credentials', {}).get('db_name', '') or db_type %}
+<!-- Hidden div to store DB info for JavaScript -->
+<div id="db-info" data-db-type="{{ db_type }}" data-db-name="{{ db_name }}" class="d-none"></div>
+
+<div class="chat-container">
+    <!-- Chat History Sidebar -->
+    <div class="chat-history-panel">
+        <div class="chat-sidebar-header">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="h6 mb-0">Chats</h5>
+                <button id="new-chat-btn" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus me-1"></i> New Chat
+                </button>
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <input type="text" class="form-control" placeholder="Search chats...">
+                <button class="btn btn-outline-secondary" type="button">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+        
+        <ul id="chat-list" class="chat-list">
+            <!-- Chat history will be loaded here -->
+            <li class="text-center my-3 text-muted">
+                <div class="spinner-border spinner-border-sm" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <span class="ms-2">Loading chats...</span>
+            </li>
+        </ul>
+    </div>
+    
+    <!-- Main Chat Area -->
+    <div class="chat-main">
+        <!-- Connected Database Info -->
+        <div class="p-3 border-bottom">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="db-badge db-badge-{{ db_type }} me-2">{{ db_name }}</span>
+                    <small class="text-muted">Connected</small>
+                </div>
+                <div>
+                    <button class="btn btn-sm btn-outline-secondary" id="refresh-schema-btn">
+                        <i class="fas fa-sync-alt me-1"></i> Refresh Schema
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chat Messages -->
+        <div id="chat-messages" class="chat-messages">
+            <!-- Messages will be loaded here -->
+            <div class="text-center my-4">
+                <div class="spinner-border text-secondary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3 text-muted">Loading chat history...</p>
+            </div>
+        </div>
+        
+        <!-- Chat Input -->
+        <div class="chat-input-container">
+            <form id="chat-form">
+                <div class="mb-2">
+                    <textarea id="query-input" class="form-control" 
+                              placeholder="Ask a question about your database..." 
+                              rows="1" required></textarea>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <div id="example-queries" class="example-queries">
+                        <!-- Example queries will be loaded here -->
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-1"></i> Send
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/database_connectors.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+{% endblock %}
