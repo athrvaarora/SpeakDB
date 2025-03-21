@@ -296,7 +296,7 @@ def process_query():
         connector = get_connector(db_type, credentials)
         
         # Generate a query using OpenAI GPT
-        success, query, explanation, needs_multiple_queries, additional_queries = generate_query(user_query, db_type, connector.get_schema())
+        success, query, explanation = generate_query(user_query, db_type, connector.get_schema())
         
         if not success:
             # Save the error message
@@ -318,42 +318,8 @@ def process_query():
                 mimetype='application/json'
             )
         
-        # Execute the primary query against the database (if we have one)
-        if query:
-            result, execution_success, error_message = connector.execute_query(query)
-        else:
-            # If we don't have a primary query but have additional queries, use the first one as primary
-            if needs_multiple_queries and additional_queries:
-                query = additional_queries.pop(0)
-                result, execution_success, error_message = connector.execute_query(query)
-            else:
-                execution_success = False
-                error_message = "No query was generated"
-                result = None
-        
-        # If we need to run multiple queries, handle them here
-        if execution_success and needs_multiple_queries and additional_queries:
-            # Store the results from all queries
-            all_results = [result]
-            all_queries = [query]
-            
-            # Run each additional query
-            for additional_query in additional_queries:
-                add_result, add_success, add_error = connector.execute_query(additional_query)
-                
-                if not add_success:
-                    # If any additional query fails, we'll note it but continue with what we have
-                    logger.warning(f"Additional query failed: {add_error}")
-                    all_results.append({"error": add_error})
-                else:
-                    all_results.append(add_result)
-                all_queries.append(additional_query)
-            
-            # Use the combined results
-            result = {
-                "combined_results": all_results,
-                "queries": all_queries
-            }
+        # Execute the query against the database
+        result, execution_success, error_message = connector.execute_query(query)
         
         if not execution_success:
             # Save the error to the database
@@ -379,21 +345,8 @@ def process_query():
                 mimetype='application/json'
             )
         
-        # Format the result based on whether it's a multiple query result or not
-        if execution_success and needs_multiple_queries and additional_queries:
-            # Format multiple queries and their results
-            queries_str = "```sql\n" + (query or "No primary query") + "\n```\n\n"
-            for i, additional_query in enumerate(additional_queries, 1):
-                if additional_query:  # Check if query is not None or empty
-                    queries_str += f"Additional Query {i}:\n```sql\n{additional_query}\n```\n\n"
-            
-            formatted_result = f"""
-{queries_str}
-{format_response(result, user_query)}
-"""
-        else:
-            # Format just the primary query and result
-            formatted_result = f"""
+        # Format just the query and result without extra text
+        formatted_result = f"""
 ```sql
 {query}
 ```

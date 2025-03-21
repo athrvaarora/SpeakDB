@@ -27,12 +27,7 @@ def generate_query(user_query, db_type, schema_info):
         schema_info (dict): Information about the database schema
         
     Returns:
-        tuple: (success, query, explanation, needs_multiple_queries, additional_queries)
-            - success (bool): Whether the query generation was successful
-            - query (str): The generated primary query
-            - explanation (str): Explanation of what the query does
-            - needs_multiple_queries (bool): Whether multiple queries are needed
-            - additional_queries (list): List of additional queries if needed
+        tuple: (success, query, explanation)
     """
     try:
         # Create a prompt that includes the database type and schema information
@@ -44,22 +39,11 @@ def generate_query(user_query, db_type, schema_info):
         The database schema is as follows:
         {json.dumps(schema_info, indent=2)}
         
-        Important requirements:
-        1. For SQLite: NEVER generate multiple SQL statements separated by semicolons, as SQLite can only execute one statement at a time.
-        2. For MySQL/PostgreSQL/SQL Server: If multiple statements are needed, ensure they are compatible with the specific database's transaction requirements.
-        3. When a user wants to see data from multiple tables, use JOIN operations when appropriate.
-        4. For NoSQL databases, ensure the query format matches the database's specific API requirements.
-        5. CRITICAL: If a user wants "all records from all tables" or similar, NEVER use UNION ALL. Instead, always set "needs_multiple_queries" to true and provide separate SELECT statements for each table in the "additional_queries" array.
-        
         Respond with JSON in the following format:
         {{
             "query": "the generated query",
-            "explanation": "explanation of what the query does and why it satisfies the request",
-            "needs_multiple_queries": false,
-            "additional_queries": []
+            "explanation": "explanation of what the query does and why it satisfies the request"
         }}
-        
-        If the request genuinely requires multiple separate queries to be run in sequence (not simultaneously), set "needs_multiple_queries" to true and provide each query in the "additional_queries" array.
         
         Ensure the query is valid for {db_type} syntax.
         """
@@ -75,93 +59,17 @@ def generate_query(user_query, db_type, schema_info):
         )
         
         # Parse the response
-        raw_response = response.choices[0].message.content
-        logger.info(f"Raw OpenAI response: {raw_response}")
+        result = json.loads(response.choices[0].message.content)
+        query = result.get("query")
+        explanation = result.get("explanation")
         
-        try:
-            result = json.loads(raw_response)
-            query = result.get("query")
-            explanation = result.get("explanation")
-            needs_multiple_queries = result.get("needs_multiple_queries", False)
-            additional_queries = result.get("additional_queries", [])
-            
-            # Log the result 
-            logger.info(f"Parsed query: {query}")
-            logger.info(f"Needs multiple queries: {needs_multiple_queries}")
-            logger.info(f"Additional queries count: {len(additional_queries)}")
-            
-            if not query and not (needs_multiple_queries and additional_queries):
-                return False, None, "Failed to generate a query from the GPT response - query is empty", False, []
-                
-            # For 'get all records from all tables' type queries or similar, we want to ensure we have multiple queries
-            query_words = user_query.lower().split()
-            is_all_tables_query = (
-                ("all" in query_words or "each" in query_words or "every" in query_words) and 
-                ("table" in query_words or "tables" in query_words) and
-                not needs_multiple_queries
-            )
-            
-            if is_all_tables_query or ("record" in query_words and "all" in query_words and "table" in query_words):
-                logger.info("Detected 'all tables' type query")
-                
-                # First try to get table names from schema_info dict format
-                table_names = []
-                if isinstance(schema_info, dict):
-                    # SQLAlchemy format with "tables" key
-                    if "tables" in schema_info:
-                        for table_info in schema_info["tables"]:
-                            if "name" in table_info:
-                                table_names.append(table_info["name"])
-                    # PostgreSQL information_schema format
-                    elif "public" in schema_info:
-                        for table in schema_info.get("public", []):
-                            table_names.append(table)
-                
-                # If we didn't get tables from schema, execute a query to get them
-                if not table_names and db_type.lower() in ['postgresql', 'mysql', 'mariadb', 'sqlserver']:
-                    # Use a default query to find table names if schema didn't provide them
-                    if db_type.lower() in ['postgresql', 'redshift']:
-                        table_query = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';"
-                    elif db_type.lower() in ['mysql', 'mariadb']:
-                        table_query = "SHOW TABLES;"
-                    elif db_type.lower() == 'sqlserver':
-                        table_query = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE';"
-                    elif db_type.lower() == 'sqlite':
-                        table_query = "SELECT name FROM sqlite_master WHERE type='table';"
-                    else:
-                        table_query = None
-                        
-                    # For now we'll use a fallback set of tables we know exist
-                    logger.info("Using fallback table names from our SQL query")
-                    table_names = ['products', 'chat_messages', 'customers', 'orders', 'order_items', 'chats']
-                
-                if table_names:
-                    needs_multiple_queries = True
-                    # Primary query gets the first table
-                    if not query:
-                        query = f"SELECT * FROM {table_names[0]} LIMIT 100;"
-                    
-                    # Additional queries for the rest of the tables
-                    additional_queries = []
-                    for table_name in table_names[1:]:
-                        additional_queries.append(f"SELECT * FROM {table_name} LIMIT 100;")
-                    
-                    logger.info(f"Converted to multiple queries with {len(additional_queries)} additional queries")
-                    explanation = f"Generating separate queries for each table to retrieve their records."
-        except json.JSONDecodeError as e:
-            logger.error(f"JSON decode error: {e}, Raw response: {raw_response}")
-            return False, None, f"Failed to parse OpenAI response as JSON: {str(e)}", False, []
-        except Exception as e:
-            logger.error(f"Error parsing OpenAI response: {e}, Raw response: {raw_response}")
-            return False, None, f"Error parsing OpenAI response: {str(e)}", False, []
-            
-        if not query and not additional_queries:
-            return False, None, "Failed to generate a query from the GPT response - no valid queries found", False, []
+        if not query:
+            return False, None, "Failed to generate a query from the GPT response"
         
-        return True, query, explanation, needs_multiple_queries, additional_queries
+        return True, query, explanation
     except Exception as e:
         logger.exception("Error generating query with GPT")
-        return False, None, f"Error generating query: {str(e)}", False, []
+        return False, None, f"Error generating query: {str(e)}"
 
 def format_response(db_result, user_query):
     """
