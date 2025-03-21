@@ -1205,71 +1205,185 @@ def format_schema_for_explorer(db_type, schema_info):
     elif db_type in ['neo4j', 'tigergraph']:
         # Graph databases
         if 'nodes' in schema_info:
-            for node_type, node_info in schema_info['nodes'].items():
-                node_data = {
-                    'name': node_type,
-                    'type': 'node',
-                    'properties': []
-                }
-                
-                if 'properties' in node_info:
-                    for prop_name, prop_info in node_info['properties'].items():
-                        prop_data = {
-                            'name': prop_name,
-                            'type': prop_info.get('type', 'unknown'),
-                        }
-                        node_data['properties'].append(prop_data)
-                
-                formatted_schema.append(node_data)
+            # Check if nodes is a list or dictionary
+            if isinstance(schema_info['nodes'], list):
+                # List format: [{'name': 'node1', 'properties': [...]}, {'name': 'node2', 'properties': [...]}]
+                for node in schema_info['nodes']:
+                    node_data = {
+                        'name': node.get('name', 'unknown'),
+                        'type': 'node',
+                        'properties': []
+                    }
+                    
+                    if 'properties' in node and isinstance(node['properties'], list):
+                        for prop in node['properties']:
+                            prop_data = {
+                                'name': prop.get('name', 'unknown'),
+                                'type': prop.get('type', 'unknown'),
+                            }
+                            node_data['properties'].append(prop_data)
+                    
+                    formatted_schema.append(node_data)
+            else:
+                # Dictionary format: {'node1': {'properties': {...}}, 'node2': {'properties': {...}}}
+                for node_type, node_info in schema_info['nodes'].items():
+                    node_data = {
+                        'name': node_type,
+                        'type': 'node',
+                        'properties': []
+                    }
+                    
+                    if 'properties' in node_info:
+                        if isinstance(node_info['properties'], list):
+                            # List format for properties
+                            for prop in node_info['properties']:
+                                prop_data = {
+                                    'name': prop.get('name', 'unknown'),
+                                    'type': prop.get('type', 'unknown'),
+                                }
+                                node_data['properties'].append(prop_data)
+                        else:
+                            # Dictionary format for properties
+                            for prop_name, prop_info in node_info['properties'].items():
+                                prop_data = {
+                                    'name': prop_name,
+                                    'type': prop_info.get('type', 'unknown'),
+                                }
+                                node_data['properties'].append(prop_data)
+                    
+                    formatted_schema.append(node_data)
                 
         if 'relationships' in schema_info:
-            for rel_type, rel_info in schema_info['relationships'].items():
-                rel_data = {
-                    'name': rel_type,
-                    'type': 'relationship',
-                    'start_node': rel_info.get('start_node', ''),
-                    'end_node': rel_info.get('end_node', ''),
-                    'properties': []
-                }
-                
-                if 'properties' in rel_info:
-                    for prop_name, prop_info in rel_info['properties'].items():
-                        prop_data = {
-                            'name': prop_name,
-                            'type': prop_info.get('type', 'unknown'),
-                        }
-                        rel_data['properties'].append(prop_data)
-                
-                formatted_schema.append(rel_data)
+            # Check if relationships is a list or dictionary
+            if isinstance(schema_info['relationships'], list):
+                # List format: [{'name': 'rel1', 'start_node': '...', 'end_node': '...', 'properties': [...]}, ...]
+                for rel in schema_info['relationships']:
+                    rel_data = {
+                        'name': rel.get('name', 'unknown'),
+                        'type': 'relationship',
+                        'start_node': rel.get('start_node', ''),
+                        'end_node': rel.get('end_node', ''),
+                        'properties': []
+                    }
+                    
+                    if 'properties' in rel and isinstance(rel['properties'], list):
+                        for prop in rel['properties']:
+                            prop_data = {
+                                'name': prop.get('name', 'unknown'),
+                                'type': prop.get('type', 'unknown'),
+                            }
+                            rel_data['properties'].append(prop_data)
+                    
+                    formatted_schema.append(rel_data)
+            else:
+                # Dictionary format: {'rel1': {'start_node': '...', 'end_node': '...', 'properties': {...}}, ...}
+                for rel_type, rel_info in schema_info['relationships'].items():
+                    rel_data = {
+                        'name': rel_type,
+                        'type': 'relationship',
+                        'start_node': rel_info.get('start_node', ''),
+                        'end_node': rel_info.get('end_node', ''),
+                        'properties': []
+                    }
+                    
+                    if 'properties' in rel_info:
+                        if isinstance(rel_info['properties'], list):
+                            # List format for properties
+                            for prop in rel_info['properties']:
+                                prop_data = {
+                                    'name': prop.get('name', 'unknown'),
+                                    'type': prop.get('type', 'unknown'),
+                                }
+                                rel_data['properties'].append(prop_data)
+                        else:
+                            # Dictionary format for properties
+                            for prop_name, prop_info in rel_info['properties'].items():
+                                prop_data = {
+                                    'name': prop_name,
+                                    'type': prop_info.get('type', 'unknown'),
+                                }
+                                rel_data['properties'].append(prop_data)
+                    
+                    formatted_schema.append(rel_data)
     
     elif db_type in ['influxdb', 'prometheus', 'kdb']:
         # Time series databases
         if 'measurements' in schema_info:
-            for meas_name, meas_info in schema_info['measurements'].items():
-                meas_data = {
-                    'name': meas_name,
-                    'type': 'measurement',
-                    'fields': [],
-                    'tags': []
-                }
-                
-                if 'fields' in meas_info:
-                    for field_name, field_info in meas_info['fields'].items():
-                        field_data = {
-                            'name': field_name,
-                            'type': field_info.get('type', 'unknown'),
-                        }
-                        meas_data['fields'].append(field_data)
-                
-                if 'tags' in meas_info:
-                    for tag_name, tag_info in meas_info['tags'].items():
-                        tag_data = {
-                            'name': tag_name,
-                            'type': 'tag',
-                        }
-                        meas_data['tags'].append(tag_data)
-                
-                formatted_schema.append(meas_data)
+            # Check if measurements is a list or dictionary
+            if isinstance(schema_info['measurements'], list):
+                # List format: [{'name': 'measurement1', 'fields': [...], 'tags': [...]}, ...]
+                for meas in schema_info['measurements']:
+                    meas_data = {
+                        'name': meas.get('name', 'unknown'),
+                        'type': 'measurement',
+                        'fields': [],
+                        'tags': []
+                    }
+                    
+                    if 'fields' in meas and isinstance(meas['fields'], list):
+                        for field in meas['fields']:
+                            field_data = {
+                                'name': field.get('name', 'unknown'),
+                                'type': field.get('type', 'unknown'),
+                            }
+                            meas_data['fields'].append(field_data)
+                    
+                    if 'tags' in meas and isinstance(meas['tags'], list):
+                        for tag in meas['tags']:
+                            tag_data = {
+                                'name': tag.get('name', 'unknown'),
+                                'type': 'tag',
+                            }
+                            meas_data['tags'].append(tag_data)
+                    
+                    formatted_schema.append(meas_data)
+            else:
+                # Dictionary format: {'measurement1': {'fields': {...}, 'tags': {...}}, ...}
+                for meas_name, meas_info in schema_info['measurements'].items():
+                    meas_data = {
+                        'name': meas_name,
+                        'type': 'measurement',
+                        'fields': [],
+                        'tags': []
+                    }
+                    
+                    if 'fields' in meas_info:
+                        if isinstance(meas_info['fields'], list):
+                            # List format for fields
+                            for field in meas_info['fields']:
+                                field_data = {
+                                    'name': field.get('name', 'unknown'),
+                                    'type': field.get('type', 'unknown'),
+                                }
+                                meas_data['fields'].append(field_data)
+                        else:
+                            # Dictionary format for fields
+                            for field_name, field_info in meas_info['fields'].items():
+                                field_data = {
+                                    'name': field_name,
+                                    'type': field_info.get('type', 'unknown'),
+                                }
+                                meas_data['fields'].append(field_data)
+                    
+                    if 'tags' in meas_info:
+                        if isinstance(meas_info['tags'], list):
+                            # List format for tags
+                            for tag in meas_info['tags']:
+                                tag_data = {
+                                    'name': tag.get('name', 'unknown'),
+                                    'type': 'tag',
+                                }
+                                meas_data['tags'].append(tag_data)
+                        else:
+                            # Dictionary format for tags
+                            for tag_name, tag_info in meas_info['tags'].items():
+                                tag_data = {
+                                    'name': tag_name,
+                                    'type': 'tag',
+                                }
+                                meas_data['tags'].append(tag_data)
+                    
+                    formatted_schema.append(meas_data)
     
     else:
         # Generic fallback for other database types
