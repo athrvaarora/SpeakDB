@@ -202,7 +202,8 @@ def test_db_connection():
                 id=chat_id,
                 db_type=db_type,
                 db_name=credentials.get('db_name', db_type.upper()),
-                db_credentials=json.dumps(credentials)  # Store credentials as JSON string
+                db_credentials=json.dumps(credentials),  # Store credentials as JSON string
+                user_id=current_user.id if current_user.is_authenticated else None  # Link to user if authenticated
             )
             
             # Save the chat to the database
@@ -296,8 +297,19 @@ def get_chat_history():
 def get_previous_chats():
     """Get a list of previous chat sessions"""
     try:
-        # Query the database for all chats, ordered by most recent first
-        chats = db.session.query(Chat).order_by(Chat.updated_at.desc()).all()
+        # Filter chats based on authentication status
+        if current_user.is_authenticated:
+            # Get the authenticated user's chats
+            chats = db.session.query(Chat).filter(Chat.user_id == current_user.id).order_by(Chat.updated_at.desc()).all()
+        else:
+            # For guests, only show session chats or those with no user association
+            if 'chat_id' in session:
+                chats = db.session.query(Chat).filter(
+                    (Chat.id == session['chat_id']) | 
+                    (Chat.user_id.is_(None))
+                ).order_by(Chat.updated_at.desc()).all()
+            else:
+                chats = db.session.query(Chat).filter(Chat.user_id.is_(None)).order_by(Chat.updated_at.desc()).all()
         
         # Convert the chats to dictionaries
         chat_list = [chat.to_dict() for chat in chats]
@@ -329,6 +341,13 @@ def load_chat(chat_id):
             return jsonify({
                 'success': False,
                 'message': f"Chat with ID {chat_id} not found"
+            })
+        
+        # Security check: only allow users to access their own chats or guest chats
+        if chat.user_id is not None and current_user.is_authenticated and chat.user_id != current_user.id:
+            return jsonify({
+                'success': False,
+                'message': "You don't have permission to access this chat session"
             })
         
         # Store the chat ID in the session

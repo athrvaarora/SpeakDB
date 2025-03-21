@@ -1,248 +1,172 @@
-{% extends "layout.html" %}
-
-{% block title %}SpeakDB - Login or Sign Up{% endblock %}
-
-{% block head %}
-<style>
-    .auth-container {
-        max-width: 900px;
-        margin: 0 auto;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-        border-radius: 1.5rem;
-        overflow: hidden;
-    }
-    
-    .auth-sidebar {
-        background: linear-gradient(135deg, var(--pastel-primary) 0%, var(--pastel-info) 100%);
-        color: white;
-        padding: 3rem 2rem;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-    
-    .auth-form {
-        padding: 2.5rem;
-        background-color: white;
-    }
-    
-    .auth-tabs .nav-link {
-        padding: 1rem 1.5rem;
-        border-radius: 0;
-        border: none;
-        color: var(--pastel-gray-700);
-        font-weight: 500;
-        background-color: var(--pastel-gray-100);
-    }
-    
-    .auth-tabs .nav-link.active {
-        background-color: white;
-        color: var(--pastel-primary);
-    }
-    
-    .auth-form-header {
-        margin-bottom: 2rem;
-    }
-    
-    .auth-form-footer {
-        margin-top: 1.5rem;
-    }
-    
-    .guest-option {
-        padding: 1.5rem;
-        border-top: 1px solid var(--pastel-gray-200);
-        text-align: center;
-    }
-    
-    .or-divider {
-        display: flex;
-        align-items: center;
-        text-align: center;
-        margin: 2rem 0;
-    }
-    
-    .or-divider::before,
-    .or-divider::after {
-        content: '';
-        flex: 1;
-        border-bottom: 1px solid var(--pastel-gray-300);
-    }
-    
-    .or-divider span {
-        padding: 0 1rem;
-        color: var(--pastel-gray-600);
-        font-size: 0.9rem;
-    }
-    
-    .feature-highlight {
-        margin-bottom: 1.5rem;
-    }
-    
-    .feature-highlight i {
-        color: white;
-        margin-right: 0.75rem;
-    }
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="container py-5">
-    <div class="auth-container">
-        <div class="row g-0">
-            <!-- Left side with features and benefits -->
-            <div class="col-lg-5 auth-sidebar d-none d-lg-flex">
-                <div>
-                    <div class="d-flex align-items-center mb-4">
-                        <img src="{{ url_for('static', filename='images/speakdb-logo-white.svg') }}" alt="SpeakDB Logo" width="50" height="50" class="me-3">
-                        <h2 class="h3 fw-bold mb-0">SpeakDB</h2>
-                    </div>
-                    
-                    <h3 class="h4 fw-semibold mb-4">Why create an account?</h3>
-                    
-                    <div class="feature-highlight">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-history"></i>
-                            <div>
-                                <h5 class="fw-semibold mb-1">Save Query History</h5>
-                                <p class="mb-0 opacity-75">Access all your previous conversations and results</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="feature-highlight">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-database"></i>
-                            <div>
-                                <h5 class="fw-semibold mb-1">Multiple Databases</h5>
-                                <p class="mb-0 opacity-75">Save connection details for easy access</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="feature-highlight">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-cog"></i>
-                            <div>
-                                <h5 class="fw-semibold mb-1">Personalized Settings</h5>
-                                <p class="mb-0 opacity-75">Customize your experience and preferences</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="feature-highlight">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-cloud"></i>
-                            <div>
-                                <h5 class="fw-semibold mb-1">Cloud Sync</h5>
-                                <p class="mb-0 opacity-75">Access your data from any device</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Right side with authentication forms -->
-            <div class="col-lg-7">
-                <ul class="nav nav-tabs auth-tabs" id="authTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login-tab-pane" type="button" role="tab" aria-controls="login-tab-pane" aria-selected="true">Login</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="signup-tab" data-bs-toggle="tab" data-bs-target="#signup-tab-pane" type="button" role="tab" aria-controls="signup-tab-pane" aria-selected="false">Sign Up</button>
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpeakDB - Sign In or Register</title>
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('landing') }}">
+                <img src="{{ url_for('static', filename='images/speakdb-logo-white.svg') }}" alt="SpeakDB Logo" height="30" class="me-2">
+                <span>SpeakDB</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('app') }}">Continue as Guest</a>
                     </li>
                 </ul>
-                
-                <div class="tab-content" id="authTabsContent">
-                    <!-- Login Tab -->
-                    <div class="tab-pane fade show active" id="login-tab-pane" role="tabpanel" aria-labelledby="login-tab" tabindex="0">
-                        <div class="auth-form">
-                            <div class="auth-form-header">
-                                <h2 class="fw-bold mb-2">Welcome back</h2>
-                                <p class="text-muted">Enter your credentials to access your account</p>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-10 col-lg-8">
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
-                            
-                            <form action="{{ url_for('login') }}" method="post">
-                                <div class="mb-3">
-                                    <label for="login-email" class="form-label">Email address</label>
-                                    <input type="email" class="form-control" id="login-email" name="email" required>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="row g-0">
+                            <div class="col-md-6 bg-primary bg-gradient p-4 text-light d-flex flex-column justify-content-center rounded-start">
+                                <div class="text-center mb-4">
+                                    <img src="{{ url_for('static', filename='images/speakdb-logo-white.svg') }}" alt="SpeakDB Logo" height="60" class="mb-3">
+                                    <h2 class="h4 mb-3">Welcome to SpeakDB</h2>
+                                    <p class="mb-0">Create an account to save your database connections and chat history</p>
+                                </div>
+                                <div class="auth-benefits">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <svg class="me-2" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                        <span>Save database connections</span>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-3">
+                                        <svg class="me-2" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                        <span>Access your chat history</span>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <svg class="me-2" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                        <span>Personalized experience</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 p-4 rounded-end">
+                                <!-- Tabs -->
+                                <ul class="nav nav-tabs mb-4" id="authTabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login-tab-pane" type="button" role="tab" aria-controls="login-tab-pane" aria-selected="true">Sign In</button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register-tab-pane" type="button" role="tab" aria-controls="register-tab-pane" aria-selected="false">Register</button>
+                                    </li>
+                                </ul>
+                                
+                                <!-- Tab Content -->
+                                <div class="tab-content" id="authTabsContent">
+                                    <!-- Login Form -->
+                                    <div class="tab-pane fade show active" id="login-tab-pane" role="tabpanel" aria-labelledby="login-tab" tabindex="0">
+                                        <form action="{{ url_for('login') }}" method="POST">
+                                            <div class="mb-3">
+                                                <label for="login-email" class="form-label">Email address</label>
+                                                <input type="email" class="form-control" id="login-email" name="email" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="login-password" class="form-label">Password</label>
+                                                <input type="password" class="form-control" id="login-password" name="password" required>
+                                            </div>
+                                            <div class="mb-3 form-check">
+                                                <input type="checkbox" class="form-check-input" id="remember-me" name="remember">
+                                                <label class="form-check-label" for="remember-me">Remember me</label>
+                                            </div>
+                                            <div class="d-grid">
+                                                <button type="submit" class="btn btn-primary">Sign In</button>
+                                            </div>
+                                            <div class="text-center mt-3">
+                                                <p class="mb-0">
+                                                    <a href="#" id="switch-to-register" class="text-decoration-none">Don't have an account? Register</a>
+                                                </p>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    
+                                    <!-- Register Form -->
+                                    <div class="tab-pane fade" id="register-tab-pane" role="tabpanel" aria-labelledby="register-tab" tabindex="0">
+                                        <form action="{{ url_for('signup') }}" method="POST">
+                                            <div class="mb-3">
+                                                <label for="register-name" class="form-label">Full Name</label>
+                                                <input type="text" class="form-control" id="register-name" name="name" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="register-email" class="form-label">Email address</label>
+                                                <input type="email" class="form-control" id="register-email" name="email" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="register-password" class="form-label">Password</label>
+                                                <input type="password" class="form-control" id="register-password" name="password" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="register-confirm-password" class="form-label">Confirm Password</label>
+                                                <input type="password" class="form-control" id="register-confirm-password" name="confirm_password" required>
+                                            </div>
+                                            <div class="d-grid">
+                                                <button type="submit" class="btn btn-primary">Create Account</button>
+                                            </div>
+                                            <div class="text-center mt-3">
+                                                <p class="mb-0">
+                                                    <a href="#" id="switch-to-login" class="text-decoration-none">Already have an account? Sign in</a>
+                                                </p>
+                                            </div>
+                                        </form>
+                                    </div>
                                 </div>
                                 
-                                <div class="mb-3">
-                                    <label for="login-password" class="form-label">Password</label>
-                                    <input type="password" class="form-control" id="login-password" name="password" required>
+                                <div class="text-center mt-4">
+                                    <a href="{{ url_for('app') }}" class="text-decoration-none">Continue as Guest</a>
                                 </div>
-                                
-                                <div class="mb-3 form-check">
-                                    <input type="checkbox" class="form-check-input" id="remember-me" name="remember">
-                                    <label class="form-check-label" for="remember-me">Remember me</label>
-                                </div>
-                                
-                                <div class="d-grid">
-                                    <button type="submit" class="btn btn-primary btn-lg">Log In</button>
-                                </div>
-                                
-                                <div class="auth-form-footer text-center">
-                                    <a href="#" class="text-muted">Forgot your password?</a>
-                                </div>
-                            </form>
+                            </div>
                         </div>
                     </div>
-                    
-                    <!-- Sign Up Tab -->
-                    <div class="tab-pane fade" id="signup-tab-pane" role="tabpanel" aria-labelledby="signup-tab" tabindex="0">
-                        <div class="auth-form">
-                            <div class="auth-form-header">
-                                <h2 class="fw-bold mb-2">Create an account</h2>
-                                <p class="text-muted">Sign up to save your history and database connections</p>
-                            </div>
-                            
-                            <form action="{{ url_for('signup') }}" method="post">
-                                <div class="mb-3">
-                                    <label for="signup-name" class="form-label">Full name</label>
-                                    <input type="text" class="form-control" id="signup-name" name="name" required>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="signup-email" class="form-label">Email address</label>
-                                    <input type="email" class="form-control" id="signup-email" name="email" required>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="signup-password" class="form-label">Password</label>
-                                    <input type="password" class="form-control" id="signup-password" name="password" required minlength="8">
-                                    <div class="form-text">Password must be at least 8 characters long</div>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="signup-confirm-password" class="form-label">Confirm password</label>
-                                    <input type="password" class="form-control" id="signup-confirm-password" name="confirm_password" required minlength="8">
-                                </div>
-                                
-                                <div class="mb-3 form-check">
-                                    <input type="checkbox" class="form-check-input" id="terms" name="terms" required>
-                                    <label class="form-check-label" for="terms">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></label>
-                                </div>
-                                
-                                <div class="d-grid">
-                                    <button type="submit" class="btn btn-primary btn-lg">Sign Up</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Guest Option -->
-                <div class="guest-option">
-                    <div class="or-divider">
-                        <span>OR</span>
-                    </div>
-                    
-                    <p class="mb-3 text-muted">Don't want to create an account right now?</p>
-                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary px-4">Continue as Guest</a>
-                    <p class="mt-2 small text-muted">Note: Your database queries and history won't be saved.</p>
                 </div>
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Switch between login and register tabs using the text links
+            document.getElementById('switch-to-register').addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('register-tab').click();
+            });
+            
+            document.getElementById('switch-to-login').addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('login-tab').click();
+            });
+        });
+    </script>
+</body>
+</html>

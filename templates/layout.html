@@ -1,19 +1,19 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="light">
+<html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}SpeakDB - Natural Language Database Interface{% endblock %}</title>
-    <!-- Bootstrap - Light theme -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap - Dark Theme -->
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
     <!-- Custom CSS -->
     <link href="{{ url_for('static', filename='css/custom.css') }}" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Highlight.js for code syntax highlighting -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-light.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
     <!-- GitHub Markdown CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown-light.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown-dark.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <!-- Animation CSS -->
@@ -22,29 +22,60 @@
 </head>
 <body>
     <div class="app-container">
-        <header class="app-header bg-white shadow-sm mb-4">
+        <header class="app-header bg-dark shadow-sm mb-4">
             <div class="container d-flex justify-content-between align-items-center py-3">
                 <div class="logo d-flex align-items-center animate__animated animate__fadeIn">
-                    <img src="{{ url_for('static', filename='images/speakdb-logo.svg') }}" alt="SpeakDB Logo" width="40" height="40" class="me-2">
-                    <h1 class="h4 m-0 fw-semibold">Speak<span class="text-primary">DB</span></h1>
+                    <img src="{{ url_for('static', filename='images/speakdb-logo-white.svg') }}" alt="SpeakDB Logo" width="40" height="40" class="me-2">
+                    <h1 class="h4 m-0 fw-semibold text-white">Speak<span class="text-primary">DB</span></h1>
                 </div>
-                <div class="animate__animated animate__fadeIn animate__delay-1s">
-                    <span class="text-primary fw-light">Smart Database Conversations</span>
+                <div class="d-flex align-items-center animate__animated animate__fadeIn animate__delay-1s">
+                    <div class="me-4">
+                        <span class="text-primary fw-light">Smart Database Conversations</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        {% if current_user.is_authenticated %}
+                            <div class="dropdown">
+                                <button class="btn btn-outline-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-user-circle me-1"></i> {{ current_user.username }}
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                    <li><a class="dropdown-item" href="{{ url_for('index') }}"><i class="fas fa-database me-2"></i>Databases</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                                </ul>
+                            </div>
+                        {% else %}
+                            <a href="{{ url_for('auth') }}" class="btn btn-outline-light me-2">Sign In</a>
+                            <a href="{{ url_for('app') }}" class="btn btn-primary"><i class="fas fa-database me-1"></i> Start</a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </header>
 
         <main class="container mb-5 animate__animated animate__fadeIn animate__delay-1s">
-            <!-- Alert container for messages -->
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show mb-4" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <!-- Alert container for javascript messages -->
             <div id="alert-container" class="mb-4"></div>
             
             <!-- Main content -->
             {% block content %}{% endblock %}
         </main>
 
-        <footer class="app-footer py-3 bg-white shadow-sm mt-auto">
+        <footer class="app-footer py-3 bg-dark shadow-sm mt-auto">
             <div class="container text-center">
-                <small class="text-muted">SpeakDB &copy; 2025 - Powered by OpenAI GPT</small>
+                <small class="text-light">SpeakDB &copy; 2025 - Powered by OpenAI GPT</small>
             </div>
         </footer>
     </div>
