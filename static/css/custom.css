@@ -402,6 +402,8 @@ body {
     background-color: #f9fafc;
     scrollbar-width: thin;
     scrollbar-color: var(--pastel-gray-300) transparent;
+    display: flex;
+    flex-direction: column;
 }
 
 .chat-messages::-webkit-scrollbar {
@@ -732,8 +734,9 @@ textarea.form-control:focus {
 
 /* Compact welcome container for improved spacing */
 .welcome-container.compact {
-    padding: 1.5rem 1rem;
+    padding: 1rem 1rem;
     margin-top: 0; /* Remove top margin */
+    margin-bottom: auto; /* Push any extra space to the bottom */
 }
 
 .welcome-container i {
