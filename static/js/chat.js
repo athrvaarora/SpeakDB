@@ -259,6 +259,9 @@ function sendQuery(query) {
     // Add user message to chat
     addMessageToChat(query, 'user');
     
+    // Ensure the input is visible
+    scrollToBottom();
+    
     // Show typing indicator
     addTypingIndicator();
     
@@ -632,7 +635,19 @@ function useExample(element) {
 function scrollToBottom() {
     const messagesContainer = document.getElementById('chat-messages');
     if (messagesContainer) {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        // Smooth scroll to the bottom
+        messagesContainer.scrollTo({
+            top: messagesContainer.scrollHeight,
+            behavior: 'smooth'
+        });
+        
+        // Also focus the input text area to ensure it's visible
+        setTimeout(() => {
+            const queryInput = document.getElementById('query-input');
+            if (queryInput) {
+                queryInput.focus();
+            }
+        }, 100);
     }
 }
 
