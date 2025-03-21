@@ -1,4 +1,4 @@
-// main.js - Main JavaScript for the DB Chat application
+// main.js - Main JavaScript for the SpeakDB application
 
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize the application
