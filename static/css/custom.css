@@ -1,9 +1,61 @@
-/* Custom styles for DB Chat application */
+/* Custom styles for DB Chat application - Modern Light Theme with Pastel Colors */
+
+:root {
+    /* Pastel color palette */
+    --pastel-primary: #6e9de4;    /* Soft blue */
+    --pastel-secondary: #b4e1fd;  /* Light blue */
+    --pastel-success: #9de0ad;    /* Mint green */
+    --pastel-info: #a6dcef;       /* Sky blue */
+    --pastel-warning: #ffd3b6;    /* Peach */
+    --pastel-danger: #ffaaa5;     /* Soft pink */
+    --pastel-light: #f8f9fa;      /* Off-white */
+    --pastel-dark: #343a40;       /* Charcoal */
+    --pastel-gray-100: #f8f9fa;
+    --pastel-gray-200: #e9ecef;
+    --pastel-gray-300: #dee2e6;
+    --pastel-gray-400: #ced4da;
+    --pastel-gray-500: #adb5bd;
+    --pastel-gray-600: #6c757d;
+    --pastel-gray-700: #495057;
+    --pastel-gray-800: #343a40;
+    --pastel-gray-900: #212529;
+    
+    /* UI element colors */
+    --bg-card: #ffffff;
+    --bg-sidebar: #f8f9fa;
+    --border-light: #e1e8ed;
+    --shadow-light: rgba(0, 0, 0, 0.05);
+    --shadow-hover: rgba(0, 0, 0, 0.1);
+}
+
+/* Typography and base styles */
+body {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: var(--pastel-light);
+    color: var(--pastel-gray-700);
+    line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 500;
+    color: var(--pastel-gray-800);
+}
+
+a {
+    color: var(--pastel-primary);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+a:hover {
+    color: #5a81c2;
+    text-decoration: none;
+}
 
 /* Apply GitHub Markdown styling to our chat messages */
 .markdown-body {
     background-color: transparent !important;
-    color: inherit !important;
+    color: var(--pastel-gray-800) !important;
     font-size: 0.95rem;
 }
 
@@ -14,51 +66,60 @@
     border-collapse: collapse;
     display: table;
     overflow: auto;
+    box-shadow: 0 1px 3px var(--shadow-light);
 }
 
 .markdown-body table th,
 .markdown-body table td {
-    padding: 0.5rem;
-    border: 1px solid var(--bs-gray-700);
+    padding: 0.75rem;
+    border: 1px solid var(--pastel-gray-200);
     text-align: left;
 }
 
 .markdown-body table th {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--pastel-gray-100);
     font-weight: 600;
+    color: var(--pastel-gray-700);
 }
 
 .markdown-body table tr:nth-child(even) {
-    background-color: rgba(255, 255, 255, 0.03);
+    background-color: var(--pastel-gray-100);
 }
 
 .markdown-body table tr:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--pastel-info);
+    opacity: 0.8;
 }
 
 /* Ensure all code blocks are visible and can scroll */
 .markdown-body pre {
     max-height: 600px;
     overflow: auto;
+    background-color: #f7f8f9 !important;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px var(--shadow-light);
 }
 
 .markdown-body pre code {
     display: block;
     padding: 1rem;
     overflow-x: auto;
-    background-color: var(--bs-gray-800) !important;
+    background-color: transparent !important;
     border-radius: 6px;
+    color: var(--pastel-gray-800);
 }
 
 /* JSON styling for database results */
 .json-result {
     font-family: monospace;
     white-space: pre-wrap;
-    background-color: var(--bs-gray-800);
+    background-color: #f7f8f9;
     padding: 1rem;
-    border-radius: 6px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px var(--shadow-light);
     overflow-x: auto;
     margin-top: 1rem;
+    color: var(--pastel-gray-800);
 }
 
 /* Main layout */
@@ -78,21 +139,85 @@ body {
 }
 
 .app-header {
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 10px var(--shadow-light);
 }
 
 .app-footer {
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 -2px 10px var(--shadow-light);
+}
+
+/* Button styles */
+.btn-primary {
+    background-color: var(--pastel-primary);
+    border-color: var(--pastel-primary);
+}
+
+.btn-primary:hover {
+    background-color: #5a81c2;
+    border-color: #5a81c2;
+}
+
+.btn-outline-primary {
+    color: var(--pastel-primary);
+    border-color: var(--pastel-primary);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--pastel-primary);
+    border-color: var(--pastel-primary);
+}
+
+.btn-secondary {
+    background-color: var(--pastel-secondary);
+    border-color: var(--pastel-secondary);
+    color: var(--pastel-gray-700);
+}
+
+.btn-secondary:hover {
+    background-color: #95c9e9;
+    border-color: #95c9e9;
+    color: var(--pastel-gray-800);
+}
+
+.btn-outline-secondary {
+    color: var(--pastel-gray-600);
+    border-color: var(--pastel-gray-300);
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--pastel-gray-200);
+    border-color: var(--pastel-gray-400);
+    color: var(--pastel-gray-700);
 }
 
 /* Database selection page */
 .db-category {
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
+}
+
+.db-category h2 {
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin-bottom: 1.25rem;
+    color: var(--pastel-gray-800);
+    position: relative;
+    padding-bottom: 0.5rem;
+}
+
+.db-category h2:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60px;
+    height: 3px;
+    background-color: var(--pastel-primary);
+    border-radius: 3px;
 }
 
 .db-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 1.5rem;
 }
 
@@ -100,23 +225,31 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 1rem;
-    border-radius: 8px;
-    background-color: var(--bs-dark);
+    padding: 1.5rem 1rem;
+    border-radius: 12px;
+    background-color: var(--bg-card);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-light);
+    box-shadow: 0 3px 10px var(--shadow-light);
 }
 
 .db-tile:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-    background-color: var(--bs-gray-800);
+    box-shadow: 0 8px 25px var(--shadow-hover);
+    border-color: var(--pastel-primary);
 }
 
 .db-logo {
     width: 60px;
     height: 60px;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem;
+    border-radius: 50%;
+    background-color: var(--pastel-gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .db-logo svg {
@@ -127,34 +260,72 @@ body {
 .db-name {
     text-align: center;
     font-size: 0.9rem;
+    font-weight: 500;
     margin-top: 0.5rem;
+    color: var(--pastel-gray-700);
 }
 
 /* Credential form */
 .credential-form-card {
     max-width: 600px;
     margin: 0 auto;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px var(--shadow-light);
+    border: none;
+    overflow: hidden;
+}
+
+.credential-form-card .card-header {
+    background-color: var(--pastel-primary);
+    color: white;
+    border-bottom: none;
+    padding: 1.25rem 1.5rem;
+}
+
+.credential-form-card .card-body {
+    padding: 1.5rem;
+    background-color: var(--bg-card);
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--pastel-gray-300);
+    transition: all 0.2s;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--pastel-primary);
+    box-shadow: 0 0 0 0.2rem rgba(110, 157, 228, 0.2);
+}
+
+.form-label {
+    font-weight: 500;
+    color: var(--pastel-gray-700);
+    margin-bottom: 0.5rem;
 }
 
 /* Chat interface */
 .chat-container {
     display: grid;
-    grid-template-columns: 250px 1fr;
-    gap: 1rem;
+    grid-template-columns: 280px 1fr;
+    gap: 1.5rem;
     height: calc(100vh - 180px);
 }
 
 .chat-history-panel {
-    background-color: var(--bs-dark);
-    border-radius: 8px;
-    padding: 1rem;
+    background-color: var(--bg-card);
+    border-radius: 12px;
+    padding: 1.25rem;
     display: flex;
     flex-direction: column;
     height: 100%;
+    box-shadow: 0 2px 12px var(--shadow-light);
+    border: 1px solid var(--border-light);
 }
 
 .chat-sidebar-header {
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
 }
 
 .chat-list {
@@ -166,123 +337,148 @@ body {
 }
 
 .chat-list-item {
-    padding: 0.5rem 0.75rem;
-    margin-bottom: 0.5rem;
-    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+    border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
+    background-color: var(--pastel-gray-100);
+    border: 1px solid transparent;
 }
 
 .chat-list-item:hover {
-    background-color: var(--bs-gray-800);
+    background-color: var(--pastel-secondary);
 }
 
 .chat-list-item.active {
-    background-color: var(--bs-gray-700);
+    background-color: var(--pastel-primary);
+    color: white;
     position: relative;
-    border-left: 3px solid var(--bs-primary);
-    padding-left: calc(0.75rem - 3px);
+    border-color: var(--pastel-primary);
 }
 
-.chat-list-item.active::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    right: 10px;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background-color: var(--bs-primary);
-    transform: translateY(-50%);
+.chat-list-item.active .text-muted {
+    color: rgba(255, 255, 255, 0.7) !important;
 }
 
 .chat-main {
     display: flex;
     flex-direction: column;
     height: 100%;
-    border-radius: 8px;
-    background-color: var(--bs-dark);
+    border-radius: 12px;
+    background-color: var(--bg-card);
+    box-shadow: 0 2px 12px var(--shadow-light);
+    border: 1px solid var(--border-light);
+    overflow: hidden;
 }
 
 .chat-messages {
     flex-grow: 1;
     overflow-y: auto;
-    padding: 1rem;
+    padding: 1.5rem;
+    background-color: #f9fafc;
 }
 
 .chat-input-container {
-    padding: 1rem;
-    border-top: 1px solid var(--bs-gray-700);
+    padding: 1.25rem;
+    border-top: 1px solid var(--border-light);
+    background-color: var(--bg-card);
 }
 
 .message {
     margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.message-user {
+    align-items: flex-end;
+}
+
+.message-system {
+    align-items: flex-start;
 }
 
 .message-content {
     display: inline-block;
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
     max-width: 80%;
+    box-shadow: 0 2px 8px var(--shadow-light);
 }
 
 .message-user .message-content {
-    background-color: var(--bs-primary);
+    background-color: var(--pastel-primary);
     color: white;
-    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
 }
 
 .message-system .message-content {
-    background-color: var(--bs-gray-700);
-    border-top-left-radius: 0;
+    background-color: white;
+    color: var(--pastel-gray-800);
+    border-bottom-left-radius: 0;
+    border: 1px solid var(--border-light);
 }
 
 .message-query {
     font-family: monospace;
-    background-color: var(--bs-gray-800);
-    padding: 0.75rem;
-    border-radius: 6px;
-    margin: 0.5rem 0;
+    background-color: #f7f8f9;
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 0.75rem 0;
     overflow-x: auto;
+    border: 1px solid var(--pastel-gray-200);
 }
 
 .message-timestamp {
     display: block;
     font-size: 0.75rem;
-    color: var(--bs-gray-600);
-    margin-top: 0.25rem;
+    color: var(--pastel-gray-500);
+    margin-top: 0.5rem;
 }
 
 /* Query results */
 .query-results {
-    background-color: var(--bs-gray-800);
-    border-radius: 6px;
-    padding: 1rem;
-    margin-top: 0.5rem;
+    background-color: #f7f8f9;
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-top: 0.75rem;
+    border: 1px solid var(--pastel-gray-200);
 }
 
 /* Query result container */
 .query-result-container {
-    margin-top: 0.5rem;
-    margin-bottom: 1rem;
+    margin-top: 0.75rem;
+    margin-bottom: 1.25rem;
 }
 
 .result-footer {
     display: flex;
     align-items: center;
-    margin-top: 1rem;
-    padding-top: 0.5rem;
-    border-top: 1px solid var(--bs-gray-700);
+    margin-top: 1.25rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--pastel-gray-200);
 }
 
 .record-count {
     font-size: 0.85rem;
-    color: var(--bs-gray-500);
+    color: var(--pastel-gray-600);
 }
 
 .export-csv-btn, .export-json-btn {
     font-size: 0.85rem;
-    padding: 0.25rem 0.5rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    margin-left: 0.5rem;
+    background-color: white;
+    border-color: var(--pastel-gray-300);
+    color: var(--pastel-gray-700);
+}
+
+.export-csv-btn:hover, .export-json-btn:hover {
+    background-color: var(--pastel-gray-100);
+    border-color: var(--pastel-gray-400);
+    color: var(--pastel-gray-800);
 }
 
 /* Hidden data for exports */
@@ -293,16 +489,16 @@ body {
 /* Loading animation */
 .typing-indicator {
     display: flex;
-    padding: 0.5rem;
+    padding: 0.75rem;
 }
 
 .typing-indicator span {
     height: 10px;
     width: 10px;
-    background-color: var(--bs-gray-500);
+    background-color: var(--pastel-gray-400);
     border-radius: 50%;
     display: inline-block;
-    margin: 0 1px;
+    margin: 0 2px;
     animation: typing 1s infinite ease-in-out;
 }
 
@@ -323,8 +519,9 @@ body {
 /* Database type badges */
 .db-badge {
     font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
+    padding: 0.35rem 0.65rem;
+    border-radius: 20px;
+    font-weight: 500;
 }
 
 .db-badge-postgresql,
@@ -336,8 +533,8 @@ body {
 .db-badge-cloudsql,
 .db-badge-mariadb,
 .db-badge-db2 {
-    background-color: rgba(45, 156, 219, 0.2);
-    color: #2d9cdb;
+    background-color: rgba(45, 156, 219, 0.15);
+    color: #1a8cd2;
 }
 
 .db-badge-mongodb,
@@ -347,26 +544,26 @@ body {
 .db-badge-dynamodb,
 .db-badge-couchbase,
 .db-badge-neo4j {
-    background-color: rgba(39, 174, 96, 0.2);
-    color: #27ae60;
+    background-color: rgba(39, 174, 96, 0.15);
+    color: #219653;
 }
 
 .db-badge-snowflake,
 .db-badge-bigquery,
 .db-badge-synapse {
-    background-color: rgba(155, 81, 224, 0.2);
-    color: #9b51e0;
+    background-color: rgba(155, 81, 224, 0.15);
+    color: #8040c1;
 }
 
 .db-badge-cosmosdb,
 .db-badge-firestore {
-    background-color: rgba(242, 153, 74, 0.2);
-    color: #f2994a;
+    background-color: rgba(242, 153, 74, 0.15);
+    color: #e67e22;
 }
 
 .db-badge-influxdb {
-    background-color: rgba(235, 87, 87, 0.2);
-    color: #eb5757;
+    background-color: rgba(235, 87, 87, 0.15);
+    color: #d73a3a;
 }
 
 /* Example queries */
@@ -374,19 +571,87 @@ body {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-    margin-top: 1rem;
+    margin-top: 1.25rem;
 }
 
 .example-query {
     font-size: 0.85rem;
-    padding: 0.35rem 0.75rem;
-    border-radius: 16px;
-    background-color: var(--bs-gray-700);
+    padding: 0.5rem 0.85rem;
+    border-radius: 20px;
+    background-color: var(--pastel-gray-100);
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
     white-space: nowrap;
+    border: 1px solid var(--pastel-gray-200);
+    color: var(--pastel-gray-700);
 }
 
 .example-query:hover {
-    background-color: var(--bs-gray-600);
+    background-color: var(--pastel-secondary);
+    color: var(--pastel-gray-800);
+    border-color: var(--pastel-secondary);
+}
+
+/* Input styling */
+textarea.form-control {
+    border-radius: 20px;
+    padding: 0.85rem 1.25rem;
+    resize: none;
+    border: 1px solid var(--pastel-gray-300);
+    box-shadow: 0 1px 3px var(--shadow-light);
+    transition: all 0.3s ease;
+}
+
+textarea.form-control:focus {
+    border-color: var(--pastel-primary);
+    box-shadow: 0 0 0 0.25rem rgba(110, 157, 228, 0.25);
+}
+
+/* Alert styling */
+.alert {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 2px 8px var(--shadow-light);
+}
+
+.alert-primary {
+    background-color: rgba(110, 157, 228, 0.15);
+    color: #4a77c5;
+}
+
+.alert-success {
+    background-color: rgba(157, 224, 173, 0.15);
+    color: #27ae60;
+}
+
+.alert-danger {
+    background-color: rgba(255, 170, 165, 0.15);
+    color: #e74c3c;
+}
+
+.alert-warning {
+    background-color: rgba(255, 211, 182, 0.15);
+    color: #f39c12;
+}
+
+/* Welcome message */
+.welcome-container {
+    text-align: center;
+    padding: 2.5rem 1.5rem;
+}
+
+.welcome-container i {
+    color: var(--pastel-primary);
+    margin-bottom: 1.5rem;
+}
+
+.welcome-container h4 {
+    color: var(--pastel-gray-800);
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.welcome-examples {
+    max-width: 500px;
+    margin: 1.5rem auto;
 }

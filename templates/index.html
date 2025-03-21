@@ -7,25 +7,35 @@
     <div class="row">
         <div class="col-12">
             <div class="text-center mb-5">
-                <h1 class="display-4 mb-3">DB Chat</h1>
-                <p class="lead">Choose a database to connect and start querying with natural language</p>
+                <div class="mb-4">
+                    <i class="fas fa-database fa-4x text-primary" style="opacity: 0.8;"></i>
+                </div>
+                <h1 class="display-4 mb-3 fw-semibold">Connect Your Database</h1>
+                <p class="lead text-muted">Choose a database type below to connect and start querying with natural language</p>
             </div>
             
             <!-- Database Selection Section -->
             <div id="database-selection" class="mb-5">
                 <!-- Database categories and tiles will be loaded via JavaScript -->
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3 text-muted">Loading database options...</p>
+                </div>
             </div>
             
             <!-- Credential Form Container (initially hidden) -->
             <div id="credential-form-container" class="mb-5" style="display: none;">
                 <div class="card credential-form-card">
-                    <div class="card-header bg-dark">
-                        <h3 class="card-title h5 mb-0">
+                    <div class="card-header">
+                        <h3 class="card-title h5 mb-0 fw-semibold">
                             <i class="fas fa-key me-2"></i>
-                            <span id="credential-db-name">Database</span> Credentials
+                            <span id="credential-db-name">Database</span> Connection
                         </h3>
                     </div>
                     <div class="card-body">
+                        <p class="text-muted mb-4">Please provide the necessary credentials to connect to your database. All data is processed locally and never stored on our servers.</p>
                         <form id="credential-form">
                             <!-- Credential fields will be generated dynamically -->
                         </form>

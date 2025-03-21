@@ -15,14 +15,14 @@
     <div class="chat-history-panel">
         <div class="chat-sidebar-header">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="h6 mb-0">Chats</h5>
-                <button id="new-chat-btn" class="btn btn-sm btn-primary">
+                <h5 class="h6 mb-0 fw-semibold">Your Chats</h5>
+                <button id="new-chat-btn" class="btn btn-sm btn-primary rounded-pill">
                     <i class="fas fa-plus me-1"></i> New Chat
                 </button>
             </div>
             <div class="input-group input-group-sm mb-3">
-                <input type="text" class="form-control" placeholder="Search chats...">
-                <button class="btn btn-outline-secondary" type="button">
+                <input type="text" class="form-control rounded-pill" placeholder="Search chats...">
+                <button class="btn btn-outline-primary rounded-pill ms-2" type="button">
                     <i class="fas fa-search"></i>
                 </button>
             </div>
@@ -31,7 +31,7 @@
         <ul id="chat-list" class="chat-list">
             <!-- Chat history will be loaded here -->
             <li class="text-center my-3 text-muted">
-                <div class="spinner-border spinner-border-sm" role="status">
+                <div class="spinner-border spinner-border-sm text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
                 <span class="ms-2">Loading chats...</span>
@@ -42,14 +42,14 @@
     <!-- Main Chat Area -->
     <div class="chat-main">
         <!-- Connected Database Info -->
-        <div class="p-3 border-bottom">
+        <div class="p-3 border-bottom bg-white">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <span class="db-badge db-badge-{{ db_type }} me-2">{{ db_name }}</span>
                     <small class="text-muted">Connected</small>
                 </div>
                 <div>
-                    <button class="btn btn-sm btn-outline-secondary" id="refresh-schema-btn">
+                    <button class="btn btn-sm btn-outline-primary rounded-pill" id="refresh-schema-btn">
                         <i class="fas fa-sync-alt me-1"></i> Refresh Schema
                     </button>
                 </div>
@@ -62,7 +62,7 @@
         <div id="chat-messages" class="chat-messages">
             <!-- Messages will be loaded here -->
             <div class="text-center my-4">
-                <div class="spinner-border text-secondary" role="status">
+                <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
                 <p class="mt-3 text-muted">Loading chat history...</p>
@@ -72,8 +72,8 @@
         <!-- Chat Input -->
         <div class="chat-input-container">
             <form id="chat-form">
-                <div class="mb-2">
-                    <textarea id="query-input" class="form-control" 
+                <div class="mb-3">
+                    <textarea id="query-input" class="form-control shadow-sm" 
                               placeholder="Ask a question about your database..." 
                               rows="1" required></textarea>
                 </div>
@@ -83,7 +83,7 @@
                         <!-- Example queries will be loaded here -->
                     </div>
                     
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">
                         <i class="fas fa-paper-plane me-1"></i> Send
                     </button>
                 </div>
