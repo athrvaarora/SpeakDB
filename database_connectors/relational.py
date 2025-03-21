@@ -183,6 +183,25 @@ class PostgreSQLConnector(BaseRelationalConnector):
                     logger.info("Using DATABASE_URL from environment variables")
                     self.connection = psycopg2.connect(os.environ["DATABASE_URL"])
                     self.engine = create_engine(os.environ["DATABASE_URL"])
+                # Use standard PostgreSQL environment variables
+                elif all(os.environ.get(key) for key in ["POSTGRES_HOST", "POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_DB"]):
+                    logger.info("Using PostgreSQL environment variables")
+                    host = os.environ.get("POSTGRES_HOST")
+                    port = os.environ.get("POSTGRES_PORT", "5432")
+                    user = os.environ.get("POSTGRES_USER")
+                    password = os.environ.get("POSTGRES_PASSWORD")
+                    db_name = os.environ.get("POSTGRES_DB")
+                    
+                    self.connection = psycopg2.connect(
+                        host=host,
+                        port=port,
+                        user=user,
+                        password=password,
+                        dbname=db_name
+                    )
+                    
+                    conn_string = f"postgresql://{user}:{password}@{host}:{port}/{db_name}"
+                    self.engine = create_engine(conn_string)
                 else:
                     logger.error("No valid PostgreSQL credentials provided")
                     raise Exception("No valid PostgreSQL credentials provided")
@@ -216,6 +235,25 @@ class MySQLConnector(BaseRelationalConnector):
                     
                     # Create SQLAlchemy engine for schema inspection
                     conn_string = f"mysql+mysqlconnector://{self.credentials.get('username')}:{self.credentials.get('password')}@{self.credentials.get('host')}/{self.credentials.get('db_name')}"
+                    self.engine = create_engine(conn_string)
+                # Use standard MySQL environment variables
+                elif all(os.environ.get(key) for key in ["MYSQL_HOST", "MYSQL_USER", "MYSQL_PASSWORD", "MYSQL_DATABASE"]):
+                    logger.info("Using MySQL environment variables")
+                    host = os.environ.get("MYSQL_HOST")
+                    port = os.environ.get("MYSQL_PORT", "3306") 
+                    user = os.environ.get("MYSQL_USER")
+                    password = os.environ.get("MYSQL_PASSWORD")
+                    db_name = os.environ.get("MYSQL_DATABASE")
+                    
+                    self.connection = mysql.connector.connect(
+                        host=host,
+                        port=port,
+                        user=user,
+                        password=password,
+                        database=db_name
+                    )
+                    
+                    conn_string = f"mysql+mysqlconnector://{user}:{password}@{host}:{port}/{db_name}"
                     self.engine = create_engine(conn_string)
                 else:
                     logger.error("No valid MySQL credentials provided")
@@ -276,10 +314,22 @@ class SQLiteConnector(BaseRelationalConnector):
         """Connect to a SQLite database"""
         if not self.connection:
             try:
-                self.connection = sqlite3.connect(self.credentials.get("file_path"))
+                # Check if credentials contain file path
+                if self.credentials.get("file_path"):
+                    db_path = self.credentials.get("file_path")
+                    logger.info(f"Using file path from credentials: {db_path}")
+                # Check for environment variable
+                elif os.environ.get("SQLITE_DB_PATH"):
+                    db_path = os.environ.get("SQLITE_DB_PATH")
+                    logger.info(f"Using SQLITE_DB_PATH environment variable: {db_path}")
+                else:
+                    logger.error("No SQLite database path provided")
+                    raise Exception("No SQLite database path provided")
+                
+                self.connection = sqlite3.connect(db_path)
                 
                 # Create SQLAlchemy engine for schema inspection
-                conn_string = f"sqlite:///{self.credentials.get('file_path')}"
+                conn_string = f"sqlite:///{db_path}"
                 self.engine = create_engine(conn_string)
                 
             except Exception as e:

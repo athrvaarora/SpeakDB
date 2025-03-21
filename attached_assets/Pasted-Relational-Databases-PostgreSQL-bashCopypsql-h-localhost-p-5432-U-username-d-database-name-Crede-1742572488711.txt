@@ -1,0 +1,111 @@
+Relational Databases
+PostgreSQL
+bashCopypsql -h localhost -p 5432 -U username -d database_name
+Credentials needed: username, password, host, port, database name
+MySQL/MariaDB
+bashCopymysql -h localhost -P 3306 -u username -p database_name
+Credentials needed: username, password, host, port, database name
+SQL Server
+bashCopysqlcmd -S localhost -U username -P password -d database_name
+Credentials needed: username, password, server address, database name
+Oracle Database
+bashCopysqlplus username/password@//localhost:1521/service_name
+Credentials needed: username, password, host, port, service name
+SQLite
+bashCopysqlite3 /path/to/database.db
+Credentials needed: path to database file
+Amazon Redshift
+bashCopypsql -h redshift-cluster-name.region.redshift.amazonaws.com -p 5439 -U username -d database_name
+Credentials needed: cluster address, username, password, database name
+Google Cloud SQL
+bashCopygcloud sql connect instance-name --user=username
+Credentials needed: Google Cloud credentials, instance name, username, password
+IBM Db2
+bashCopydb2 connect to database_name user username using password
+Credentials needed: username, password, database name
+Teradata
+bashCopybteq .logon hostname/username,password
+Credentials needed: hostname, username, password
+SAP HANA
+bashCopyhdbsql -n host:port -u username -p password -d database_name
+Credentials needed: host, port, username, password, database name
+PlanetScale
+bashCopypscale connect database_name branch_name
+Credentials needed: PlanetScale account credentials, database name, branch name
+Vertica
+bashCopyvsql -h hostname -p port -U username -w password -d database_name
+Credentials needed: hostname, port, username, password, database name
+NoSQL Databases
+MongoDB
+bashCopymongo "mongodb://username:password@hostname:port/database_name"
+Credentials needed: username, password, hostname, port, database name
+Cassandra
+bashCopycqlsh hostname port -u username -p password
+Credentials needed: hostname, port, username, password
+Redis
+bashCopyredis-cli -h hostname -p port -a password
+Credentials needed: hostname, port, password
+Elasticsearch
+bashCopycurl -X GET "localhost:9200/_search" -H "Content-Type: application/json" -d'{"query": {"match_all": {}}}'
+Credentials needed: hostname, port, (possibly API key or username/password)
+DynamoDB (AWS CLI)
+bashCopyaws dynamodb list-tables --endpoint-url http://localhost:8000
+Credentials needed: AWS credentials (access key, secret key)
+Couchbase
+bashCopycbc-pillowfight -U couchbase://localhost/bucket_name -u username -P password
+Credentials needed: hostname, bucket name, username, password
+Neo4j
+bashCopycypher-shell -a bolt://localhost:7687 -u username -p password
+Credentials needed: bolt URL, username, password
+Data Warehouse Databases
+Snowflake
+bashCopysnowsql -a account_identifier -u username -d database_name -s schema_name -r role_name
+Credentials needed: account identifier, username, password, database name, schema, role
+Google BigQuery
+bashCopybq query --use_legacy_sql=false 'SELECT * FROM dataset.table LIMIT 10'
+Credentials needed: Google Cloud credentials
+Azure Synapse Analytics
+bashCopysqlcmd -S servername.sql.azuresynapse.net -d database_name -U username -P password
+Credentials needed: server name, database name, username, password
+Graph Databases
+TigerGraph
+bashCopygadmin config get Authentication.TokenSecret
+gsql -g graph_name
+Credentials needed: graph name, username, password
+Amazon Neptune
+bashCopycurl -X POST https://your-neptune-endpoint:port/sparql -d "query=SELECT ?s ?p ?o WHERE {?s ?p ?o} LIMIT 10"
+Credentials needed: Neptune endpoint, AWS credentials
+Cloud Databases
+Azure Cosmos DB
+bashCopyaz cosmosdb sql query --account-name account_name --database-name database_name --container-name container_name --query-text "SELECT * FROM c"
+Credentials needed: Azure credentials, account name, database name, container name
+Firebase Firestore
+bashCopyfirebase firestore:get --project project_id collections/documents
+Credentials needed: Firebase credentials, project ID
+Supabase
+bashCopypsql "postgres://postgres:password@db.supabase.co:5432/postgres"
+Credentials needed: Supabase URL, username, password
+Heroku Postgres
+bashCopyheroku pg:psql postgresql-shaped-12345 --app your-app-name
+Credentials needed: Heroku credentials, app name
+Crunchy Bridge
+bashCopypsql "postgres://username:password@db.crunchybridge.com:5432/database_name"
+Credentials needed: connection string with username, password, host
+Neon.tech
+bashCopypsql "postgres://username:password@hostname:5432/database_name?sslmode=require"
+Credentials needed: connection string with username, password, host
+Time Series Databases
+InfluxDB
+bashCopyinflux -host localhost -port 8086 -username username -password password
+Credentials needed: host, port, username, password
+TimescaleDB
+bashCopypsql -h localhost -p 5432 -U username -d database_name
+Credentials needed: host, port, username, password, database name
+Kdb+
+bashCopyq path/to/script.q -p 5000
+Credentials needed: path to script, port number
+Specialized Databases
+Prometheus
+bashCopycurl -G 'http://localhost:9090/api/v1/query' --data-urlencode 'query=up'
+Credentials needed: hostname, port (possibly API key or username/password)
+Remember that you should never hardcode credentials in your terminal commands or scripts. Consider using environment variables or secure credential managers instead.

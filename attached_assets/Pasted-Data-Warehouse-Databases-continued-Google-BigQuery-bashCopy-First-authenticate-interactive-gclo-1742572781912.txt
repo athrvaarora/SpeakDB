@@ -1,0 +1,181 @@
+Data Warehouse Databases (continued)
+Google BigQuery
+bashCopy# First authenticate (interactive)
+gcloud auth login
+# Then query
+bq query --use_legacy_sql=false 'SELECT * FROM dataset.table LIMIT 10'
+.env variables:
+CopyGOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
+GCP_PROJECT_ID=your_project_id
+BIGQUERY_DATASET=your_dataset
+Azure Synapse Analytics
+bashCopy# First login (interactive)
+az login
+# Then connect
+sqlcmd -S servername.sql.azuresynapse.net -d database_name -U username -P password
+.env variables:
+CopyAZURE_SYNAPSE_SERVER=servername.sql.azuresynapse.net
+AZURE_SYNAPSE_DATABASE=database_name
+AZURE_SYNAPSE_USER=username
+AZURE_SYNAPSE_PASSWORD=your_password
+Graph Databases
+TigerGraph
+bashCopy# First authenticate
+gadmin config get Authentication.TokenSecret
+# Then connect
+gsql -g graph_name
+.env variables:
+CopyTIGERGRAPH_HOST=hostname
+TIGERGRAPH_USERNAME=username
+TIGERGRAPH_PASSWORD=your_password
+TIGERGRAPH_GRAPH=graph_name
+TIGERGRAPH_SECRET=your_auth_token_secret
+Amazon Neptune
+bashCopy# First configure AWS credentials (interactive)
+aws configure
+# Then query
+curl -X POST https://your-neptune-endpoint:port/sparql -d "query=SELECT ?s ?p ?o WHERE {?s ?p ?o} LIMIT 10"
+.env variables:
+CopyAWS_ACCESS_KEY_ID=your_access_key
+AWS_SECRET_ACCESS_KEY=your_secret_key
+AWS_REGION=your_region
+NEPTUNE_ENDPOINT=your-neptune-endpoint:port
+NEPTUNE_IAM_AUTH_ENABLED=true
+Cloud Databases
+Azure Cosmos DB
+bashCopy# First login to Azure (interactive)
+az login
+# Then query Cosmos DB
+az cosmosdb sql query --account-name account_name --database-name database_name --container-name container_name --query-text "SELECT * FROM c"
+.env variables:
+CopyAZURE_COSMOS_ENDPOINT=https://your-account.documents.azure.com:443/
+AZURE_COSMOS_KEY=your_primary_key
+AZURE_COSMOS_DATABASE=database_name
+AZURE_COSMOS_CONTAINER=container_name
+Firebase Firestore
+bashCopy# First authenticate (interactive Google login)
+firebase login
+# Then access Firestore
+firebase firestore:get --project project_id collections/documents
+.env variables:
+CopyFIREBASE_API_KEY=your_api_key
+FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
+FIREBASE_PROJECT_ID=your_project_id
+FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
+FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+FIREBASE_APP_ID=your_app_id
+FIREBASE_MEASUREMENT_ID=your_measurement_id
+FIREBASE_DATABASE_URL=https://your_project_id.firebaseio.com
+FIREBASE_SERVICE_ACCOUNT_KEY_PATH=/path/to/serviceAccountKey.json
+Supabase
+bashCopy# Interactive login first
+supabase login
+# Then connect to the database
+psql "postgres://postgres:password@db.supabase.co:5432/postgres"
+.env variables:
+CopySUPABASE_URL=https://your-project-id.supabase.co
+SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+SUPABASE_DB_URL=postgres://postgres:password@db.supabase.co:5432/postgres
+Heroku Postgres
+bashCopy# First login (interactive)
+heroku login
+# Then connect
+heroku pg:psql postgresql-shaped-12345 --app your-app-name
+.env variables:
+CopyHEROKU_API_KEY=your_api_key
+HEROKU_APP_NAME=your_app_name
+DATABASE_URL=postgres://username:password@hostname:port/database_name
+Crunchy Bridge
+bashCopypsql "postgres://username:password@db.crunchybridge.com:5432/database_name"
+.env variables:
+CopyCRUNCHY_DB_URL=postgres://username:password@db.crunchybridge.com:5432/database_name
+CRUNCHY_DB_USERNAME=username
+CRUNCHY_DB_PASSWORD=your_password
+CRUNCHY_DB_HOST=db.crunchybridge.com
+CRUNCHY_DB_PORT=5432
+CRUNCHY_DB_NAME=database_name
+Neon.tech
+bashCopypsql "postgres://username:password@hostname:5432/database_name?sslmode=require"
+.env variables:
+CopyNEON_DB_URL=postgres://username:password@hostname:5432/database_name?sslmode=require
+NEON_DB_USERNAME=username
+NEON_DB_PASSWORD=your_password
+NEON_DB_HOST=hostname
+NEON_DB_PORT=5432
+NEON_DB_NAME=database_name
+Time Series Databases
+InfluxDB
+bashCopy# Interactive login
+influx auth login -u username -p password
+# Then connect
+influx -host localhost -port 8086 -username username -password password
+.env variables:
+CopyINFLUXDB_URL=http://localhost:8086
+INFLUXDB_TOKEN=your_api_token
+INFLUXDB_ORG=your_organization
+INFLUXDB_BUCKET=your_bucket
+INFLUXDB_USERNAME=username
+INFLUXDB_PASSWORD=your_password
+TimescaleDB
+bashCopypsql -h localhost -p 5432 -U username -d database_name
+.env variables:
+CopyTIMESCALE_HOST=localhost
+TIMESCALE_PORT=5432
+TIMESCALE_USER=username
+TIMESCALE_PASSWORD=your_password
+TIMESCALE_DATABASE=database_name
+Kdb+
+bashCopyq path/to/script.q -p 5000
+.env variables:
+CopyKDB_HOST=localhost
+KDB_PORT=5000
+KDB_USERNAME=username
+KDB_PASSWORD=your_password
+KDB_SCRIPT_PATH=/path/to/script.q
+Specialized Databases
+Prometheus
+bashCopycurl -G 'http://localhost:9090/api/v1/query' --data-urlencode 'query=up'
+.env variables:
+CopyPROMETHEUS_URL=http://localhost:9090
+PROMETHEUS_USERNAME=username  # If authentication is enabled
+PROMETHEUS_PASSWORD=your_password  # If authentication is enabled
+For Cassandra (completing from earlier):
+bashCopy# First authenticate (may prompt for password)
+cqlsh hostname port -u username -p password
+.env variables:
+CopyCASSANDRA_HOST=hostname
+CASSANDRA_PORT=9042
+CASSANDRA_USERNAME=username
+CASSANDRA_PASSWORD=your_password
+CASSANDRA_KEYSPACE=your_keyspace
+For Redis (completing from earlier):
+bashCopyredis-cli -h hostname -p port -a password
+.env variables:
+CopyREDIS_HOST=hostname
+REDIS_PORT=6379
+REDIS_PASSWORD=your_password
+REDIS_DB=0
+For Elasticsearch (completing from earlier):
+bashCopy# With basic auth
+curl -X GET "localhost:9200/_search" -u username:password -H "Content-Type: application/json" -d'{"query": {"match_all": {}}}'
+.env variables:
+CopyELASTICSEARCH_URL=http://localhost:9200
+ELASTICSEARCH_USERNAME=username
+ELASTICSEARCH_PASSWORD=your_password
+ELASTICSEARCH_API_KEY=your_api_key  # If using API key auth instead of username/password
+For Couchbase (completing from earlier):
+bashCopycbc-pillowfight -U couchbase://localhost/bucket_name -u username -P password
+.env variables:
+CopyCOUCHBASE_CONNECTION_STRING=couchbase://localhost
+COUCHBASE_USERNAME=username
+COUCHBASE_PASSWORD=your_password
+COUCHBASE_BUCKET=bucket_name
+For Neo4j (completing from earlier):
+bashCopy# Authenticate and connect
+cypher-shell -a bolt://localhost:7687 -u username -p password
+.env variables:
+CopyNEO4J_URI=bolt://localhost:7687
+NEO4J_USERNAME=username
+NEO4J_PASSWORD=your_password
+NEO4J_DATABASE=neo4j  # Default database name

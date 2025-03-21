@@ -120,6 +120,22 @@ class MongoDBConnector(BaseNoSQLConnector):
                     connection_string += f"{host}:{port}/{auth_db}"
                     
                     self.client = pymongo.MongoClient(connection_string)
+                # Check for MongoDB URI environment variable
+                elif os.environ.get("MONGO_URI"):
+                    logger.info("Using MONGO_URI environment variable")
+                    connection_string = os.environ.get("MONGO_URI")
+                    self.client = pymongo.MongoClient(connection_string)
+                # Check for standard MongoDB environment variables
+                elif all(os.environ.get(key) for key in ["MONGO_HOST", "MONGO_USER", "MONGO_PASSWORD", "MONGO_DATABASE"]):
+                    logger.info("Using MongoDB environment variables")
+                    host = os.environ.get("MONGO_HOST")
+                    port = os.environ.get("MONGO_PORT", "27017")
+                    user = os.environ.get("MONGO_USER")
+                    password = os.environ.get("MONGO_PASSWORD")
+                    db_name = os.environ.get("MONGO_DATABASE")
+                    
+                    connection_string = f"mongodb://{user}:{password}@{host}:{port}/{db_name}"
+                    self.client = pymongo.MongoClient(connection_string)
                 else:
                     logger.error("No valid MongoDB credentials provided")
                     raise Exception("No valid MongoDB credentials provided")
