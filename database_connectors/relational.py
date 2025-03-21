@@ -334,18 +334,28 @@ class SQLiteConnector(BaseRelationalConnector):
         """Connect to a SQLite database"""
         if not self.connection:
             try:
-                # Check if credentials contain file path
-                if self.credentials.get("file_path"):
-                    db_path = self.credentials.get("file_path")
-                    logger.info(f"Using file path from credentials: {db_path}")
-                # Check for environment variable
-                elif os.environ.get("SQLITE_DB_PATH"):
-                    db_path = os.environ.get("SQLITE_DB_PATH")
-                    logger.info(f"Using SQLITE_DB_PATH environment variable: {db_path}")
-                else:
+                # Get database path from credentials dict or environment variables
+                db_path = self.credentials.get("file_path") or os.environ.get("SQLITE_DB_PATH")
+                
+                # Log if using environment variables
+                if os.environ.get("SQLITE_DB_PATH") and not self.credentials.get("file_path"):
+                    logger.info("Using SQLITE_DB_PATH environment variable")
+                
+                # Check if we have a database path
+                if not db_path:
+                    # Try default data directory path as a last resort
+                    if os.path.exists("data"):
+                        for file in os.listdir("data"):
+                            if file.endswith(".db"):
+                                db_path = os.path.join("data", file)
+                                logger.info(f"Found SQLite database in data directory: {db_path}")
+                                break
+                
+                if not db_path:
                     logger.error("No SQLite database path provided")
                     raise Exception("No SQLite database path provided")
                 
+                logger.info(f"Connecting to SQLite database at: {db_path}")
                 self.connection = sqlite3.connect(db_path)
                 
                 # Create SQLAlchemy engine for schema inspection

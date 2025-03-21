@@ -81,18 +81,30 @@ class CosmosDBConnector(BaseCloudConnector):
         if not self.client:
             try:
                 # Get credentials from provided credentials or environment variables
-                account_uri = self.credentials.get("account_uri") or os.environ.get("COSMOS_ACCOUNT_URI")
-                primary_key = self.credentials.get("primary_key") or os.environ.get("COSMOS_PRIMARY_KEY")
+                account_uri = self.credentials.get("account_uri") or os.environ.get("AZURE_COSMOS_ENDPOINT")
+                primary_key = self.credentials.get("primary_key") or os.environ.get("AZURE_COSMOS_KEY")
+                database_name = self.credentials.get("database_name") or os.environ.get("AZURE_COSMOS_DATABASE")
+                container_name = self.credentials.get("container_name") or os.environ.get("AZURE_COSMOS_CONTAINER")
                 
                 # Log if using environment variables
-                if os.environ.get("COSMOS_ACCOUNT_URI") and not self.credentials.get("account_uri"):
-                    logger.info("Using COSMOS_ACCOUNT_URI environment variable")
+                if os.environ.get("AZURE_COSMOS_ENDPOINT") and not self.credentials.get("account_uri"):
+                    logger.info("Using AZURE_COSMOS_ENDPOINT environment variable")
                     
-                if os.environ.get("COSMOS_PRIMARY_KEY") and not self.credentials.get("primary_key"):
-                    logger.info("Using COSMOS_PRIMARY_KEY environment variable")
+                if os.environ.get("AZURE_COSMOS_KEY") and not self.credentials.get("primary_key"):
+                    logger.info("Using AZURE_COSMOS_KEY environment variable")
+                    
+                if os.environ.get("AZURE_COSMOS_DATABASE") and not self.credentials.get("database_name"):
+                    logger.info("Using AZURE_COSMOS_DATABASE environment variable")
+                    
+                if os.environ.get("AZURE_COSMOS_CONTAINER") and not self.credentials.get("container_name"):
+                    logger.info("Using AZURE_COSMOS_CONTAINER environment variable")
                 
                 if not account_uri or not primary_key:
-                    raise ValueError("Cosmos DB account URI and primary key are required (either in credentials or as COSMOS_ACCOUNT_URI and COSMOS_PRIMARY_KEY environment variables)")
+                    raise ValueError("Cosmos DB endpoint and key are required (either in credentials or as environment variables)")
+                
+                # Store database and container names for use in execute_query
+                self.database_name = database_name
+                self.container_name = container_name
                 
                 self.client = CosmosClient(account_uri, credential=primary_key)
                 
@@ -195,14 +207,40 @@ class FirestoreConnector(BaseCloudConnector):
             try:
                 # Get credentials from provided credentials or environment variables
                 project_id = self.credentials.get("project_id") or os.environ.get("FIREBASE_PROJECT_ID")
-                service_account_key = self.credentials.get("service_account_key") or os.environ.get("FIREBASE_SERVICE_ACCOUNT_KEY")
+                auth_domain = self.credentials.get("auth_domain") or os.environ.get("FIREBASE_AUTH_DOMAIN")
+                storage_bucket = self.credentials.get("storage_bucket") or os.environ.get("FIREBASE_STORAGE_BUCKET")
+                messaging_sender_id = self.credentials.get("messaging_sender_id") or os.environ.get("FIREBASE_MESSAGING_SENDER_ID")
+                app_id = self.credentials.get("app_id") or os.environ.get("FIREBASE_APP_ID")
+                database_url = self.credentials.get("database_url") or os.environ.get("FIREBASE_DATABASE_URL")
+                
+                # Check for service account key path or direct key
+                service_account_key = self.credentials.get("service_account_key")
+                service_account_key_path = self.credentials.get("service_account_key_path") or os.environ.get("FIREBASE_SERVICE_ACCOUNT_KEY_PATH")
+                
+                # Load service account key from file if path is provided
+                if not service_account_key and service_account_key_path and os.path.exists(service_account_key_path):
+                    try:
+                        with open(service_account_key_path, 'r') as key_file:
+                            service_account_key = key_file.read()
+                            logger.info(f"Loaded service account key from {service_account_key_path}")
+                    except Exception as e:
+                        logger.error(f"Failed to load service account key from {service_account_key_path}: {str(e)}")
                 
                 # Log if using environment variables
                 if os.environ.get("FIREBASE_PROJECT_ID") and not self.credentials.get("project_id"):
                     logger.info("Using FIREBASE_PROJECT_ID environment variable")
-                    
-                if os.environ.get("FIREBASE_SERVICE_ACCOUNT_KEY") and not self.credentials.get("service_account_key"):
-                    logger.info("Using FIREBASE_SERVICE_ACCOUNT_KEY environment variable")
+                
+                if os.environ.get("FIREBASE_AUTH_DOMAIN") and not self.credentials.get("auth_domain"):
+                    logger.info("Using FIREBASE_AUTH_DOMAIN environment variable")
+                
+                if os.environ.get("FIREBASE_STORAGE_BUCKET") and not self.credentials.get("storage_bucket"):
+                    logger.info("Using FIREBASE_STORAGE_BUCKET environment variable")
+                
+                if os.environ.get("FIREBASE_DATABASE_URL") and not self.credentials.get("database_url"):
+                    logger.info("Using FIREBASE_DATABASE_URL environment variable")
+                
+                if os.environ.get("FIREBASE_SERVICE_ACCOUNT_KEY_PATH") and not self.credentials.get("service_account_key_path"):
+                    logger.info("Using FIREBASE_SERVICE_ACCOUNT_KEY_PATH environment variable")
                 
                 # Try different connection methods
                 if not firebase_admin:
@@ -397,22 +435,34 @@ class SupabaseConnector(BaseCloudConnector):
         """Connect to a Supabase project"""
         if not self.client:
             try:
-                # Check for direct credentials first
-                supabase_url = self.credentials.get("supabase_url")
-                supabase_key = self.credentials.get("supabase_key")
+                # Get credentials from provided credentials or environment variables
+                supabase_url = self.credentials.get("supabase_url") or os.environ.get("SUPABASE_URL")
+                supabase_key = self.credentials.get("supabase_key") or os.environ.get("SUPABASE_ANON_KEY") or os.environ.get("SUPABASE_KEY")
+                service_role_key = self.credentials.get("service_role_key") or os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+                db_url = self.credentials.get("db_url") or os.environ.get("SUPABASE_DB_URL")
                 
-                # Check for environment variables if credentials not provided
-                if not supabase_url:
-                    supabase_url = os.environ.get("SUPABASE_URL")
+                # Log if using environment variables
+                if os.environ.get("SUPABASE_URL") and not self.credentials.get("supabase_url"):
                     logger.info("Using SUPABASE_URL environment variable")
                 
-                if not supabase_key:
-                    supabase_key = os.environ.get("SUPABASE_KEY") 
+                if os.environ.get("SUPABASE_ANON_KEY") and not self.credentials.get("supabase_key"):
+                    logger.info("Using SUPABASE_ANON_KEY environment variable")
+                elif os.environ.get("SUPABASE_KEY") and not self.credentials.get("supabase_key"):
                     logger.info("Using SUPABASE_KEY environment variable")
+                
+                if os.environ.get("SUPABASE_SERVICE_ROLE_KEY") and not self.credentials.get("service_role_key"):
+                    logger.info("Using SUPABASE_SERVICE_ROLE_KEY environment variable")
+                
+                if os.environ.get("SUPABASE_DB_URL") and not self.credentials.get("db_url"):
+                    logger.info("Using SUPABASE_DB_URL environment variable")
+                
+                # Store additional credentials for use in operations
+                self.service_role_key = service_role_key
+                self.db_url = db_url
                 
                 # Validate credentials
                 if not supabase_url or not supabase_key:
-                    raise ValueError("Supabase URL and API key are required (either in credentials or as environment variables SUPABASE_URL and SUPABASE_KEY)")
+                    raise ValueError("Supabase URL and API key are required (either in credentials or as environment variables)")
                 
                 # Check if supabase package is installed
                 if not create_client:
