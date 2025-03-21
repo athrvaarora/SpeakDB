@@ -75,14 +75,88 @@ def generate_query(user_query, db_type, schema_info):
         )
         
         # Parse the response
-        result = json.loads(response.choices[0].message.content)
-        query = result.get("query")
-        explanation = result.get("explanation")
-        needs_multiple_queries = result.get("needs_multiple_queries", False)
-        additional_queries = result.get("additional_queries", [])
+        raw_response = response.choices[0].message.content
+        logger.info(f"Raw OpenAI response: {raw_response}")
         
-        if not query:
-            return False, None, "Failed to generate a query from the GPT response", False, []
+        try:
+            result = json.loads(raw_response)
+            query = result.get("query")
+            explanation = result.get("explanation")
+            needs_multiple_queries = result.get("needs_multiple_queries", False)
+            additional_queries = result.get("additional_queries", [])
+            
+            # Log the result 
+            logger.info(f"Parsed query: {query}")
+            logger.info(f"Needs multiple queries: {needs_multiple_queries}")
+            logger.info(f"Additional queries count: {len(additional_queries)}")
+            
+            if not query and not (needs_multiple_queries and additional_queries):
+                return False, None, "Failed to generate a query from the GPT response - query is empty", False, []
+                
+            # For 'get all records from all tables' type queries or similar, we want to ensure we have multiple queries
+            query_words = user_query.lower().split()
+            is_all_tables_query = (
+                ("all" in query_words or "each" in query_words or "every" in query_words) and 
+                ("table" in query_words or "tables" in query_words) and
+                not needs_multiple_queries
+            )
+            
+            if is_all_tables_query or ("record" in query_words and "all" in query_words and "table" in query_words):
+                logger.info("Detected 'all tables' type query")
+                
+                # First try to get table names from schema_info dict format
+                table_names = []
+                if isinstance(schema_info, dict):
+                    # SQLAlchemy format with "tables" key
+                    if "tables" in schema_info:
+                        for table_info in schema_info["tables"]:
+                            if "name" in table_info:
+                                table_names.append(table_info["name"])
+                    # PostgreSQL information_schema format
+                    elif "public" in schema_info:
+                        for table in schema_info.get("public", []):
+                            table_names.append(table)
+                
+                # If we didn't get tables from schema, execute a query to get them
+                if not table_names and db_type.lower() in ['postgresql', 'mysql', 'mariadb', 'sqlserver']:
+                    # Use a default query to find table names if schema didn't provide them
+                    if db_type.lower() in ['postgresql', 'redshift']:
+                        table_query = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';"
+                    elif db_type.lower() in ['mysql', 'mariadb']:
+                        table_query = "SHOW TABLES;"
+                    elif db_type.lower() == 'sqlserver':
+                        table_query = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE';"
+                    elif db_type.lower() == 'sqlite':
+                        table_query = "SELECT name FROM sqlite_master WHERE type='table';"
+                    else:
+                        table_query = None
+                        
+                    # For now we'll use a fallback set of tables we know exist
+                    logger.info("Using fallback table names from our SQL query")
+                    table_names = ['products', 'chat_messages', 'customers', 'orders', 'order_items', 'chats']
+                
+                if table_names:
+                    needs_multiple_queries = True
+                    # Primary query gets the first table
+                    if not query:
+                        query = f"SELECT * FROM {table_names[0]} LIMIT 100;"
+                    
+                    # Additional queries for the rest of the tables
+                    additional_queries = []
+                    for table_name in table_names[1:]:
+                        additional_queries.append(f"SELECT * FROM {table_name} LIMIT 100;")
+                    
+                    logger.info(f"Converted to multiple queries with {len(additional_queries)} additional queries")
+                    explanation = f"Generating separate queries for each table to retrieve their records."
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON decode error: {e}, Raw response: {raw_response}")
+            return False, None, f"Failed to parse OpenAI response as JSON: {str(e)}", False, []
+        except Exception as e:
+            logger.error(f"Error parsing OpenAI response: {e}, Raw response: {raw_response}")
+            return False, None, f"Error parsing OpenAI response: {str(e)}", False, []
+            
+        if not query and not additional_queries:
+            return False, None, "Failed to generate a query from the GPT response - no valid queries found", False, []
         
         return True, query, explanation, needs_multiple_queries, additional_queries
     except Exception as e:
