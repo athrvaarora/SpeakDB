@@ -83,22 +83,17 @@ class InfluxDBConnector(BaseTimeSeriesConnector):
         """Connect to an InfluxDB time-series database"""
         if not self.client:
             try:
-                # Support both direct URL and individual parameters
-                if self.credentials.get("url"):
-                    url = self.credentials.get("url")
-                else:
-                    host = self.credentials.get("host", "localhost")
-                    port = self.credentials.get("port", 8086)
-                    url = f"http://{host}:{port}"
+                # Get URL from credentials
+                url = self.credentials.get("url", "http://localhost:8086")
                 
-                # Use token authentication if provided
+                # Use token authentication if provided (InfluxDB 2.x)
                 token = self.credentials.get("token")
                 org = self.credentials.get("org")
+                bucket = self.credentials.get("bucket")
                 
-                # Fall back to username/password auth if token not provided
+                # Fall back to username/password auth if token not provided (InfluxDB 1.x)
                 username = self.credentials.get("username")
                 password = self.credentials.get("password")
-                bucket = self.credentials.get("bucket")
                 
                 if token:
                     self.client = InfluxDBClient(url=url, token=token, org=org)
