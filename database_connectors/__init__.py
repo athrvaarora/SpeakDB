@@ -64,7 +64,10 @@ def get_connector(db_type, credentials):
         'elasticsearch': ('database_connectors.nosql', 'ElasticsearchConnector'),
         'dynamodb': ('database_connectors.nosql', 'DynamoDBConnector'),
         'couchbase': ('database_connectors.nosql', 'CouchbaseConnector'),
-        'neo4j': ('database_connectors.nosql', 'Neo4jConnector'),
+        
+        # Graph databases
+        'neo4j': ('database_connectors.graph', 'Neo4jConnector'),
+        'tigergraph': ('database_connectors.graph', 'TigerGraphConnector'),
         
         # Data warehouse
         'snowflake': ('database_connectors.datawarehouse', 'SnowflakeConnector'),
@@ -75,6 +78,9 @@ def get_connector(db_type, credentials):
         'cosmosdb': ('database_connectors.cloud', 'CosmosDBConnector'),
         'firestore': ('database_connectors.cloud', 'FirestoreConnector'),
         'supabase': ('database_connectors.cloud', 'SupabaseConnector'),
+        'heroku': ('database_connectors.heroku', 'HerokuConnector'),
+        'crunchybridge': ('database_connectors.crunchybridge', 'CrunchyBridgeConnector'),
+        'neon': ('database_connectors.neon', 'NeonConnector'),
         
         # Time-series databases
         'influxdb': ('database_connectors.timeseries', 'InfluxDBConnector'),
