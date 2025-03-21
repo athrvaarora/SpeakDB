@@ -65,6 +65,8 @@ def get_connector(db_type, credentials):
         'dynamodb': ('database_connectors.nosql', 'DynamoDBConnector'),
         'couchbase': ('database_connectors.nosql', 'CouchbaseConnector'),
         'neo4j': ('database_connectors.nosql', 'Neo4jConnector'),
+        'tigergraph': ('database_connectors.nosql', 'TigerGraphConnector'),
+        'neptune': ('database_connectors.nosql', 'NeptuneConnector'),
         
         # Data warehouse
         'snowflake': ('database_connectors.datawarehouse', 'SnowflakeConnector'),

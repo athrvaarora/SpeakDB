@@ -569,9 +569,11 @@ def get_required_credentials():
         
         # Graph Databases
         'tigergraph': {
-            'fields': ['graph_name', 'username', 'password'],
+            'fields': ['host', 'username', 'password', 'graph', 'secret'],
             'url_option': False,
-            'terminal_command': 'gsql -g graph_name'
+            'terminal_command': 'gsql -g graph_name',
+            'auth_command': 'gadmin config get Authentication.TokenSecret',
+            'notes': 'First authenticate with "gadmin" to get a token secret, then connect with "gsql". The host is the TigerGraph server hostname.'
         },
         'neptune': {
             'fields': ['neptune_endpoint', 'aws_credentials'],
