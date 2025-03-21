@@ -17,6 +17,9 @@ openai = OpenAI(api_key=OPENAI_API_KEY)
 # do not change this unless explicitly requested by the user
 MODEL = "gpt-4o"
 
+# Store the database schema analysis for reference during the session
+DATABASE_SCHEMA_ANALYSIS = {}
+
 def generate_query(user_query, db_type, schema_info):
     """
     Generate a database query from a natural language query using OpenAI's GPT
@@ -30,7 +33,10 @@ def generate_query(user_query, db_type, schema_info):
         tuple: (success, query, explanation)
     """
     try:
-        # Create a prompt that includes the database type and schema information
+        # Get or create schema analysis
+        schema_analysis = analyze_schema(db_type, schema_info)
+        
+        # Create a prompt that includes the database type, schema information, and schema analysis
         prompt = f"""
         You are a database query generator. Generate a query for a {db_type} database based on the following natural language request:
         
@@ -38,6 +44,11 @@ def generate_query(user_query, db_type, schema_info):
         
         The database schema is as follows:
         {json.dumps(schema_info, indent=2)}
+        
+        Schema analysis:
+        {json.dumps(schema_analysis, indent=2)}
+        
+        Use the schema analysis to better understand the data model and relationships.
         
         Respond with JSON in the following format:
         {{
@@ -52,7 +63,7 @@ def generate_query(user_query, db_type, schema_info):
         response = openai.chat.completions.create(
             model=MODEL,
             messages=[
-                {"role": "system", "content": "You are an expert database query generator."},
+                {"role": "system", "content": "You are an expert database query generator with deep understanding of database structures and relationships."},
                 {"role": "user", "content": prompt}
             ],
             response_format={"type": "json_object"}
@@ -70,6 +81,84 @@ def generate_query(user_query, db_type, schema_info):
     except Exception as e:
         logger.exception("Error generating query with GPT")
         return False, None, f"Error generating query: {str(e)}"
+
+def analyze_schema(db_type, schema_info):
+    """
+    Analyze the database schema and provide insights for improved query generation
+    
+    Args:
+        db_type (str): The type of database (e.g., 'postgresql', 'mongodb')
+        schema_info (dict): Information about the database schema
+        
+    Returns:
+        dict: Analysis results with insights about the schema
+    """
+    global DATABASE_SCHEMA_ANALYSIS
+    
+    try:
+        # Skip if we already have analysis for this database type
+        cache_key = f"{db_type}_{hash(str(schema_info))}"
+        if cache_key in DATABASE_SCHEMA_ANALYSIS:
+            logger.info(f"Using cached schema analysis for {db_type}")
+            return DATABASE_SCHEMA_ANALYSIS[cache_key]
+        
+        logger.info(f"Analyzing schema for {db_type} database")
+        
+        # Create a prompt for schema analysis
+        prompt = f"""
+        You are a database expert. Analyze this {db_type} database schema and provide insights:
+        
+        {json.dumps(schema_info, indent=2)}
+        
+        Respond with JSON in the following format:
+        {{
+            "schema_summary": "brief summary of the database schema",
+            "tables": [
+                {{
+                    "name": "table_name",
+                    "purpose": "what this table stores",
+                    "key_fields": ["field1", "field2"],
+                    "relationships": ["description of relationships"]
+                }}
+            ],
+            "data_domains": ["list of main data domains covered"],
+            "recommended_joins": ["suggestions for common table joins"],
+            "naming_patterns": "observations about naming conventions",
+            "query_recommendations": ["suggestions for efficient queries"]
+        }}
+        
+        For NoSQL databases, adapt the format appropriately (collections instead of tables, etc.).
+        Focus on the most important insights that would help in generating accurate queries.
+        """
+        
+        # Generate the schema analysis using OpenAI GPT
+        response = openai.chat.completions.create(
+            model=MODEL,
+            messages=[
+                {"role": "system", "content": "You are an expert database analyst."},
+                {"role": "user", "content": prompt}
+            ],
+            response_format={"type": "json_object"}
+        )
+        
+        # Parse the response
+        analysis = json.loads(response.choices[0].message.content)
+        
+        # Cache the analysis
+        DATABASE_SCHEMA_ANALYSIS[cache_key] = analysis
+        
+        return analysis
+    except Exception as e:
+        logger.exception(f"Error analyzing schema: {str(e)}")
+        # Return a minimal analysis object if there's an error
+        return {
+            "schema_summary": f"Error analyzing schema: {str(e)}",
+            "tables": [],
+            "data_domains": [],
+            "recommended_joins": [],
+            "naming_patterns": "",
+            "query_recommendations": []
+        }
 
 def format_response(db_result, user_query):
     """
