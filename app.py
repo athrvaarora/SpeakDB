@@ -372,9 +372,10 @@ def process_query():
         # Format the result based on whether it's a multiple query result or not
         if execution_success and needs_multiple_queries and additional_queries:
             # Format multiple queries and their results
-            queries_str = "```sql\n" + query + "\n```\n\n"
+            queries_str = "```sql\n" + (query or "No primary query") + "\n```\n\n"
             for i, additional_query in enumerate(additional_queries, 1):
-                queries_str += f"Additional Query {i}:\n```sql\n{additional_query}\n```\n\n"
+                if additional_query:  # Check if query is not None or empty
+                    queries_str += f"Additional Query {i}:\n```sql\n{additional_query}\n```\n\n"
             
             formatted_result = f"""
 {queries_str}

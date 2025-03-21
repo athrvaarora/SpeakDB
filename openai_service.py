@@ -47,9 +47,9 @@ def generate_query(user_query, db_type, schema_info):
         Important requirements:
         1. For SQLite: NEVER generate multiple SQL statements separated by semicolons, as SQLite can only execute one statement at a time.
         2. For MySQL/PostgreSQL/SQL Server: If multiple statements are needed, ensure they are compatible with the specific database's transaction requirements.
-        3. When a user wants to see data from multiple tables, use JOIN operations or UNION when appropriate, rather than multiple separate SELECT statements.
+        3. When a user wants to see data from multiple tables, use JOIN operations when appropriate.
         4. For NoSQL databases, ensure the query format matches the database's specific API requirements.
-        5. If a user wants "all records from all tables", use UNION ALL with consistent column structures, or generate a query that retrieves one table at a time.
+        5. CRITICAL: If a user wants "all records from all tables" or similar, NEVER use UNION ALL. Instead, always set "needs_multiple_queries" to true and provide separate SELECT statements for each table in the "additional_queries" array.
         
         Respond with JSON in the following format:
         {{
