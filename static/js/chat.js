@@ -454,6 +454,30 @@ function addQueryToChat(query, explanation = null) {
     const queryContent = document.createElement('div');
     queryContent.className = 'message-content markdown-body';
     
+    // Add schema analysis badge if explanation mentions schema analysis
+    const hasSchemaAnalysis = explanation && (
+        explanation.toLowerCase().includes('schema') || 
+        explanation.toLowerCase().includes('table') || 
+        explanation.toLowerCase().includes('column') || 
+        explanation.toLowerCase().includes('relationship')
+    );
+    
+    if (hasSchemaAnalysis) {
+        const schemaAnalysisBadge = document.createElement('div');
+        schemaAnalysisBadge.className = 'schema-analysis-badge mb-2';
+        schemaAnalysisBadge.innerHTML = `
+            <div class="d-flex align-items-center">
+                <span class="badge bg-info me-2">
+                    <i class="fas fa-brain me-1"></i> AI Schema Analysis
+                </span>
+                <span class="small text-muted">
+                    This response uses AI analysis of your database structure to improve accuracy
+                </span>
+            </div>
+        `;
+        queryContent.appendChild(schemaAnalysisBadge);
+    }
+    
     // Create markdown content with explanation and SQL code block
     let markdownContent = '';
     
@@ -465,10 +489,14 @@ function addQueryToChat(query, explanation = null) {
     // Add query as SQL code block with syntax highlighting
     markdownContent += `\`\`\`sql\n${query}\n\`\`\``;
     
+    // Create div for the markdown content
+    const markdownDiv = document.createElement('div');
+    
     // Parse markdown and sanitize HTML
     try {
         const parsedContent = marked.parse(markdownContent);
-        queryContent.innerHTML = DOMPurify.sanitize(parsedContent);
+        markdownDiv.innerHTML = DOMPurify.sanitize(parsedContent);
+        queryContent.appendChild(markdownDiv);
         
         // Initialize highlight.js on code blocks
         setTimeout(() => {
@@ -565,6 +593,16 @@ function showWelcomeMessage() {
                 <h4 class="fw-semibold">Welcome to SpeakDB</h4>
                 <p class="text-muted">You are connected to <strong>${dbName}</strong>.</p>
                 <p>Ask questions about your database using natural language.</p>
+                <div class="schema-analysis-badge mt-3 mx-auto" style="max-width: 500px;">
+                    <div class="d-flex align-items-center">
+                        <span class="badge bg-info me-2">
+                            <i class="fas fa-brain me-1"></i> AI Schema Analysis
+                        </span>
+                        <span class="small text-muted">
+                            Your database schema has been analyzed to improve query accuracy
+                        </span>
+                    </div>
+                </div>
             </div>
             <div class="mb-3 animate__animated animate__fadeIn animate__delay-1s">
                 <p class="text-muted small">Try these examples:</p>

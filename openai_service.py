@@ -35,6 +35,7 @@ def generate_query(user_query, db_type, schema_info):
     try:
         # Get or create schema analysis
         schema_analysis = analyze_schema(db_type, schema_info)
+        using_schema_analysis = bool(schema_analysis and schema_analysis.get('tables'))
         
         # Create a prompt that includes the database type, schema information, and schema analysis
         prompt = f"""
@@ -76,6 +77,24 @@ def generate_query(user_query, db_type, schema_info):
         
         if not query:
             return False, None, "Failed to generate a query from the GPT response"
+        
+        # Add schema analysis indicator to explanation if schema analysis was used
+        if using_schema_analysis:
+            # Add schema analysis details to the explanation
+            table_names = [table.get('name') for table in schema_analysis.get('tables', [])]
+            schema_info_text = ""
+            
+            if schema_analysis.get('schema_summary'):
+                schema_info_text += f"Based on schema analysis: {schema_analysis.get('schema_summary')}\n\n"
+            
+            if table_names:
+                schema_info_text += f"This query involves tables: {', '.join(table_names)}\n\n"
+                
+            if schema_analysis.get('recommended_joins') and len(schema_analysis.get('recommended_joins')) > 0:
+                schema_info_text += "Using recommended table relationships for optimal results.\n\n"
+                
+            # Combine with original explanation
+            explanation = schema_info_text + explanation
         
         return True, query, explanation
     except Exception as e:

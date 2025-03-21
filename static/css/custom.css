@@ -698,6 +698,32 @@ textarea.form-control:focus {
     color: #f39c12;
 }
 
+/* Schema Analysis Badge and Indicator */
+.schema-analysis-badge {
+    padding: 0.65rem;
+    border-radius: 8px;
+    background-color: rgba(166, 220, 239, 0.15);
+    border-left: 4px solid var(--pastel-info);
+    margin-bottom: 1rem;
+}
+
+.schema-analysis-indicator {
+    padding: 1rem;
+    border-radius: 10px;
+    background-color: white;
+    transition: all 0.3s ease;
+    animation: pulseGlow 1.5s infinite alternate;
+}
+
+@keyframes pulseGlow {
+    from {
+        box-shadow: 0 0 5px rgba(166, 220, 239, 0.3);
+    }
+    to {
+        box-shadow: 0 0 15px rgba(166, 220, 239, 0.7);
+    }
+}
+
 /* Welcome message */
 .welcome-container {
     text-align: center;
