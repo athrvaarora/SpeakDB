@@ -105,19 +105,21 @@ class MongoDBConnector(BaseNoSQLConnector):
                     connection_string = self.credentials.get("connection_string")
                     self.client = pymongo.MongoClient(connection_string)
                 # Check if individual credentials are provided
-                elif self.credentials.get("host"):
+                elif self.credentials.get("hostname") or self.credentials.get("host"):
                     logger.info("Using individual credentials")
-                    host = self.credentials.get("host", "localhost")
+                    # Support both hostname (new) and host (legacy) parameters
+                    host = self.credentials.get("hostname") or self.credentials.get("host", "localhost")
                     port = self.credentials.get("port", 27017)
-                    username = self.credentials.get("username")
+                    # Support both user (new) and username (legacy) parameters
+                    username = self.credentials.get("user") or self.credentials.get("username")
                     password = self.credentials.get("password")
-                    auth_db = self.credentials.get("auth_db", "admin")
+                    database_name = self.credentials.get("database_name") or self.credentials.get("database", "admin")
                     
                     connection_string = f"mongodb://"
                     if username and password:
                         connection_string += f"{username}:{password}@"
                     
-                    connection_string += f"{host}:{port}/{auth_db}"
+                    connection_string += f"{host}:{port}/{database_name}"
                     
                     self.client = pymongo.MongoClient(connection_string)
                 else:

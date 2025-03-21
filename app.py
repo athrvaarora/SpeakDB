@@ -601,12 +601,12 @@ def get_required_credentials():
             'url_example': 'mongodb://username:password@hostname:port/database_name',
             'terminal_command': 'mongo "mongodb://username:password@hostname:port/database_name"',
             'env_variables': [
-                'MONGODB_HOST=hostname',
-                'MONGODB_PORT=port',
-                'MONGODB_USERNAME=username',
-                'MONGODB_PASSWORD=your_password',
-                'MONGODB_DATABASE=database_name',
-                'MONGODB_URI=mongodb://username:password@hostname:port/database_name'
+                'MONGO_URI=mongodb://username:password@hostname:port/database_name',
+                'MONGO_HOST=hostname',
+                'MONGO_PORT=port',
+                'MONGO_USER=username',
+                'MONGO_PASSWORD=your_password',
+                'MONGO_DATABASE=database_name'
             ]
         },
         'cassandra': {
@@ -651,12 +651,12 @@ def get_required_credentials():
         'dynamodb': {
             'fields': ['access_key', 'secret_key', 'region', 'endpoint_url'],
             'url_option': False,
-            'terminal_command': 'aws dynamodb list-tables --endpoint-url endpoint_url',
+            'terminal_command': '# First configure AWS credentials (interactive)\naws configure\n# Then access DynamoDB\naws dynamodb list-tables --endpoint-url http://localhost:8000',
             'env_variables': [
                 'AWS_ACCESS_KEY_ID=your_access_key',
                 'AWS_SECRET_ACCESS_KEY=your_secret_key',
                 'AWS_REGION=your_region',
-                'DYNAMODB_ENDPOINT=endpoint_url'
+                'AWS_DYNAMODB_ENDPOINT=http://localhost:8000'
             ],
             'auth_popup': True,
             'auth_type': 'aws'
@@ -784,13 +784,13 @@ def get_required_credentials():
             'url_option': True,
             'url_field': 'endpoint',
             'url_example': 'https://your-account.documents.azure.com:443/',
-            'terminal_command': '# First login to Azure (interactive)\naz login\n# Then query\naz cosmosdb sql query --account-name account_name --database-name database_name --container-name container_name --query-text "SELECT * FROM c"',
+            'terminal_command': '# First login to Azure (interactive)\naz login\n# Then query Cosmos DB\naz cosmosdb sql query --account-name account_name --database-name database_name --container-name container_name --query-text "SELECT * FROM c"',
             'notes': 'Requires AZURE_COSMOS_ENDPOINT, AZURE_COSMOS_KEY, AZURE_COSMOS_DATABASE, and AZURE_COSMOS_CONTAINER.',
             'env_variables': [
                 'AZURE_COSMOS_ENDPOINT=https://your-account.documents.azure.com:443/',
                 'AZURE_COSMOS_KEY=your_primary_key',
-                'AZURE_COSMOS_DATABASE=your_database_name',
-                'AZURE_COSMOS_CONTAINER=your_container_name'
+                'AZURE_COSMOS_DATABASE=database_name',
+                'AZURE_COSMOS_CONTAINER=container_name'
             ],
             'auth_popup': True,
             'auth_type': 'azure'
@@ -798,18 +798,18 @@ def get_required_credentials():
         'firestore': {
             'fields': ['api_key', 'auth_domain', 'project_id', 'storage_bucket', 'messaging_sender_id', 'app_id', 'measurement_id', 'database_url', 'service_account_key_path'],
             'url_option': False,
-            'terminal_command': '# First login to Firebase (interactive)\nfirebase login\n# Then query\nfirebase firestore:get --project project_id collections/documents',
+            'terminal_command': '# First authenticate (interactive Google login)\nfirebase login\n# Then access Firestore\nfirebase firestore:get --project project_id collections/documents',
             'notes': 'Requires Firebase credentials including project ID and service account key.',
             'env_variables': [
-                'GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json',
                 'FIREBASE_API_KEY=your_api_key',
-                'FIREBASE_AUTH_DOMAIN=your-project-id.firebaseapp.com',
-                'FIREBASE_PROJECT_ID=your-project-id',
-                'FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com',
+                'FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com',
+                'FIREBASE_PROJECT_ID=your_project_id',
+                'FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com',
                 'FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id',
                 'FIREBASE_APP_ID=your_app_id',
                 'FIREBASE_MEASUREMENT_ID=your_measurement_id',
-                'FIREBASE_DATABASE_URL=https://your-project-id.firebaseio.com'
+                'FIREBASE_DATABASE_URL=https://your_project_id.firebaseio.com',
+                'FIREBASE_SERVICE_ACCOUNT_KEY_PATH=/path/to/serviceAccountKey.json'
             ],
             'auth_popup': True,
             'auth_type': 'google'
