@@ -22,8 +22,7 @@ class User(UserMixin, db.Model):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships
-    chats = relationship("Chat", back_populates="user", cascade="all, delete-orphan")
+    # Note: Chat relationship removed as it doesn't match the database schema
     
     def __init__(self, email=None, name=None, password=None, profile_picture=None, firebase_uid=None):
         self.id = str(uuid.uuid4())
@@ -64,6 +63,7 @@ class Chat(db.Model):
     
     # Relationships
     messages = relationship("ChatMessage", back_populates="chat", cascade="all, delete-orphan")
+    # Note: user relationship removed as it's not in the database schema
     
     def __init__(self, id=None, db_type=None, db_name=None, db_credentials=None):
         self.id = id or str(uuid.uuid4())
@@ -74,7 +74,6 @@ class Chat(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
-            'user_id': self.user_id,
             'db_type': self.db_type,
             'db_name': self.db_name,
             'created_at': self.created_at.isoformat() if self.created_at else None,

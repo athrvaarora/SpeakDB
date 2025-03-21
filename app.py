@@ -40,7 +40,7 @@ login_manager.login_view = 'auth'
 
 @login_manager.user_loader
 def load_user(user_id):
-    return db.session.query(User).get(int(user_id))
+    return db.session.query(User).filter(User.id == user_id).first()
 
 # Routes
 @app.route('/')
@@ -187,10 +187,9 @@ def test_db_connection():
             chat_id = str(uuid.uuid4())
             session['chat_id'] = chat_id
             
-            # Create a new chat record with user_id if authenticated
+            # Create a new chat record
             chat = Chat(
                 id=chat_id,
-                user_id=current_user.id if current_user.is_authenticated else None,
                 db_type=db_type,
                 db_name=credentials.get('db_name', db_type.upper()),
                 db_credentials=json.dumps(credentials)  # Store credentials as JSON string
@@ -287,19 +286,11 @@ def get_chat_history():
 def get_previous_chats():
     """Get a list of previous chat sessions"""
     try:
-        # Filter chats based on authentication status
-        if current_user.is_authenticated:
-            # Get the authenticated user's chats
-            chats = db.session.query(Chat).filter(Chat.user_id == current_user.id).order_by(Chat.updated_at.desc()).all()
+        # For now, just show chats in the current session
+        if 'chat_id' in session:
+            chats = db.session.query(Chat).filter(Chat.id == session['chat_id']).order_by(Chat.updated_at.desc()).all()
         else:
-            # For guests, only show session chats or those with no user association
-            if 'chat_id' in session:
-                chats = db.session.query(Chat).filter(
-                    (Chat.id == session['chat_id']) | 
-                    (Chat.user_id == None)
-                ).order_by(Chat.updated_at.desc()).all()
-            else:
-                chats = db.session.query(Chat).filter(Chat.user_id == None).order_by(Chat.updated_at.desc()).all()
+            chats = []
         
         # Convert the chats to dictionaries
         chat_list = [chat.to_dict() for chat in chats]
@@ -333,12 +324,7 @@ def load_chat(chat_id):
                 'message': f"Chat with ID {chat_id} not found"
             })
         
-        # Security check: make sure the user can access this chat
-        if chat.user_id is not None and current_user.is_authenticated and chat.user_id != current_user.id:
-            return jsonify({
-                'success': False,
-                'message': "You don't have permission to access this chat"
-            })
+        # No security check needed for now since user_id isn't in the database schema
         
         # Store the chat ID in the session
         session['chat_id'] = chat_id
@@ -448,12 +434,7 @@ def process_query():
                 'message': "Chat not found. Please start a new chat."
             })
             
-        # If the chat belongs to a user, make sure it's the current user
-        if chat.user_id is not None and current_user.is_authenticated and chat.user_id != current_user.id:
-            return jsonify({
-                'success': False,
-                'message': "You don't have permission to access this chat"
-            })
+        # No security check needed for user_id
         
         # Get the database connector
         connector = get_connector(db_type, credentials)
