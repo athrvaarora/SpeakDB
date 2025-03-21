@@ -414,6 +414,7 @@ def get_required_credentials():
     
     # Define the credentials required for each database type
     credential_requirements = {
+        # Relational Databases
         'postgresql': {
             'fields': ['host', 'port', 'username', 'password', 'db_name'],
             'url_option': True,
@@ -421,14 +422,16 @@ def get_required_credentials():
             'url_example': 'postgresql://username:password@host:port/db_name'
         },
         'mysql': {
-            'fields': ['host', 'username', 'password', 'db_name'],
+            'fields': ['host', 'port', 'username', 'password', 'db_name'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'mysql://username:password@host/db_name'
+            'url_example': 'mysql://username:password@host:port/db_name'
         },
         'sqlserver': {
-            'fields': ['host', 'instance', 'username', 'password'],
-            'url_option': False
+            'fields': ['host', 'port', 'instance', 'username', 'password', 'database'],
+            'url_option': True,
+            'url_field': 'connection_string',
+            'url_example': 'mssql://username:password@host:port/database?instance=instance'
         },
         'oracle': {
             'fields': ['host', 'port', 'service_name', 'username', 'password'],
@@ -451,15 +454,39 @@ def get_required_credentials():
             'url_option': False
         },
         'mariadb': {
-            'fields': ['host', 'username', 'password', 'db_name'],
+            'fields': ['host', 'port', 'username', 'password', 'db_name'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'mariadb://username:password@host/db_name'
+            'url_example': 'mariadb://username:password@host:port/db_name'
         },
         'db2': {
             'fields': ['host', 'port', 'username', 'password', 'db_name'],
             'url_option': False
         },
+        'teradata': {
+            'fields': ['host', 'username', 'password', 'database'],
+            'url_option': True,
+            'url_field': 'connection_string',
+            'url_example': 'jdbc:teradata://host/LOGMECH=LDAP'
+        },
+        'saphana': {
+            'fields': ['host', 'port', 'username', 'password', 'ssl_cert'],
+            'url_option': True,
+            'url_field': 'connection_string',
+            'url_example': 'jdbc:sap://host:443/?encrypt=true'
+        },
+        'planetscale': {
+            'fields': ['host', 'username', 'password'],
+            'url_option': True,
+            'url_field': 'connection_string',
+            'url_example': 'mysql://aws.connect.psdb.cloud/db?sslaccept=strict'
+        },
+        'vertica': {
+            'fields': ['host', 'port', 'username', 'password', 'database'],
+            'url_option': False
+        },
+        
+        # NoSQL Databases
         'mongodb': {
             'fields': ['host', 'port', 'username', 'password', 'auth_db'],
             'url_option': True,
@@ -494,8 +521,12 @@ def get_required_credentials():
         },
         'neo4j': {
             'fields': ['uri', 'username', 'password'],
-            'url_option': False
+            'url_option': True,
+            'url_field': 'connection_string',
+            'url_example': 'bolt://host:7687'
         },
+        
+        # Data Warehouses
         'snowflake': {
             'fields': ['account', 'username', 'password', 'warehouse', 'db_name'],
             'url_option': True,
@@ -510,6 +541,20 @@ def get_required_credentials():
             'fields': ['server', 'username', 'password', 'db_name'],
             'url_option': False
         },
+        
+        # Graph Databases
+        'tigergraph': {
+            'fields': ['host', 'graph_name', 'username', 'password'],
+            'url_option': False
+        },
+        'neptune': {
+            'fields': ['endpoint', 'region', 'aws_access_key_id', 'aws_secret_access_key'],
+            'url_option': True,
+            'url_field': 'connection_string',
+            'url_example': 'wss://neptune-db.amazonaws.com:8182/gremlin'
+        },
+        
+        # Cloud Databases
         'cosmosdb': {
             'fields': ['account_uri', 'primary_key'],
             'url_option': False
@@ -518,11 +563,55 @@ def get_required_credentials():
             'fields': ['project_id', 'collection'],
             'url_option': False
         },
+        'supabase': {
+            'fields': ['supabase_url', 'supabase_key'],
+            'url_option': True,
+            'url_field': 'connection_string',
+            'url_example': 'postgres://postgres:[YOUR-PASSWORD]@db.supabase.co:5432/postgres'
+        },
+        'heroku': {
+            'fields': ['database_url'],
+            'url_option': True,
+            'url_field': 'connection_string',
+            'url_example': 'postgres://user:pass@ec2-123.compute-1.amazonaws.com:5432/db'
+        },
+        'crunchybridge': {
+            'fields': ['connection_string'],
+            'url_option': True,
+            'url_field': 'connection_string',
+            'url_example': 'postgresql://user@host:5432/db?password=pass'
+        },
+        'neon': {
+            'fields': ['host', 'user', 'password', 'project_id'],
+            'url_option': True,
+            'url_field': 'connection_string',
+            'url_example': 'postgres://user:pass@ep-cool-darkness-123.us-east-2.aws.neon.tech/db'
+        },
+        
+        # Time Series Databases
         'influxdb': {
             'fields': ['host', 'port', 'token', 'org', 'bucket'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'influxdb://host:port?token=token&org=org&bucket=bucket'
+            'url_example': 'http://host:8086?token=xxx&org=yyy'
+        },
+        'timescaledb': {
+            'fields': ['host', 'port', 'username', 'password', 'database'],
+            'url_option': True,
+            'url_field': 'connection_string',
+            'url_example': 'postgresql://tsdbadmin:pass@host:5432/tsdb'
+        },
+        'kdb': {
+            'fields': ['host', 'port', 'username', 'password'],
+            'url_option': False
+        },
+        
+        # Specialized Systems
+        'prometheus': {
+            'fields': ['url', 'username', 'password'],
+            'url_option': True,
+            'url_field': 'connection_string',
+            'url_example': 'https://user:pass@host:9090'
         }
     }
     
