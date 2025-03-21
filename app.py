@@ -106,11 +106,34 @@ def test_db_connection():
             db.session.add(chat)
             db.session.commit()
             
-            return jsonify({
-                'success': True,
-                'message': message,
-                'chat_id': chat_id
-            })
+            try:
+                # Get the database connector and fetch schema information
+                connector = get_connector(db_type, credentials)
+                schema_info = connector.get_schema()
+                
+                # Perform schema analysis in the background
+                from openai_service import analyze_schema
+                schema_analysis = analyze_schema(db_type, schema_info)
+                logger.info(f"Schema analysis completed successfully for {db_type}")
+                
+                # For debugging
+                analysis_summary = schema_analysis.get('schema_summary', 'No schema summary available')
+                logger.info(f"Schema analysis summary: {analysis_summary[:100]}...")
+                
+                return jsonify({
+                    'success': True,
+                    'message': f"{message} Schema analysis completed.",
+                    'chat_id': chat_id
+                })
+            except Exception as schema_error:
+                logger.exception("Error analyzing schema")
+                # Continue even if schema analysis fails
+                return jsonify({
+                    'success': True,
+                    'message': f"{message} (Note: Schema analysis failed: {str(schema_error)})",
+                    'chat_id': chat_id
+                })
+            
         else:
             return jsonify({
                 'success': False,
@@ -220,7 +243,20 @@ def load_chat(chat_id):
                 # Test the connection to make sure it's still valid
                 success, message = test_connection(chat.db_type, credentials)
                 
-                if not success:
+                if success:
+                    try:
+                        # Get the database connector and fetch schema information
+                        connector = get_connector(chat.db_type, credentials)
+                        schema_info = connector.get_schema()
+                        
+                        # Perform schema analysis in the background
+                        from openai_service import analyze_schema
+                        schema_analysis = analyze_schema(chat.db_type, schema_info)
+                        logger.info(f"Schema analysis completed successfully for {chat.db_type} during chat reload")
+                    except Exception as schema_error:
+                        logger.exception("Error analyzing schema during chat reload")
+                        # Continue even if schema analysis fails
+                else:
                     # If the connection fails, we should inform the user but still load the chat
                     logger.warning(f"Failed to reconnect to database: {message}")
                     return app.response_class(
