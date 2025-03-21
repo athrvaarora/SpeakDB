@@ -582,18 +582,18 @@ function showWelcomeMessage() {
     // Only show if the messages container is empty
     if (messagesContainer.children.length === 0) {
         const welcomeElement = document.createElement('div');
-        welcomeElement.className = 'text-center my-4';
+        welcomeElement.className = 'text-center welcome-container compact'; // Added 'compact' class
         
         // Get database name
         const dbName = document.querySelector('#db-info')?.getAttribute('data-db-name') || 'database';
         
         welcomeElement.innerHTML = `
-            <div class="mb-4 animate__animated animate__fadeIn">
-                <img src="/static/images/speakdb-logo.svg" alt="SpeakDB Logo" class="mb-3" width="80" height="80">
-                <h4 class="fw-semibold">Welcome to SpeakDB</h4>
-                <p class="text-muted">You are connected to <strong>${dbName}</strong>.</p>
-                <p>Ask questions about your database using natural language.</p>
-                <div class="schema-analysis-badge mt-3 mx-auto" style="max-width: 500px;">
+            <div class="mb-2 animate__animated animate__fadeIn"> <!-- Reduced margin -->
+                <img src="/static/images/speakdb-logo.svg" alt="SpeakDB Logo" class="mb-2" width="70" height="70"> <!-- Smaller logo, less margin -->
+                <h4 class="fw-semibold mb-1">Welcome to SpeakDB</h4> <!-- Reduced margin -->
+                <p class="text-muted mb-1">You are connected to <strong>${dbName}</strong>.</p> <!-- Reduced margin -->
+                <p class="mb-2">Ask questions about your database using natural language.</p> <!-- Reduced margin -->
+                <div class="schema-analysis-badge mt-2 mx-auto" style="max-width: 500px;"> <!-- Reduced margin -->
                     <div class="d-flex align-items-center">
                         <span class="badge bg-info me-2">
                             <i class="fas fa-brain me-1"></i> AI Schema Analysis
@@ -604,9 +604,9 @@ function showWelcomeMessage() {
                     </div>
                 </div>
             </div>
-            <div class="mb-3 animate__animated animate__fadeIn animate__delay-1s">
-                <p class="text-muted small">Try these examples:</p>
-                <div id="welcome-examples" class="d-flex flex-column gap-2">
+            <div class="mb-1 animate__animated animate__fadeIn animate__delay-1s"> <!-- Reduced margin -->
+                <p class="text-muted small mb-1">Try these examples:</p> <!-- Reduced margin -->
+                <div id="welcome-examples" class="d-flex flex-column gap-1"> <!-- Reduced gap -->
                     <div class="example-query" onclick="useExample(this)">Show me all tables in this database</div>
                     <div class="example-query" onclick="useExample(this)">How many records are in each table?</div>
                     <div class="example-query" onclick="useExample(this)">Show me the schema of a specific table</div>

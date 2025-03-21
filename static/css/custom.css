@@ -418,13 +418,13 @@ body {
 }
 
 .chat-input-container {
-    padding: 1.25rem;
+    padding: 1rem 1.25rem 0.9rem; /* Reduced top and bottom padding */
     border-top: 1px solid var(--border-light);
     background-color: var(--bg-card);
 }
 
 .message {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem; /* Reduced from 1.5rem */
     display: flex;
     flex-direction: column;
     animation: fadeInUp 0.5s ease;
@@ -443,7 +443,7 @@ body {
 
 .message-content {
     display: inline-block;
-    padding: 1rem 1.25rem;
+    padding: 0.85rem 1.15rem; /* Reduced padding */
     border-radius: 18px;
     max-width: 100%;
     box-shadow: 0 4px 16px var(--shadow-light);
@@ -730,9 +730,19 @@ textarea.form-control:focus {
     padding: 2.5rem 1.5rem;
 }
 
+/* Compact welcome container for improved spacing */
+.welcome-container.compact {
+    padding: 1.5rem 1rem;
+    margin-top: 0; /* Remove top margin */
+}
+
 .welcome-container i {
     color: var(--pastel-primary);
     margin-bottom: 1.5rem;
+}
+
+.welcome-container.compact i {
+    margin-bottom: 0.75rem;
 }
 
 .welcome-container h4 {
@@ -741,7 +751,17 @@ textarea.form-control:focus {
     font-weight: 600;
 }
 
+.welcome-container.compact h4 {
+    margin-bottom: 0.5rem;
+    font-size: 1.4rem;
+}
+
 .welcome-examples {
     max-width: 500px;
     margin: 1.5rem auto;
+}
+
+.welcome-container.compact .welcome-examples {
+    margin: 0.75rem auto;
+    max-width: 450px;
 }
