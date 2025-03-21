@@ -80,10 +80,16 @@ class CosmosDBConnector(BaseCloudConnector):
         """Connect to an Azure Cosmos DB database"""
         if not self.client:
             try:
-                account_uri = self.credentials.get("account_uri")
-                primary_key = self.credentials.get("primary_key")
+                # Use endpoint and key from credentials
+                endpoint = self.credentials.get("endpoint")
+                key = self.credentials.get("key")
+                self.database_name = self.credentials.get("database")
+                self.container_name = self.credentials.get("container")
                 
-                self.client = CosmosClient(account_uri, credential=primary_key)
+                if not endpoint or not key:
+                    raise Exception("Azure Cosmos DB requires endpoint and key")
+                
+                self.client = CosmosClient(endpoint, credential=key)
                 
             except Exception as e:
                 logger.exception("Error connecting to Azure Cosmos DB")
@@ -106,11 +112,11 @@ class CosmosDBConnector(BaseCloudConnector):
             query_obj = json.loads(query)
             
             operation = query_obj.get("operation")
-            database_id = query_obj.get("database")
-            container_id = query_obj.get("container")
+            database_id = query_obj.get("database") or self.database_name
+            container_id = query_obj.get("container") or self.container_name
             
             if not operation or not database_id or not container_id:
-                return None, False, "Query must specify operation, database, and container"
+                return None, False, "Query must specify operation, database, and container (or use the ones from credentials)"
             
             database = self.client.get_database_client(database_id)
             container = database.get_container_client(container_id)
@@ -182,34 +188,48 @@ class FirestoreConnector(BaseCloudConnector):
         """Connect to a Google Firestore database"""
         if not self.client:
             try:
+                # Get Firebase credentials
                 project_id = self.credentials.get("project_id")
-                service_account_key = self.credentials.get("service_account_key")
+                api_key = self.credentials.get("api_key")
+                auth_domain = self.credentials.get("auth_domain")
+                storage_bucket = self.credentials.get("storage_bucket")
+                messaging_sender_id = self.credentials.get("messaging_sender_id")
+                app_id = self.credentials.get("app_id")
+                measurement_id = self.credentials.get("measurement_id")
+                database_url = self.credentials.get("database_url")
+                service_account_key_path = self.credentials.get("service_account_key_path")
                 
                 # Try different connection methods
                 if not firebase_admin:
                     raise ImportError("firebase_admin package is not installed")
                 
                 if not firebase_admin._apps:
-                    # Check if service account key is provided
-                    if service_account_key:
-                        # If provided as a string, convert to dict
-                        if isinstance(service_account_key, str):
-                            try:
-                                service_account_info = json.loads(service_account_key)
-                            except json.JSONDecodeError:
-                                raise ValueError("Invalid service account key format: not valid JSON")
-                        else:
-                            service_account_info = service_account_key
+                    # Check if service account key path is provided
+                    if service_account_key_path:
+                        # Try to use service account key file
+                        try:
+                            cred = credentials.Certificate(service_account_key_path)
                             
-                        cred = credentials.Certificate(service_account_info)
-                        firebase_admin.initialize_app(cred, {
-                            'projectId': project_id
-                        })
+                            # Set up the Firebase app configuration
+                            config = {'projectId': project_id}
+                            if database_url:
+                                config['databaseURL'] = database_url
+                            if storage_bucket:
+                                config['storageBucket'] = storage_bucket
+                                
+                            firebase_admin.initialize_app(cred, config)
+                        except Exception as e:
+                            logger.error(f"Failed to initialize with service account key: {str(e)}")
+                            raise ValueError(f"Failed to initialize with service account key: {str(e)}")
                     elif project_id:
                         # Try to initialize with just project ID
-                        firebase_admin.initialize_app(options={
-                            'projectId': project_id
-                        })
+                        config = {'projectId': project_id}
+                        if database_url:
+                            config['databaseURL'] = database_url
+                        if storage_bucket:
+                            config['storageBucket'] = storage_bucket
+                            
+                        firebase_admin.initialize_app(options=config)
                     else:
                         # Try to initialize with default credentials
                         firebase_admin.initialize_app()
@@ -379,19 +399,23 @@ class SupabaseConnector(BaseCloudConnector):
         if not self.client:
             try:
                 # Get credentials
-                supabase_url = self.credentials.get("supabase_url")
-                supabase_key = self.credentials.get("supabase_key")
+                url = self.credentials.get("url")
+                anon_key = self.credentials.get("anon_key")
+                service_role_key = self.credentials.get("service_role_key")
+                
+                # Determine which key to use (prefer service role key for more permissions)
+                api_key = service_role_key or anon_key
                 
                 # Validate credentials
-                if not supabase_url or not supabase_key:
-                    raise ValueError("Supabase URL and API key are required")
+                if not url or not api_key:
+                    raise ValueError("Supabase URL and API key (anon_key or service_role_key) are required")
                 
                 # Check if supabase package is installed
                 if not create_client:
                     raise ImportError("supabase package is not installed")
                 
                 # Connect to Supabase
-                self.client = create_client(supabase_url, supabase_key)
+                self.client = create_client(url, api_key)
                 
             except Exception as e:
                 logger.exception("Error connecting to Supabase")

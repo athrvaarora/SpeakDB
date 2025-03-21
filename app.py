@@ -583,42 +583,50 @@ def get_required_credentials():
         
         # Cloud Databases
         'cosmosdb': {
-            'fields': ['account_name', 'database_name', 'container_name'],
-            'url_option': False,
-            'terminal_command': 'az cosmosdb sql query --account-name account_name --database-name database_name --container-name container_name --query-text "SELECT * FROM c"'
+            'fields': ['endpoint', 'key', 'database', 'container'],
+            'url_option': True,
+            'url_field': 'endpoint',
+            'url_example': 'https://your-account.documents.azure.com:443/',
+            'terminal_command': 'az cosmosdb sql query --account-name account_name --database-name database_name --container-name container_name --query-text "SELECT * FROM c"',
+            'notes': 'Requires AZURE_COSMOS_ENDPOINT, AZURE_COSMOS_KEY, AZURE_COSMOS_DATABASE, and AZURE_COSMOS_CONTAINER.'
         },
         'firestore': {
-            'fields': ['project_id', 'collection'],
+            'fields': ['api_key', 'auth_domain', 'project_id', 'storage_bucket', 'messaging_sender_id', 'app_id', 'measurement_id', 'database_url', 'service_account_key_path'],
             'url_option': False,
-            'terminal_command': 'firebase firestore:get --project project_id collections/documents'
+            'terminal_command': 'firebase firestore:get --project project_id collections/documents',
+            'notes': 'Requires Firebase credentials including project ID and service account key.'
         },
         'supabase': {
-            'fields': ['supabase_url', 'supabase_key'],
+            'fields': ['url', 'anon_key', 'service_role_key', 'db_url'],
             'url_option': True,
-            'url_field': 'connection_string',
-            'url_example': 'postgres://postgres:[YOUR-PASSWORD]@db.supabase.co:5432/postgres',
-            'terminal_command': 'psql "postgres://postgres:password@db.supabase.co:5432/postgres"'
+            'url_field': 'url',
+            'url_example': 'https://your-project-id.supabase.co',
+            'terminal_command': 'psql "postgres://postgres:password@db.supabase.co:5432/postgres"',
+            'notes': 'Requires Supabase URL, anon key, and service role key.'
         },
         'heroku': {
-            'fields': ['app_name'],
+            'fields': ['api_key', 'app_name', 'database_url'],
             'url_option': True,
-            'url_field': 'connection_string',
-            'url_example': 'postgres://user:pass@ec2-123.compute-1.amazonaws.com:5432/db',
-            'terminal_command': 'heroku pg:psql postgresql-shaped-12345 --app app_name'
+            'url_field': 'database_url',
+            'url_example': 'postgres://username:password@hostname:port/database_name',
+            'terminal_command': 'heroku pg:psql postgresql-shaped-12345 --app your-app-name',
+            'notes': 'Requires Heroku API key and app name.'
         },
         'crunchybridge': {
-            'fields': ['connection_string'],
+            'fields': ['db_url', 'username', 'password', 'host', 'port', 'database_name'],
             'url_option': True,
-            'url_field': 'connection_string',
-            'url_example': 'postgresql://username:password@db.crunchybridge.com:5432/database_name',
-            'terminal_command': 'psql "postgresql://username:password@db.crunchybridge.com:5432/database_name"'
+            'url_field': 'db_url',
+            'url_example': 'postgres://username:password@db.crunchybridge.com:5432/database_name',
+            'terminal_command': 'psql "postgres://username:password@db.crunchybridge.com:5432/database_name"',
+            'notes': 'Requires a Crunchy Bridge database connection string.'
         },
         'neon': {
-            'fields': ['connection_string'],
+            'fields': ['db_url', 'username', 'password', 'host', 'port', 'database_name'],
             'url_option': True,
-            'url_field': 'connection_string',
+            'url_field': 'db_url',
             'url_example': 'postgres://username:password@hostname:5432/database_name?sslmode=require',
-            'terminal_command': 'psql "postgres://username:password@hostname:5432/database_name?sslmode=require"'
+            'terminal_command': 'psql "postgres://username:password@hostname:5432/database_name?sslmode=require"',
+            'notes': 'Requires a Neon.tech database connection string with SSL enabled.'
         },
         
         # Time Series Databases
