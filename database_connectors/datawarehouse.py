@@ -1,5 +1,6 @@
 import logging
 import json
+import os
 import snowflake.connector
 from google.cloud import bigquery
 import pyodbc
@@ -62,11 +63,28 @@ class SnowflakeConnector(BaseDataWarehouseConnector):
         """Connect to a Snowflake data warehouse"""
         if not self.client:
             try:
-                account = self.credentials.get("account")
-                username = self.credentials.get("username")
-                password = self.credentials.get("password")
-                warehouse = self.credentials.get("warehouse")
-                database = self.credentials.get("db_name")
+                # Get credentials from credentials dict or environment variables
+                account = self.credentials.get("account") or os.environ.get("SNOWFLAKE_ACCOUNT")
+                username = self.credentials.get("username") or os.environ.get("SNOWFLAKE_USER")
+                password = self.credentials.get("password") or os.environ.get("SNOWFLAKE_PASSWORD")
+                warehouse = self.credentials.get("warehouse") or os.environ.get("SNOWFLAKE_WAREHOUSE")
+                database = self.credentials.get("db_name") or os.environ.get("SNOWFLAKE_DATABASE")
+                
+                # Log if using environment variables
+                if os.environ.get("SNOWFLAKE_ACCOUNT") and not self.credentials.get("account"):
+                    logger.info("Using SNOWFLAKE_ACCOUNT environment variable")
+                if os.environ.get("SNOWFLAKE_USER") and not self.credentials.get("username"):
+                    logger.info("Using SNOWFLAKE_USER environment variable")
+                if os.environ.get("SNOWFLAKE_PASSWORD") and not self.credentials.get("password"):
+                    logger.info("Using SNOWFLAKE_PASSWORD environment variable")
+                if os.environ.get("SNOWFLAKE_WAREHOUSE") and not self.credentials.get("warehouse"):
+                    logger.info("Using SNOWFLAKE_WAREHOUSE environment variable")
+                if os.environ.get("SNOWFLAKE_DATABASE") and not self.credentials.get("db_name"):
+                    logger.info("Using SNOWFLAKE_DATABASE environment variable")
+                
+                # Check for required credentials
+                if not account or not username or not password:
+                    raise ValueError("Account, username, and password are required for Snowflake connection")
                 
                 self.client = snowflake.connector.connect(
                     account=account,
@@ -185,7 +203,19 @@ class BigQueryConnector(BaseDataWarehouseConnector):
         """Connect to a Google BigQuery data warehouse"""
         if not self.client:
             try:
-                project_id = self.credentials.get("project_id")
+                # Get credentials from credentials or environment variables
+                project_id = self.credentials.get("project_id") or os.environ.get("GCP_PROJECT_ID")
+                
+                # Check if credentials file is specified in environment
+                if os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") and not self.credentials.get("project_id"):
+                    logger.info("Using GOOGLE_APPLICATION_CREDENTIALS environment variable")
+                    # When GOOGLE_APPLICATION_CREDENTIALS is set, the client will use it automatically
+                
+                if os.environ.get("GCP_PROJECT_ID") and not self.credentials.get("project_id"):
+                    logger.info("Using GCP_PROJECT_ID environment variable")
+                
+                if not project_id:
+                    raise ValueError("Project ID is required (either in credentials or as GCP_PROJECT_ID environment variable)")
                 
                 # Initialize BigQuery client
                 self.client = bigquery.Client(project=project_id)
@@ -199,7 +229,11 @@ class BigQueryConnector(BaseDataWarehouseConnector):
         try:
             self.connect()
             
-            dataset_id = self.credentials.get("dataset")
+            # Get dataset_id from credentials or environment variables
+            dataset_id = self.credentials.get("dataset") or os.environ.get("GCP_DATASET_ID")
+            
+            if not dataset_id:
+                raise ValueError("Dataset ID is required (either in credentials or as GCP_DATASET_ID environment variable)")
             
             schema_info = {
                 "dataset": dataset_id,
@@ -276,10 +310,25 @@ class SynapseConnector(BaseDataWarehouseConnector):
         """Connect to an Azure Synapse Analytics data warehouse"""
         if not self.client:
             try:
-                server = self.credentials.get("server")
-                username = self.credentials.get("username")
-                password = self.credentials.get("password")
-                database = self.credentials.get("db_name")
+                # Get credentials from credentials dict or environment variables
+                server = self.credentials.get("server") or os.environ.get("SYNAPSE_SERVER")
+                username = self.credentials.get("username") or os.environ.get("SYNAPSE_USERNAME")
+                password = self.credentials.get("password") or os.environ.get("SYNAPSE_PASSWORD")
+                database = self.credentials.get("db_name") or os.environ.get("SYNAPSE_DATABASE")
+                
+                # Log if using environment variables
+                if os.environ.get("SYNAPSE_SERVER") and not self.credentials.get("server"):
+                    logger.info("Using SYNAPSE_SERVER environment variable")
+                if os.environ.get("SYNAPSE_USERNAME") and not self.credentials.get("username"):
+                    logger.info("Using SYNAPSE_USERNAME environment variable")
+                if os.environ.get("SYNAPSE_PASSWORD") and not self.credentials.get("password"):
+                    logger.info("Using SYNAPSE_PASSWORD environment variable")
+                if os.environ.get("SYNAPSE_DATABASE") and not self.credentials.get("db_name"):
+                    logger.info("Using SYNAPSE_DATABASE environment variable")
+                
+                # Check for required credentials
+                if not server or not username or not password or not database:
+                    raise ValueError("Server, username, password, and database are required for Azure Synapse Analytics connection")
                 
                 # Connect to Synapse using pyodbc
                 conn_str = f"Driver={{ODBC Driver 17 for SQL Server}};Server=tcp:{server},1433;Database={database};Uid={username};Pwd={password};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
