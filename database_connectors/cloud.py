@@ -205,17 +205,23 @@ class FirestoreConnector(BaseCloudConnector):
         """Connect to a Google Firestore database"""
         if not self.client:
             try:
-                # Get credentials from provided credentials or environment variables
+                # Get project ID - this is the only required field
                 project_id = self.credentials.get("project_id") or os.environ.get("FIREBASE_PROJECT_ID")
-                auth_domain = self.credentials.get("auth_domain") or os.environ.get("FIREBASE_AUTH_DOMAIN")
-                storage_bucket = self.credentials.get("storage_bucket") or os.environ.get("FIREBASE_STORAGE_BUCKET")
-                messaging_sender_id = self.credentials.get("messaging_sender_id") or os.environ.get("FIREBASE_MESSAGING_SENDER_ID")
-                app_id = self.credentials.get("app_id") or os.environ.get("FIREBASE_APP_ID")
-                database_url = self.credentials.get("database_url") or os.environ.get("FIREBASE_DATABASE_URL")
                 
-                # Check for service account key path or direct key
+                if not project_id:
+                    raise ValueError("Firebase Project ID is required (either in credentials or as FIREBASE_PROJECT_ID environment variable)")
+                
+                # Log if using environment variables
+                if os.environ.get("FIREBASE_PROJECT_ID") and not self.credentials.get("project_id"):
+                    logger.info("Using FIREBASE_PROJECT_ID environment variable")
+                
+                # Optional: service account key for authentication - can be provided in several ways
                 service_account_key = self.credentials.get("service_account_key")
                 service_account_key_path = self.credentials.get("service_account_key_path") or os.environ.get("FIREBASE_SERVICE_ACCOUNT_KEY_PATH")
+                
+                # These are optional parameters for web config
+                api_key = self.credentials.get("api_key") or os.environ.get("FIREBASE_API_KEY")
+                auth_domain = self.credentials.get("auth_domain") or os.environ.get("FIREBASE_AUTH_DOMAIN")
                 
                 # Load service account key from file if path is provided
                 if not service_account_key and service_account_key_path and os.path.exists(service_account_key_path):
@@ -226,52 +232,49 @@ class FirestoreConnector(BaseCloudConnector):
                     except Exception as e:
                         logger.error(f"Failed to load service account key from {service_account_key_path}: {str(e)}")
                 
-                # Log if using environment variables
-                if os.environ.get("FIREBASE_PROJECT_ID") and not self.credentials.get("project_id"):
-                    logger.info("Using FIREBASE_PROJECT_ID environment variable")
-                
-                if os.environ.get("FIREBASE_AUTH_DOMAIN") and not self.credentials.get("auth_domain"):
-                    logger.info("Using FIREBASE_AUTH_DOMAIN environment variable")
-                
-                if os.environ.get("FIREBASE_STORAGE_BUCKET") and not self.credentials.get("storage_bucket"):
-                    logger.info("Using FIREBASE_STORAGE_BUCKET environment variable")
-                
-                if os.environ.get("FIREBASE_DATABASE_URL") and not self.credentials.get("database_url"):
-                    logger.info("Using FIREBASE_DATABASE_URL environment variable")
-                
-                if os.environ.get("FIREBASE_SERVICE_ACCOUNT_KEY_PATH") and not self.credentials.get("service_account_key_path"):
-                    logger.info("Using FIREBASE_SERVICE_ACCOUNT_KEY_PATH environment variable")
-                
-                # Try different connection methods
+                # Check if the firebase_admin package is installed
                 if not firebase_admin:
                     raise ImportError("firebase_admin package is not installed")
                 
+                # Initialize Firebase App if not already initialized
                 if not firebase_admin._apps:
-                    # Check if service account key is provided
-                    if service_account_key:
-                        # If provided as a string, convert to dict
-                        if isinstance(service_account_key, str):
-                            try:
-                                service_account_info = json.loads(service_account_key)
-                            except json.JSONDecodeError:
-                                raise ValueError("Invalid service account key format: not valid JSON")
+                    try:
+                        # Try different connection methods in order of preference
+                        # 1. Service account key (most secure)
+                        if service_account_key:
+                            # If provided as a string, convert to dict
+                            if isinstance(service_account_key, str):
+                                try:
+                                    service_account_info = json.loads(service_account_key)
+                                except json.JSONDecodeError:
+                                    raise ValueError("Invalid service account key format: not valid JSON")
+                            else:
+                                service_account_info = service_account_key
+                                
+                            cred = credentials.Certificate(service_account_info)
+                            firebase_admin.initialize_app(cred, {
+                                'projectId': project_id
+                            })
+                            logger.info(f"Connected to Firebase Firestore with service account credentials for project: {project_id}")
+                        
+                        # 2. Project ID only (for minimal authentication, requires allowlisted IP or public data)
                         else:
-                            service_account_info = service_account_key
-                            
-                        cred = credentials.Certificate(service_account_info)
-                        firebase_admin.initialize_app(cred, {
-                            'projectId': project_id
-                        })
-                    elif project_id:
-                        # Try to initialize with just project ID
-                        firebase_admin.initialize_app(options={
-                            'projectId': project_id
-                        })
-                    else:
-                        # Try to initialize with default credentials
-                        firebase_admin.initialize_app()
+                            # Try to initialize with just project ID
+                            firebase_admin.initialize_app(options={
+                                'projectId': project_id
+                            })
+                            logger.info(f"Connected to Firebase Firestore with minimal credentials for project: {project_id}")
+                            logger.warning("Using minimal authentication. Firestore access may be limited without service account credentials.")
+                    except Exception as e:
+                        logger.error(f"Error initializing Firebase app: {str(e)}")
+                        # If we got here, we need to inform the user they need more credentials
+                        raise ValueError("Could not connect to Firebase. You may need to provide a service account key. " + 
+                                         "Please check your Firebase console and export a service account key from " +
+                                         "Project Settings → Service Accounts.")
                 
+                # Get Firestore client
                 self.client = firestore.client()
+                logger.info("Firebase Firestore client initialized successfully")
                 
             except Exception as e:
                 logger.exception("Error connecting to Firestore")

@@ -588,9 +588,29 @@ def get_required_credentials():
             'terminal_command': 'az cosmosdb sql query --account-name account_name --database-name database_name --container-name container_name --query-text "SELECT * FROM c"'
         },
         'firestore': {
-            'fields': ['project_id', 'collection'],
+            'fields': [
+                'project_id', 
+                'api_key', 
+                'auth_domain', 
+                'storage_bucket', 
+                'messaging_sender_id', 
+                'app_id',
+                'measurement_id',
+                'database_url',
+                'service_account_key_path',
+                'collection'
+            ],
             'url_option': False,
-            'terminal_command': 'firebase firestore:get --project project_id collections/documents'
+            'terminal_command': 'firebase firestore:get --project project_id collections/documents',
+            'optional_fields': [
+                'auth_domain', 
+                'storage_bucket', 
+                'messaging_sender_id', 
+                'app_id',
+                'measurement_id',
+                'database_url',
+                'service_account_key_path'
+            ]
         },
         'supabase': {
             'fields': ['supabase_url', 'supabase_key'],
