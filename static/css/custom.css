@@ -118,6 +118,21 @@ body {
 
 .chat-list-item.active {
     background-color: var(--bs-gray-700);
+    position: relative;
+    border-left: 3px solid var(--bs-primary);
+    padding-left: calc(0.75rem - 3px);
+}
+
+.chat-list-item.active::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--bs-primary);
+    transform: translateY(-50%);
 }
 
 .chat-main {
