@@ -1,356 +1,581 @@
-<!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SpeakDB - Natural Language Database Interface</title>
-    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="/">
-                <img src="{{ url_for('static', filename='images/speakdb-logo-white.svg') }}" alt="SpeakDB Logo" height="30" class="me-2">
-                <span>SpeakDB</span>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#features">Features</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#databases">Supported Databases</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#how-it-works">How It Works</a>
-                    </li>
-                    <li class="nav-item ms-lg-2">
-                        <a href="{{ url_for('auth') }}" class="btn btn-outline-light">Sign In</a>
-                    </li>
-                    <li class="nav-item ms-lg-2">
-                        <a href="{{ url_for('app') }}" class="btn btn-primary">Get Started</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+{% extends "layout.html" %}
 
-    <!-- Hero Section -->
-    <section class="hero-section py-5">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-lg-6 mb-4 mb-lg-0">
-                    <h1 class="display-4 fw-bold mb-3">Talk to Your Database in Plain English</h1>
-                    <p class="lead mb-4">SpeakDB transforms natural language into database queries for all your database systems - no SQL knowledge required.</p>
-                    <div class="d-flex flex-wrap gap-2">
-                        <a href="{{ url_for('app') }}" class="btn btn-primary btn-lg">Try it now</a>
-                        <a href="{{ url_for('auth') }}" class="btn btn-outline-light btn-lg">Create an account</a>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="hero-image-container p-4 rounded-4 text-center">
-                        <img src="{{ url_for('static', filename='images/speakdb-hero.svg') }}" alt="SpeakDB Chat Interface" class="img-fluid rounded-4 hero-image">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+{% block title %}SpeakDB - AI-Powered Database Interface{% endblock %}
 
-    <!-- Features Section -->
-    <section class="py-5 bg-dark" id="features">
-        <div class="container">
-            <h2 class="text-center mb-5">Powerful Features</h2>
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="card h-100 border-0 bg-dark-subtle">
-                        <div class="card-body">
-                            <div class="feature-icon-container mb-3">
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary">
-                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                                </svg>
-                            </div>
-                            <h3 class="h5 card-title">Natural Language Queries</h3>
-                            <p class="card-text">Ask questions in plain English and get accurate database results in seconds.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card h-100 border-0 bg-dark-subtle">
-                        <div class="card-body">
-                            <div class="feature-icon-container mb-3">
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary">
-                                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
-                                </svg>
-                            </div>
-                            <h3 class="h5 card-title">Multi-Database Support</h3>
-                            <p class="card-text">Connect to any database system - SQL, NoSQL, graph, time-series, and cloud databases.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card h-100 border-0 bg-dark-subtle">
-                        <div class="card-body">
-                            <div class="feature-icon-container mb-3">
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                                </svg>
-                            </div>
-                            <h3 class="h5 card-title">Smart Schema Analysis</h3>
-                            <p class="card-text">Automatically analyzes your database structure to provide more accurate query results.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card h-100 border-0 bg-dark-subtle">
-                        <div class="card-body">
-                            <div class="feature-icon-container mb-3">
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary">
-                                    <line x1="4" y1="21" x2="4" y2="14"></line>
-                                    <line x1="4" y1="10" x2="4" y2="3"></line>
-                                    <line x1="12" y1="21" x2="12" y2="12"></line>
-                                    <line x1="12" y1="8" x2="12" y2="3"></line>
-                                    <line x1="20" y1="21" x2="20" y2="16"></line>
-                                    <line x1="20" y1="12" x2="20" y2="3"></line>
-                                    <line x1="1" y1="14" x2="7" y2="14"></line>
-                                    <line x1="9" y1="8" x2="15" y2="8"></line>
-                                    <line x1="17" y1="16" x2="23" y2="16"></line>
-                                </svg>
-                            </div>
-                            <h3 class="h5 card-title">Data Visualization</h3>
-                            <p class="card-text">Visualize your query results with beautiful charts and interactive graphs.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card h-100 border-0 bg-dark-subtle">
-                        <div class="card-body">
-                            <div class="feature-icon-container mb-3">
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary">
-                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                                </svg>
-                            </div>
-                            <h3 class="h5 card-title">Query Explanations</h3>
-                            <p class="card-text">Understand how your natural language is translated into database queries with detailed explanations.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card h-100 border-0 bg-dark-subtle">
-                        <div class="card-body">
-                            <div class="feature-icon-container mb-3">
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary">
-                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="9" cy="7" r="4"></circle>
-                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                                </svg>
-                            </div>
-                            <h3 class="h5 card-title">User Accounts</h3>
-                            <p class="card-text">Save your database connections and chat history for seamless access across sessions.</p>
-                        </div>
-                    </div>
+{% block head %}
+<style>
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .feature-icon-1 {
+        background-color: rgba(110, 157, 228, 0.15);
+        color: var(--pastel-primary);
+    }
+    
+    .feature-icon-2 {
+        background-color: rgba(157, 224, 173, 0.15);
+        color: #27ae60;
+    }
+    
+    .feature-icon-3 {
+        background-color: rgba(255, 211, 182, 0.15);
+        color: #f39c12;
+    }
+    
+    .feature-icon-4 {
+        background-color: rgba(166, 220, 239, 0.15);
+        color: #3498db;
+    }
+    
+    .hero-section {
+        padding: 7rem 0;
+        background: linear-gradient(135deg, rgba(110, 157, 228, 0.1) 0%, rgba(166, 220, 239, 0.1) 100%);
+        border-radius: 0 0 2rem 2rem;
+    }
+    
+    .section {
+        padding: 5rem 0;
+    }
+    
+    .db-icon {
+        width: 40px;
+        height: 40px;
+        padding: 8px;
+        border-radius: 10px;
+        background-color: var(--pastel-gray-100);
+        margin-right: 0.75rem;
+    }
+    
+    .workflow-step {
+        position: relative;
+        padding-left: 4rem;
+        margin-bottom: 2.5rem;
+    }
+    
+    .workflow-number {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 3rem;
+        height: 3rem;
+        background-color: var(--pastel-primary);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 1.25rem;
+    }
+    
+    .workflow-step:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        top: 3rem;
+        left: 1.5rem;
+        width: 2px;
+        height: calc(100% - 1rem);
+        background-color: var(--pastel-gray-200);
+    }
+    
+    .testimonial-card {
+        border-radius: 1rem;
+        padding: 2rem;
+        background-color: white;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        height: 100%;
+    }
+    
+    .auth-container {
+        max-width: 900px;
+        margin: 0 auto;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        border-radius: 1.5rem;
+        overflow: hidden;
+    }
+    
+    .auth-form {
+        padding: 2.5rem;
+    }
+    
+    .auth-tabs .nav-link {
+        padding: 1rem 1.5rem;
+        border-radius: 0;
+        border: none;
+        color: var(--pastel-gray-700);
+        font-weight: 500;
+        background-color: var(--pastel-gray-100);
+    }
+    
+    .auth-tabs .nav-link.active {
+        background-color: white;
+        color: var(--pastel-primary);
+    }
+    
+    .auth-form-header {
+        margin-bottom: 2rem;
+    }
+    
+    .auth-form-footer {
+        margin-top: 1.5rem;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 animate__animated animate__fadeInLeft">
+                <h1 class="display-4 fw-bold mb-4">Speak to Your Database in Plain English</h1>
+                <p class="lead mb-4">SpeakDB transforms complex database querying into natural conversations. Ask questions in plain language and get instant insights from your data.</p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="{{ url_for('auth') }}" class="btn btn-primary btn-lg px-4 py-2">Get Started</a>
+                    <a href="#features" class="btn btn-outline-secondary btn-lg px-4 py-2">Learn More</a>
                 </div>
             </div>
+            <div class="col-lg-6 animate__animated animate__fadeInRight">
+                <img src="{{ url_for('static', filename='images/speakdb-hero.svg') }}" alt="SpeakDB Illustration" class="img-fluid">
+            </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- Supported Databases Section -->
-    <section class="py-5" id="databases">
-        <div class="container">
-            <h2 class="text-center mb-5">Supported Database Systems</h2>
-            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-4 justify-content-center">
-                <!-- Database Icons will be loaded via JS -->
-                <div class="col text-center">
-                    <div class="database-logo-container p-3 rounded-3 mb-2">
-                        <div class="database-logo" data-db-type="postgresql"></div>
+<!-- Key Features Section -->
+<section class="section" id="features">
+    <div class="container">
+        <div class="text-center mb-5 animate__animated animate__fadeIn">
+            <h2 class="fw-bold mb-3">Intelligent Database Interactions</h2>
+            <p class="lead text-muted mx-auto" style="max-width: 700px;">Explore your data through natural language, visualize insights, and make database interactions accessible to everyone.</p>
+        </div>
+        
+        <div class="row g-4 mt-3">
+            <div class="col-md-6 col-lg-3 animate__animated animate__fadeInUp">
+                <div class="d-flex flex-column align-items-center text-center">
+                    <div class="feature-icon feature-icon-1">
+                        <i class="fas fa-comments"></i>
                     </div>
-                    <p class="small">PostgreSQL</p>
+                    <h4 class="fw-semibold mb-3">Natural Language</h4>
+                    <p class="text-muted">Query databases using everyday language instead of complex SQL or NoSQL syntax.</p>
                 </div>
-                <div class="col text-center">
-                    <div class="database-logo-container p-3 rounded-3 mb-2">
-                        <div class="database-logo" data-db-type="mysql"></div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3 animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
+                <div class="d-flex flex-column align-items-center text-center">
+                    <div class="feature-icon feature-icon-2">
+                        <i class="fas fa-database"></i>
                     </div>
-                    <p class="small">MySQL</p>
+                    <h4 class="fw-semibold mb-3">Multi-Database</h4>
+                    <p class="text-muted">Connect to 30+ database types including SQL, NoSQL, graph, and time-series.</p>
                 </div>
-                <div class="col text-center">
-                    <div class="database-logo-container p-3 rounded-3 mb-2">
-                        <div class="database-logo" data-db-type="mongodb"></div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3 animate__animated animate__fadeInUp" style="animation-delay: 0.4s;">
+                <div class="d-flex flex-column align-items-center text-center">
+                    <div class="feature-icon feature-icon-3">
+                        <i class="fas fa-chart-bar"></i>
                     </div>
-                    <p class="small">MongoDB</p>
+                    <h4 class="fw-semibold mb-3">Data Visualization</h4>
+                    <p class="text-muted">Transform query results into insightful visualizations with one click.</p>
                 </div>
-                <div class="col text-center">
-                    <div class="database-logo-container p-3 rounded-3 mb-2">
-                        <div class="database-logo" data-db-type="redis"></div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3 animate__animated animate__fadeInUp" style="animation-delay: 0.6s;">
+                <div class="d-flex flex-column align-items-center text-center">
+                    <div class="feature-icon feature-icon-4">
+                        <i class="fas fa-brain"></i>
                     </div>
-                    <p class="small">Redis</p>
-                </div>
-                <div class="col text-center">
-                    <div class="database-logo-container p-3 rounded-3 mb-2">
-                        <div class="database-logo" data-db-type="neo4j"></div>
-                    </div>
-                    <p class="small">Neo4j</p>
-                </div>
-                <div class="col text-center">
-                    <div class="database-logo-container p-3 rounded-3 mb-2">
-                        <div class="database-logo" data-db-type="dynamodb"></div>
-                    </div>
-                    <p class="small">DynamoDB</p>
-                </div>
-                <div class="col text-center">
-                    <div class="database-logo-container p-3 rounded-3 mb-2">
-                        <div class="database-logo" data-db-type="snowflake"></div>
-                    </div>
-                    <p class="small">Snowflake</p>
-                </div>
-                <div class="col text-center">
-                    <div class="database-logo-container p-3 rounded-3 mb-2">
-                        <div class="database-logo" data-db-type="influxdb"></div>
-                    </div>
-                    <p class="small">InfluxDB</p>
-                </div>
-                <div class="col text-center">
-                    <div class="database-logo-container p-3 rounded-3 mb-2">
-                        <div class="database-logo" data-db-type="bigquery"></div>
-                    </div>
-                    <p class="small">BigQuery</p>
-                </div>
-                <div class="col text-center">
-                    <div class="database-logo-container p-3 rounded-3 mb-2">
-                        <div class="database-logo" data-db-type="elastic"></div>
-                    </div>
-                    <p class="small">Elasticsearch</p>
-                </div>
-                <!-- For additional databases, show a view more button -->
-                <div class="col text-center">
-                    <a href="{{ url_for('app') }}" class="database-logo-container d-flex align-items-center justify-content-center p-3 rounded-3 mb-2 text-decoration-none">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="8" x2="12" y2="16"></line>
-                            <line x1="8" y1="12" x2="16" y2="12"></line>
-                        </svg>
-                    </a>
-                    <p class="small">And 25+ More</p>
+                    <h4 class="fw-semibold mb-3">AI Analysis</h4>
+                    <p class="text-muted">Smart schema analysis ensures accurate query generation and relevant results.</p>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- How it Works Section -->
-    <section class="py-5 bg-dark" id="how-it-works">
-        <div class="container">
-            <h2 class="text-center mb-5">How It Works</h2>
-            <div class="row g-4">
-                <div class="col-md-3">
-                    <div class="card h-100 border-0 bg-dark-subtle">
-                        <div class="card-body text-center">
-                            <div class="step-number mb-3">1</div>
-                            <h3 class="h5 card-title">Connect</h3>
-                            <p class="card-text">Choose your database type and connect using your credentials.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card h-100 border-0 bg-dark-subtle">
-                        <div class="card-body text-center">
-                            <div class="step-number mb-3">2</div>
-                            <h3 class="h5 card-title">Ask</h3>
-                            <p class="card-text">Type your question in plain English, no SQL or query language needed.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card h-100 border-0 bg-dark-subtle">
-                        <div class="card-body text-center">
-                            <div class="step-number mb-3">3</div>
-                            <h3 class="h5 card-title">Analyze</h3>
-                            <p class="card-text">SpeakDB translates your question into the appropriate database query.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card h-100 border-0 bg-dark-subtle">
-                        <div class="card-body text-center">
-                            <div class="step-number mb-3">4</div>
-                            <h3 class="h5 card-title">Results</h3>
-                            <p class="card-text">Get your results with explanations and visualizations.</p>
+<!-- Database Support Section -->
+<section class="section bg-light">
+    <div class="container">
+        <div class="text-center mb-5 animate__animated animate__fadeIn">
+            <h2 class="fw-bold mb-3">Universal Database Compatibility</h2>
+            <p class="lead text-muted mx-auto" style="max-width: 700px;">Connect to virtually any database system with our comprehensive support for all major database types.</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4 animate__animated animate__fadeInUp">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4 fw-semibold">Relational Databases</h5>
+                        <div class="d-flex flex-wrap gap-3">
+                            <div class="d-flex align-items-center">
+                                <div class="db-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="#336791" stroke-width="2">
+                                        <path d="M12 3C8.7 3 6 4.3 6 6s2.7 3 6 3 6-1.3 6-3-2.7-3-6-3z"/>
+                                        <path d="M6 9v6c0 1.7 2.7 3 6 3s6-1.3 6-3V9"/>
+                                        <path d="M6 15v3c0 1.7 2.7 3 6 3s6-1.3 6-3v-3"/>
+                                    </svg>
+                                </div>
+                                <span>PostgreSQL</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="db-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="#4479A1" stroke-width="2">
+                                        <path d="M12 3L3 7.5v9L12 21l9-4.5v-9L12 3z"/>
+                                        <path d="M12 12L3 7.5"/>
+                                        <path d="M12 12v9"/>
+                                        <path d="M12 12l9-4.5"/>
+                                    </svg>
+                                </div>
+                                <span>MySQL</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="db-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="#CC2927" stroke-width="2">
+                                        <path d="M3 5h18v14H3z"/>
+                                        <path d="M7 9v6M12 9v6M17 9v6"/>
+                                    </svg>
+                                </div>
+                                <span>SQL Server</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="db-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="#F80000" stroke-width="2">
+                                        <path d="M12 3a9 9 0 100 18 9 9 0 000-18z"/>
+                                        <path d="M12 7v10M7 12h10"/>
+                                    </svg>
+                                </div>
+                                <span>Oracle</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="db-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="#003B57" stroke-width="2">
+                                        <path d="M5 5h14v14H5z"/>
+                                        <path d="M5 12h14"/>
+                                    </svg>
+                                </div>
+                                <span>SQLite</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="text-center mt-5">
-                <a href="{{ url_for('app') }}" class="btn btn-primary btn-lg">Try SpeakDB Now</a>
+            
+            <div class="col-md-4 animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4 fw-semibold">NoSQL Databases</h5>
+                        <div class="d-flex flex-wrap gap-3">
+                            <div class="d-flex align-items-center">
+                                <div class="db-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="#47A248" stroke-width="2">
+                                        <path d="M12 3C8.7 3 6 6.7 6 12s2.7 9 6 9 6-3.6 6-9-2.7-9-6-9z"/>
+                                        <path d="M12 21v-9"/>
+                                    </svg>
+                                </div>
+                                <span>MongoDB</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="db-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="#DC382D" stroke-width="2">
+                                        <path d="M4 4l8-1v18l-8-1V4z"/>
+                                        <path d="M12 3l8 1v16l-8 1V3z"/>
+                                    </svg>
+                                </div>
+                                <span>Redis</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="db-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="#1B86E7" stroke-width="2">
+                                        <path d="M3 3h18v18H3z"/>
+                                        <path d="M7 7h10v10H7z"/>
+                                    </svg>
+                                </div>
+                                <span>Elasticsearch</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="db-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="#FE5000" stroke-width="2">
+                                        <path d="M12 3L4 10l8 7 8-7-8-7z"/>
+                                        <path d="M4 14l8 7 8-7"/>
+                                    </svg>
+                                </div>
+                                <span>Couchbase</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 animate__animated animate__fadeInUp" style="animation-delay: 0.4s;">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4 fw-semibold">Specialized Databases</h5>
+                        <div class="d-flex flex-wrap gap-3">
+                            <div class="d-flex align-items-center">
+                                <div class="db-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="#008CC1" stroke-width="2">
+                                        <circle cx="12" cy="12" r="9"/>
+                                        <path d="M12 8v8M8 12h8"/>
+                                    </svg>
+                                </div>
+                                <span>Neo4j</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="db-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="#22ADF6" stroke-width="2">
+                                        <path d="M3 3h18v18H3z"/>
+                                        <path d="M3 9h18M9 9v12"/>
+                                    </svg>
+                                </div>
+                                <span>InfluxDB</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="db-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="#5A9AD6" stroke-width="2">
+                                        <path d="M5 12a7 7 0 1014 0 7 7 0 00-14 0z"/>
+                                        <path d="M19 18L21 20M5 18L3 20"/>
+                                    </svg>
+                                </div>
+                                <span>Snowflake</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="db-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="#4285F4" stroke-width="2">
+                                        <path d="M3 18l9-12 9 12H3z"/>
+                                    </svg>
+                                </div>
+                                <span>BigQuery</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- Footer -->
-    <footer class="py-4 bg-dark-subtle">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="d-flex align-items-center mb-3">
-                        <img src="{{ url_for('static', filename='images/speakdb-logo-white.svg') }}" alt="SpeakDB Logo" height="24" class="me-2">
-                        <span class="fw-bold">SpeakDB</span>
-                    </div>
-                    <p class="small text-muted mb-0">© 2025 SpeakDB. All rights reserved.</p>
+<!-- How It Works Section -->
+<section class="section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 animate__animated animate__fadeInLeft">
+                <h2 class="fw-bold mb-4">How SpeakDB Works</h2>
+                
+                <div class="workflow-step">
+                    <div class="workflow-number">1</div>
+                    <h5 class="fw-semibold">Connect to Your Database</h5>
+                    <p class="text-muted">Choose your database type and provide connection credentials to establish a secure connection.</p>
                 </div>
-                <div class="col-md-6">
-                    <ul class="nav justify-content-md-end mt-3 mt-md-0">
-                        <li class="nav-item">
-                            <a class="nav-link px-2 text-muted" href="{{ url_for('landing') }}">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link px-2 text-muted" href="#features">Features</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link px-2 text-muted" href="#databases">Databases</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link px-2 text-muted" href="{{ url_for('app') }}">App</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link px-2 text-muted" href="{{ url_for('auth') }}">Sign In</a>
-                        </li>
-                    </ul>
+                
+                <div class="workflow-step">
+                    <div class="workflow-number">2</div>
+                    <h5 class="fw-semibold">AI Analyzes Your Schema</h5>
+                    <p class="text-muted">Our advanced AI examines your database structure to understand tables, relationships, and data types.</p>
+                </div>
+                
+                <div class="workflow-step">
+                    <div class="workflow-number">3</div>
+                    <h5 class="fw-semibold">Ask Questions in Plain English</h5>
+                    <p class="text-muted">Type questions naturally as if you're speaking to a colleague. No need for technical syntax.</p>
+                </div>
+                
+                <div class="workflow-step">
+                    <div class="workflow-number">4</div>
+                    <h5 class="fw-semibold">Get Instant Results & Visualizations</h5>
+                    <p class="text-muted">View data in tables, charts, and graphs. Export results or continue refining your queries.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-6 animate__animated animate__fadeInRight">
+                <div class="chart-container">
+                    <canvas id="workflow-chart"></canvas>
+                </div>
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="me-3 text-primary">
+                                <i class="fas fa-lightbulb fa-2x"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1 fw-semibold">Example Query</h5>
+                                <p class="mb-0 text-muted small">Natural language to database query</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="card bg-light border-0 mb-2">
+                                <div class="card-body py-2 px-3">
+                                    <p class="mb-0"><em>"Show me sales by product category for the last quarter, sorted by revenue"</em></p>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-center my-2">
+                                <i class="fas fa-arrow-down text-primary"></i>
+                            </div>
+                            
+                            <div class="card bg-light border-0">
+                                <div class="card-body py-2 px-3">
+                                    <pre class="mb-0"><code>SELECT c.category_name, SUM(oi.quantity * p.price) as revenue
+FROM order_items oi
+JOIN products p ON oi.product_id = p.id
+JOIN categories c ON p.category_id = c.id
+JOIN orders o ON oi.order_id = o.id
+WHERE o.order_date >= DATE_SUB(CURRENT_DATE, INTERVAL 3 MONTH)
+GROUP BY c.category_name
+ORDER BY revenue DESC</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </footer>
+    </div>
+</section>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/database_logos.js') }}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Load database logos
-            document.querySelectorAll('.database-logo').forEach(function(element) {
-                const dbType = element.getAttribute('data-db-type');
-                if (dbType) {
-                    const logoSvg = getLogoSvg(dbType);
-                    if (logoSvg) {
-                        element.innerHTML = logoSvg;
+<!-- Testimonials Section -->
+<section class="section bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold mb-3">What Our Users Say</h2>
+            <p class="lead text-muted mx-auto" style="max-width: 700px;">SpeakDB is transforming how teams interact with their databases.</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4 animate__animated animate__fadeIn">
+                <div class="testimonial-card">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="bg-primary text-white rounded-circle p-3 me-3">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0 fw-semibold">Sarah Johnson</h5>
+                            <p class="mb-0 small text-muted">Data Analyst</p>
+                        </div>
+                    </div>
+                    <p class="mb-0">"SpeakDB has revolutionized how our team accesses data. We've reduced the time spent writing queries by 70%, allowing us to focus on analyzing insights instead of syntax."</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4 animate__animated animate__fadeIn" style="animation-delay: 0.2s;">
+                <div class="testimonial-card">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="bg-primary text-white rounded-circle p-3 me-3">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0 fw-semibold">Michael Chen</h5>
+                            <p class="mb-0 small text-muted">Product Manager</p>
+                        </div>
+                    </div>
+                    <p class="mb-0">"As a non-technical manager, I was always dependent on our data team for insights. With SpeakDB, I can directly get the information I need without waiting for help. Game changer!"</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4 animate__animated animate__fadeIn" style="animation-delay: 0.4s;">
+                <div class="testimonial-card">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="bg-primary text-white rounded-circle p-3 me-3">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0 fw-semibold">David Rodriguez</h5>
+                            <p class="mb-0 small text-muted">Database Administrator</p>
+                        </div>
+                    </div>
+                    <p class="mb-0">"The schema analysis feature is brilliant. SpeakDB understands our complex database structure and generates accurate queries. It's also reduced the number of support requests I get from colleagues."</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card border-0 shadow-lg bg-primary text-white p-4 p-md-5 animate__animated animate__fadeIn">
+                    <div class="card-body text-center">
+                        <h2 class="display-5 fw-bold mb-4">Ready to Transform Your Data Experience?</h2>
+                        <p class="lead mb-4">Start speaking to your database in natural language today.</p>
+                        <a href="{{ url_for('auth') }}" class="btn btn-light btn-lg">Get Started Now</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize workflow chart
+        const ctx = document.getElementById('workflow-chart').getContext('2d');
+        const workflowChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Traditional SQL', 'SpeakDB'],
+                datasets: [{
+                    label: 'Time to Insight (minutes)',
+                    data: [45, 5],
+                    backgroundColor: [
+                        'rgba(166, 220, 239, 0.7)',
+                        'rgba(110, 157, 228, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(166, 220, 239, 1)',
+                        'rgba(110, 157, 228, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Time to Insight Comparison',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        }
+                    },
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Minutes'
+                        }
                     }
                 }
-            });
-
-            // Smooth scrolling for anchor links
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const targetId = this.getAttribute('href');
-                    if (targetId !== '#') {
-                        document.querySelector(targetId).scrollIntoView({
-                            behavior: 'smooth'
-                        });
-                    }
-                });
-            });
+            }
         });
-    </script>
-</body>
-</html>
+        
+        // Highlight.js initialization for code snippets
+        document.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightElement(block);
+        });
+    });
+</script>
+{% endblock %}
