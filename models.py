@@ -14,16 +14,18 @@ class Chat(db.Model):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     db_type = Column(String(50), nullable=False)
     db_name = Column(String(100))
+    db_credentials = Column(Text)  # JSON string of database credentials
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationship with messages
     messages = relationship("ChatMessage", back_populates="chat", cascade="all, delete-orphan")
     
-    def __init__(self, id=None, db_type=None, db_name=None):
+    def __init__(self, id=None, db_type=None, db_name=None, db_credentials=None):
         self.id = id or str(uuid.uuid4())
         self.db_type = db_type
         self.db_name = db_name
+        self.db_credentials = db_credentials
     
     def to_dict(self):
         return {

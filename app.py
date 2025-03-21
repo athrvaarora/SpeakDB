@@ -2,6 +2,7 @@ import os
 import logging
 import json
 import uuid
+from datetime import datetime
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from openai_service import generate_query, format_response
 from database_connectors import get_connector, test_connection
@@ -66,7 +67,8 @@ def test_db_connection():
             chat = Chat(
                 id=chat_id,
                 db_type=db_type,
-                db_name=credentials.get('db_name', db_type.upper())
+                db_name=credentials.get('db_name', db_type.upper()),
+                db_credentials=json.dumps(credentials)  # Store credentials as JSON string
             )
             
             # Save the chat to the database
@@ -147,6 +149,67 @@ def get_previous_chats():
         return jsonify({
             'success': False,
             'message': f"Error getting previous chats: {str(e)}"
+        })
+
+@app.route('/load_chat/<chat_id>', methods=['GET'])
+def load_chat(chat_id):
+    """Load a specific chat session"""
+    try:
+        # Check if the chat exists
+        chat = Chat.query.get(chat_id)
+        
+        if not chat:
+            return jsonify({
+                'success': False,
+                'message': f"Chat with ID {chat_id} not found"
+            })
+        
+        # Store the chat ID in the session
+        session['chat_id'] = chat_id
+        
+        # Restore the database credentials for this chat
+        if chat.db_credentials:
+            try:
+                credentials = json.loads(chat.db_credentials)
+                session['database_credentials'] = {
+                    'type': chat.db_type,
+                    'credentials': credentials
+                }
+                
+                # Test the connection to make sure it's still valid
+                success, message = test_connection(chat.db_type, credentials)
+                
+                if not success:
+                    # If the connection fails, we should inform the user but still load the chat
+                    logger.warning(f"Failed to reconnect to database: {message}")
+                    return jsonify({
+                        'success': True,
+                        'chat': chat.to_dict(),
+                        'warning': f"Could not reconnect to the database: {message}"
+                    })
+            except json.JSONDecodeError:
+                logger.error(f"Invalid JSON in db_credentials for chat {chat_id}")
+                return jsonify({
+                    'success': True,
+                    'chat': chat.to_dict(),
+                    'warning': "Could not restore database connection. The stored credentials are invalid."
+                })
+        else:
+            return jsonify({
+                'success': True,
+                'chat': chat.to_dict(),
+                'warning': "No database credentials were stored with this chat."
+            })
+        
+        return jsonify({
+            'success': True,
+            'chat': chat.to_dict()
+        })
+    except Exception as e:
+        logger.exception("Error loading chat")
+        return jsonify({
+            'success': False,
+            'message': f"Error loading chat: {str(e)}"
         })
 
 @app.route('/process_query', methods=['POST'])

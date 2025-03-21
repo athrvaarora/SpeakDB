@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
 let currentDbType = '';
 let typingTimer;
 let isProcessing = false;
+let currentChatId = '';
 
 // Initialize the chat interface elements and event listeners
 function initChatInterface() {
@@ -186,9 +187,9 @@ function loadPreviousChats() {
                         
                         chatItem.appendChild(chatInfo);
                         
-                        // Add click handler to switch to this chat
+                        // Add click handler to load this chat
                         chatItem.addEventListener('click', function() {
-                            window.location.href = `/chat?id=${chat.id}`;
+                            loadChat(chat.id);
                         });
                         
                         chatList.appendChild(chatItem);
