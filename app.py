@@ -76,7 +76,7 @@ def login():
 @app.route('/signup', methods=['POST'])
 def signup():
     """Handle user signup"""
-    full_name = request.form.get('name')
+    name = request.form.get('name')
     email = request.form.get('email')
     password = request.form.get('password')
     confirm_password = request.form.get('confirm_password')
@@ -92,21 +92,10 @@ def signup():
         flash('Email already registered', 'danger')
         return redirect(url_for('auth'))
     
-    # Create username from email
-    username = email.split('@')[0]
-    
-    # Check if username exists
-    base_username = username
-    counter = 1
-    while db.session.query(User).filter(User.username == username).first():
-        username = f"{base_username}{counter}"
-        counter += 1
-    
     # Create new user
     new_user = User(
-        username=username,
         email=email,
-        full_name=full_name,
+        name=name,
         password=password
     )
     

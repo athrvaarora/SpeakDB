@@ -13,21 +13,24 @@ db = SQLAlchemy()
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     
-    id = Column(Integer, primary_key=True)
-    username = Column(String(64), unique=True, nullable=False)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    name = Column(String(120))
     email = Column(String(120), unique=True, nullable=False)
-    full_name = Column(String(120))
-    password_hash = Column(String(256))
+    profile_picture = Column(String(256), nullable=True)
+    firebase_uid = Column(String(128), nullable=True)
+    password_hash = Column(String(256), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     chats = relationship("Chat", back_populates="user", cascade="all, delete-orphan")
     
-    def __init__(self, username=None, email=None, full_name=None, password=None):
-        self.username = username
+    def __init__(self, email=None, name=None, password=None, profile_picture=None, firebase_uid=None):
+        self.id = str(uuid.uuid4())
         self.email = email
-        self.full_name = full_name
+        self.name = name
+        self.profile_picture = profile_picture
+        self.firebase_uid = firebase_uid
         if password:
             self.set_password(password)
     
@@ -35,14 +38,16 @@ class User(UserMixin, db.Model):
         self.password_hash = generate_password_hash(password)
         
     def check_password(self, password):
+        if not self.password_hash:
+            return False
         return check_password_hash(self.password_hash, password)
     
     def to_dict(self):
         return {
             'id': self.id,
-            'username': self.username,
+            'name': self.name,
             'email': self.email,
-            'full_name': self.full_name,
+            'profile_picture': self.profile_picture,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
@@ -51,7 +56,6 @@ class Chat(db.Model):
     __tablename__ = 'chats'
     
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=True)  # Nullable to support guest mode
     db_type = Column(String(50), nullable=False)
     db_name = Column(String(100))
     db_credentials = Column(Text)  # JSON string of database credentials
@@ -60,11 +64,9 @@ class Chat(db.Model):
     
     # Relationships
     messages = relationship("ChatMessage", back_populates="chat", cascade="all, delete-orphan")
-    user = relationship("User", back_populates="chats")
     
-    def __init__(self, id=None, user_id=None, db_type=None, db_name=None, db_credentials=None):
+    def __init__(self, id=None, db_type=None, db_name=None, db_credentials=None):
         self.id = id or str(uuid.uuid4())
-        self.user_id = user_id
         self.db_type = db_type
         self.db_name = db_name
         self.db_credentials = db_credentials
