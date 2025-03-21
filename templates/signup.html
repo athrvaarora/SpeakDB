@@ -2,108 +2,78 @@
 
 {% block title %}Sign Up - SpeakDB{% endblock %}
 
-{% block styles %}
-<style>
-  .auth-container {
-    min-height: 85vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .auth-card {
-    max-width: 450px;
-    width: 100%;
-    border-radius: 1rem;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-    border: 1px solid var(--bs-border-color);
-    padding: 2rem;
-    background-color: var(--bs-body-bg);
-  }
-  
-  .auth-logo {
-    margin-bottom: 2rem;
-    text-align: center;
-  }
-  
-  .auth-form .form-control {
-    padding: 0.75rem 1rem;
-    background-color: var(--bs-tertiary-bg);
-    border: 1px solid var(--bs-border-color);
-  }
-  
-  .auth-form .form-control:focus {
-    border-color: var(--bs-primary);
-    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
-  }
-  
-  .auth-divider {
-    display: flex;
-    align-items: center;
-    margin: 1.5rem 0;
-  }
-  
-  .auth-divider::before,
-  .auth-divider::after {
-    content: "";
-    flex: 1;
-    border-bottom: 1px solid var(--bs-border-color);
-  }
-  
-  .auth-divider span {
-    padding: 0 1rem;
-    color: var(--bs-secondary);
-    font-size: 0.875rem;
-  }
-</style>
-{% endblock %}
-
 {% block content %}
-<div class="auth-container">
-  <div class="auth-card">
-    <div class="auth-logo">
-      <h3 class="fw-bold">SpeakDB</h3>
-      <p class="text-muted">Create your account</p>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold">Create an Account</h2>
+                        <p class="text-muted">Join SpeakDB to unlock natural language database queries</p>
+                    </div>
+                    
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <form method="POST" action="{{ url_for('signup') }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.username.label(class="form-label") }}
+                            {{ form.username(class="form-control", placeholder="Choose a username") }}
+                            {% if form.username.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.username.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.email.label(class="form-label") }}
+                            {{ form.email(class="form-control", placeholder="Enter your email") }}
+                            {% if form.email.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.email.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.password.label(class="form-label") }}
+                            {{ form.password(class="form-control", placeholder="Choose a password (min 8 characters)") }}
+                            {% if form.password.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.password.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            {{ form.submit(class="btn btn-primary btn-lg") }}
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <p>Already have an account? <a href="{{ url_for('login') }}">Log in</a></p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-    
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-    
-    <form class="auth-form" method="POST" action="{{ url_for('signup') }}">
-      {{ form.hidden_tag() }}
-      
-      <div class="mb-3">
-        <label for="username" class="form-label">Username</label>
-        <input type="text" class="form-control" id="username" name="username" required>
-      </div>
-      
-      <div class="mb-3">
-        <label for="email" class="form-label">Email address</label>
-        <input type="email" class="form-control" id="email" name="email" required>
-      </div>
-      
-      <div class="mb-3">
-        <label for="password" class="form-label">Password</label>
-        <input type="password" class="form-control" id="password" name="password" required>
-        <div class="form-text">Must be at least 8 characters with letters and numbers</div>
-      </div>
-      
-      <div class="d-grid">
-        <button type="submit" class="btn btn-primary py-2">Create Account</button>
-      </div>
-    </form>
-    
-    <div class="text-center mt-4">
-      <p>Already have an account? <a href="{{ url_for('login') }}" class="text-decoration-none">Log in</a></p>
-    </div>
-  </div>
 </div>
 {% endblock %}
