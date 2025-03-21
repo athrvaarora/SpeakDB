@@ -209,22 +209,28 @@ class MySQLConnector(BaseRelationalConnector):
                     self.engine = create_engine(self.credentials.get("connection_string"))
                     self.connection = self.engine.connect().connection
                 # Check if individual credentials are provided
-                elif all(self.credentials.get(key) for key in ["host", "username", "password", "db_name"]):
+                else:
                     logger.info("Using individual credentials")
+                    
+                    # Support both old and new field names from form
+                    host = self.credentials.get("host") or self.credentials.get("hostname", "localhost")
+                    db_name = self.credentials.get("database_name") or self.credentials.get("db_name")
+                    port = self.credentials.get("port", 3306)
+                    
+                    if not db_name:
+                        raise Exception("No database name provided")
+                    
                     self.connection = mysql.connector.connect(
-                        host=self.credentials.get("host"),
+                        host=host,
+                        port=port,
                         user=self.credentials.get("username"),
                         password=self.credentials.get("password"),
-                        database=self.credentials.get("db_name")
+                        database=db_name
                     )
                     
                     # Create SQLAlchemy engine for schema inspection
-                    conn_string = f"mysql+mysqlconnector://{self.credentials.get('username')}:{self.credentials.get('password')}@{self.credentials.get('host')}/{self.credentials.get('db_name')}"
+                    conn_string = f"mysql+mysqlconnector://{self.credentials.get('username')}:{self.credentials.get('password')}@{host}:{port}/{db_name}"
                     self.engine = create_engine(conn_string)
-                else:
-                    logger.error("No valid MySQL credentials provided")
-                    raise Exception("No valid MySQL credentials provided")
-                
             except Exception as e:
                 logger.exception("Error connecting to MySQL")
                 raise Exception(f"Error connecting to MySQL: {str(e)}")
@@ -303,17 +309,28 @@ class RedshiftConnector(BaseRelationalConnector):
         """Connect to an Amazon Redshift database"""
         if not self.connection:
             try:
+                # Support both old and new field names from form
+                db_name = self.credentials.get("database_name") or self.credentials.get("db_name")
+                cluster_id = self.credentials.get("cluster_id") or self.credentials.get("cluster_identifier")
+                region = self.credentials.get("region") or self.credentials.get("aws_region", "us-east-1")
+                port = self.credentials.get("port", 5439)
+                
+                if not db_name:
+                    raise Exception("No database name provided")
+                if not cluster_id:
+                    raise Exception("No cluster identifier provided")
+                
                 # Setup connection using psycopg2
                 self.connection = psycopg2.connect(
-                    dbname=self.credentials.get("db_name"),
+                    dbname=db_name,
                     user=self.credentials.get("username"),
                     password=self.credentials.get("password"),
-                    host=f"{self.credentials.get('cluster_id')}.{self.credentials.get('region')}.redshift.amazonaws.com",
-                    port=5439
+                    host=f"{cluster_id}.{region}.redshift.amazonaws.com",
+                    port=port
                 )
                 
                 # Create SQLAlchemy engine for schema inspection
-                conn_string = f"redshift+psycopg2://{self.credentials.get('username')}:{self.credentials.get('password')}@{self.credentials.get('cluster_id')}.{self.credentials.get('region')}.redshift.amazonaws.com:5439/{self.credentials.get('db_name')}"
+                conn_string = f"redshift+psycopg2://{self.credentials.get('username')}:{self.credentials.get('password')}@{cluster_id}.{region}.redshift.amazonaws.com:{port}/{db_name}"
                 self.engine = create_engine(conn_string)
                 
             except Exception as e:
@@ -327,15 +344,27 @@ class CloudSQLConnector(BaseRelationalConnector):
         """Connect to a Google Cloud SQL database"""
         if not self.connection:
             try:
+                # Support both old and new field names from form
+                project_id = self.credentials.get("project_id") or self.credentials.get("gcp_project_id")
+                region = self.credentials.get("region") or self.credentials.get("gcp_region", "us-central1")
+                instance = self.credentials.get("instance") or self.credentials.get("instance_name")
+                db_name = self.credentials.get("database_name") or self.credentials.get("db_name")
+                
+                if not project_id:
+                    raise Exception("No project ID provided")
+                if not instance:
+                    raise Exception("No instance name provided")
+                
                 # Assuming MySQL is being used on Google Cloud SQL
                 self.connection = mysql.connector.connect(
-                    host=f"{self.credentials.get('project_id')}:{self.credentials.get('region')}:{self.credentials.get('instance')}",
+                    host=f"{project_id}:{region}:{instance}",
                     user=self.credentials.get("username"),
-                    password=self.credentials.get("password")
+                    password=self.credentials.get("password"),
+                    database=db_name
                 )
                 
                 # Create SQLAlchemy engine for schema inspection
-                conn_string = f"mysql+mysqlconnector://{self.credentials.get('username')}:{self.credentials.get('password')}@{self.credentials.get('project_id')}:{self.credentials.get('region')}:{self.credentials.get('instance')}"
+                conn_string = f"mysql+mysqlconnector://{self.credentials.get('username')}:{self.credentials.get('password')}@{project_id}:{region}:{instance}/{db_name}"
                 self.engine = create_engine(conn_string)
                 
             except Exception as e:
@@ -349,15 +378,24 @@ class MariaDBConnector(BaseRelationalConnector):
         """Connect to a MariaDB database"""
         if not self.connection:
             try:
+                # Support both old and new field names from form
+                host = self.credentials.get("host") or self.credentials.get("hostname", "localhost")
+                db_name = self.credentials.get("database_name") or self.credentials.get("db_name")
+                port = self.credentials.get("port", 3306)
+                
+                if not db_name:
+                    raise Exception("No database name provided")
+                
                 self.connection = mysql.connector.connect(
-                    host=self.credentials.get("host"),
+                    host=host,
+                    port=port,
                     user=self.credentials.get("username"),
                     password=self.credentials.get("password"),
-                    database=self.credentials.get("db_name")
+                    database=db_name
                 )
                 
                 # Create SQLAlchemy engine for schema inspection
-                conn_string = f"mysql+mysqlconnector://{self.credentials.get('username')}:{self.credentials.get('password')}@{self.credentials.get('host')}/{self.credentials.get('db_name')}"
+                conn_string = f"mysql+mysqlconnector://{self.credentials.get('username')}:{self.credentials.get('password')}@{host}:{port}/{db_name}"
                 self.engine = create_engine(conn_string)
                 
             except Exception as e:
@@ -371,11 +409,19 @@ class DB2Connector(BaseRelationalConnector):
         """Connect to an IBM Db2 database"""
         if not self.connection:
             try:
-                conn_string = f"DATABASE={self.credentials.get('db_name')};HOSTNAME={self.credentials.get('host')};PORT={self.credentials.get('port', 50000)};PROTOCOL=TCPIP;UID={self.credentials.get('username')};PWD={self.credentials.get('password')};"
+                # Support both old and new field names from form
+                host = self.credentials.get("host") or self.credentials.get("hostname", "localhost")
+                db_name = self.credentials.get("database_name") or self.credentials.get("db_name")
+                port = self.credentials.get("port", 50000)
+                
+                if not db_name:
+                    raise Exception("No database name provided")
+                
+                conn_string = f"DATABASE={db_name};HOSTNAME={host};PORT={port};PROTOCOL=TCPIP;UID={self.credentials.get('username')};PWD={self.credentials.get('password')};"
                 self.connection = ibm_db.connect(conn_string, "", "")
                 
                 # Create SQLAlchemy engine for schema inspection
-                sqlalchemy_conn_string = f"db2+ibm_db://{self.credentials.get('username')}:{self.credentials.get('password')}@{self.credentials.get('host')}:{self.credentials.get('port', 50000)}/{self.credentials.get('db_name')}"
+                sqlalchemy_conn_string = f"db2+ibm_db://{self.credentials.get('username')}:{self.credentials.get('password')}@{host}:{port}/{db_name}"
                 self.engine = create_engine(sqlalchemy_conn_string)
                 
             except Exception as e:
