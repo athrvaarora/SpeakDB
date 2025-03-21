@@ -71,8 +71,6 @@ def generate_query(user_query, db_type, schema_info):
         logger.exception("Error generating query with GPT")
         return False, None, f"Error generating query: {str(e)}"
 
-# Using DateTimeEncoder from utils.py for JSON serialization of datetime objects
-
 def format_response(db_result, user_query):
     """
     Format the database query result to be more direct and straightforward
@@ -85,8 +83,8 @@ def format_response(db_result, user_query):
         str: A formatted response
     """
     try:
-        # Create a markdown-formatted response based on data type
-        markdown_response = "## Query Results\n\n"
+        # Create a clean response with just the data, no extra explanations
+        markdown_response = "<div class='query-result-container' data-exportable='true'>\n\n"
         
         # If the result is a list of dictionaries (common for SQL query results)
         if isinstance(db_result, list) and len(db_result) > 0 and isinstance(db_result[0], dict):
@@ -126,10 +124,20 @@ def format_response(db_result, user_query):
             table = f"{header_row}\n{separator_row}\n" + "\n".join(data_rows)
             markdown_response += table
             
-            # Add record count information
+            # Store the original data in a hidden format for CSV export
+            json_data = json.dumps(db_result, cls=DateTimeEncoder)
+            # Avoid f-string with replacements
+            markdown_response += "\n\n<div class='hidden-data' style='display:none;' data-result='"
+            markdown_response += json_data.replace('"', '&quot;')
+            markdown_response += "'></div>"
+            
+            # Add record count and export button
             record_count = len(db_result)
             plural = "s" if record_count != 1 else ""
-            markdown_response += f"\n\n*{record_count} record{plural} returned*"
+            markdown_response += f"\n\n<div class='result-footer'>"
+            markdown_response += f"<span class='record-count'>{record_count} record{plural} returned</span>"
+            markdown_response += f"<button class='btn btn-sm btn-outline-secondary export-csv-btn ms-2'>Export CSV</button>"
+            markdown_response += "</div>"
             
         # If the result is a dictionary (common for NoSQL databases or aggregation results)
         elif isinstance(db_result, dict):
@@ -137,18 +145,41 @@ def format_response(db_result, user_query):
             formatted_result = json.dumps(db_result, indent=2, cls=DateTimeEncoder)
             markdown_response += f"```json\n{formatted_result}\n```"
             
+            # Store the original data in a hidden format for export
+            json_data = json.dumps(db_result, cls=DateTimeEncoder)
+            # Avoid f-string with replacements
+            markdown_response += "\n\n<div class='hidden-data' style='display:none;' data-result='"
+            markdown_response += json_data.replace('"', '&quot;')
+            markdown_response += "'></div>"
+            
+            # Add export button for JSON
+            markdown_response += f"\n\n<div class='result-footer'>"
+            markdown_response += f"<button class='btn btn-sm btn-outline-secondary export-json-btn'>Export JSON</button>"
+            markdown_response += "</div>"
+            
         # If it's a simple list or other data type
         else:
             # Format as JSON in a code block
             formatted_result = json.dumps(db_result, indent=2, cls=DateTimeEncoder)
             markdown_response += f"```json\n{formatted_result}\n```"
             
-            # Add count information for lists
+            # Store the original data in a hidden format for export
+            json_data = json.dumps(db_result, cls=DateTimeEncoder)
+            # Avoid f-string with replacements
+            markdown_response += "\n\n<div class='hidden-data' style='display:none;' data-result='"
+            markdown_response += json_data.replace('"', '&quot;')
+            markdown_response += "'></div>"
+            
+            # Add count information and export button for lists
             if isinstance(db_result, list):
                 count = len(db_result)
                 plural = "s" if count != 1 else ""
-                markdown_response += f"\n\n*{count} result{plural} returned*"
+                markdown_response += f"\n\n<div class='result-footer'>"
+                markdown_response += f"<span class='record-count'>{count} result{plural} returned</span>"
+                markdown_response += f"<button class='btn btn-sm btn-outline-secondary export-json-btn ms-2'>Export JSON</button>"
+                markdown_response += "</div>"
         
+        markdown_response += "</div>"
         return markdown_response
     except Exception as e:
         logger.exception("Error formatting response")

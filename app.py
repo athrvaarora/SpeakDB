@@ -345,9 +345,8 @@ def process_query():
                 mimetype='application/json'
             )
         
-        # Format the response and include the generated query
+        # Format just the query and result without extra text
         formatted_result = f"""
-## Generated Query
 ```sql
 {query}
 ```

@@ -617,3 +617,83 @@ function showError(message) {
         bsAlert.close();
     }, 5000);
 }
+
+// Export data to CSV format
+function exportToCSV(jsonDataStr) {
+    try {
+        // Parse the JSON data
+        const jsonData = JSON.parse(jsonDataStr);
+        
+        if (!Array.isArray(jsonData) || jsonData.length === 0) {
+            console.error('Invalid data for CSV export');
+            return;
+        }
+        
+        // Get the column headers from the first object
+        const headers = Object.keys(jsonData[0]);
+        
+        // Create CSV header row
+        let csvContent = headers.join(',') + '\n';
+        
+        // Add data rows
+        jsonData.forEach(item => {
+            const row = headers.map(header => {
+                const value = item[header];
+                
+                // Format based on data type
+                if (value === null || value === undefined) {
+                    return '';
+                } else if (typeof value === 'object') {
+                    // Convert objects/arrays to JSON strings, ensure quotes are escaped
+                    return '"' + JSON.stringify(value).replace(/"/g, '""') + '"';
+                } else if (typeof value === 'string') {
+                    // Escape quotes in strings
+                    return '"' + value.replace(/"/g, '""') + '"';
+                } else {
+                    return value;
+                }
+            }).join(',');
+            
+            csvContent += row + '\n';
+        });
+        
+        // Create and download the CSV file
+        downloadFile(csvContent, 'query_result.csv', 'text/csv');
+    } catch (e) {
+        console.error('Error exporting to CSV:', e);
+        showError('Failed to export data to CSV');
+    }
+}
+
+// Export data to JSON format
+function exportToJSON(jsonDataStr) {
+    try {
+        // Parse and re-stringify with proper formatting
+        const jsonData = JSON.parse(jsonDataStr);
+        const formattedJson = JSON.stringify(jsonData, null, 2);
+        
+        // Create and download the JSON file
+        downloadFile(formattedJson, 'query_result.json', 'application/json');
+    } catch (e) {
+        console.error('Error exporting to JSON:', e);
+        showError('Failed to export data to JSON');
+    }
+}
+
+// Helper function to create and trigger download
+function downloadFile(content, fileName, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    
+    // Clean up
+    setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, 100);
+}
