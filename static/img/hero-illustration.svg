@@ -1,60 +1,82 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="600" height="400" viewBox="0 0 600 400" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Database server rack -->
-  <rect x="120" y="100" width="160" height="200" rx="5" fill="#2A2E3B" stroke="#3B4251" stroke-width="2"/>
-  
-  <!-- Database units -->
-  <rect x="130" y="120" width="140" height="30" rx="3" fill="#3B4251" stroke="#4A566E" stroke-width="1"/>
-  <rect x="130" y="160" width="140" height="30" rx="3" fill="#3B4251" stroke="#4A566E" stroke-width="1"/>
-  <rect x="130" y="200" width="140" height="30" rx="3" fill="#3B4251" stroke="#4A566E" stroke-width="1"/>
-  <rect x="130" y="240" width="140" height="30" rx="3" fill="#3B4251" stroke="#4A566E" stroke-width="1"/>
-  
-  <!-- Server LEDs -->
-  <circle cx="150" cy="135" r="4" fill="#7ECC49"/>
-  <circle cx="165" cy="135" r="4" fill="#F3D23B"/>
-  <circle cx="150" cy="175" r="4" fill="#7ECC49"/>
-  <circle cx="165" cy="175" r="4" fill="#F3D23B"/>
-  <circle cx="150" cy="215" r="4" fill="#7ECC49"/>
-  <circle cx="165" cy="215" r="4" fill="#F3D23B"/>
-  <circle cx="150" cy="255" r="4" fill="#7ECC49"/>
-  <circle cx="165" cy="255" r="4" fill="#F3D23B"/>
-  
-  <!-- Chat interface -->
-  <rect x="320" y="100" width="200" height="200" rx="8" fill="#1E1E2E" stroke="#6366F1" stroke-width="2"/>
-  
-  <!-- Chat messages -->
-  <rect x="335" y="120" width="120" height="30" rx="15" fill="#6366F1"/>
-  <rect x="385" y="160" width="120" height="30" rx="15" fill="#2D2D44"/>
-  <rect x="335" y="200" width="170" height="30" rx="15" fill="#6366F1"/>
-  <rect x="365" y="240" width="140" height="30" rx="15" fill="#2D2D44"/>
-  
-  <!-- Connecting lines -->
-  <path d="M280 150 L320 150" stroke="#6366F1" stroke-width="2" stroke-dasharray="5 3"/>
-  <path d="M280 200 L320 200" stroke="#6366F1" stroke-width="2" stroke-dasharray="5 3"/>
-  <path d="M280 250 L320 250" stroke="#6366F1" stroke-width="2" stroke-dasharray="5 3"/>
-  
-  <!-- SQL code fragment -->
-  <rect x="200" y="320" width="200" height="50" rx="5" fill="#2A2E3B" stroke="#3B4251" stroke-width="1"/>
-  <text x="220" y="350" font-family="monospace" font-size="12" fill="#F4F4F5">SELECT * FROM users</text>
-  
-  <!-- Data packets -->
-  <circle cx="290" cy="150" r="5" fill="#6366F1">
-    <animate attributeName="cx" from="280" to="320" dur="2s" repeatCount="indefinite"/>
-  </circle>
-  <circle cx="290" cy="200" r="5" fill="#6366F1">
-    <animate attributeName="cx" from="280" to="320" dur="1.5s" repeatCount="indefinite"/>
-  </circle>
-  <circle cx="290" cy="250" r="5" fill="#6366F1">
-    <animate attributeName="cx" from="280" to="320" dur="2.5s" repeatCount="indefinite"/>
-  </circle>
-  
-  <!-- Decorative elements -->
-  <circle cx="100" cy="100" r="20" fill="none" stroke="#6366F1" stroke-width="1" opacity="0.3"/>
-  <circle cx="500" cy="300" r="30" fill="none" stroke="#6366F1" stroke-width="1" opacity="0.3"/>
-  <circle cx="450" cy="80" r="15" fill="none" stroke="#6366F1" stroke-width="1" opacity="0.3"/>
-  
-  <!-- Abstract data flow lines -->
-  <path d="M80 80 L130 110" stroke="#6366F1" stroke-width="1" opacity="0.3"/>
-  <path d="M520 270 L450 240" stroke="#6366F1" stroke-width="1" opacity="0.3"/>
-  <path d="M450 65 L420 100" stroke="#6366F1" stroke-width="1" opacity="0.3"/>
+<svg width="800px" height="600px" viewBox="0 0 800 600" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <defs>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="gradient-1">
+            <stop stop-color="#6366F1" offset="0%"></stop>
+            <stop stop-color="#4338CA" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="gradient-2">
+            <stop stop-color="#F472B6" offset="0%"></stop>
+            <stop stop-color="#EC4899" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="gradient-3">
+            <stop stop-color="#34D399" offset="0%"></stop>
+            <stop stop-color="#10B981" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <!-- Background Shapes -->
+        <circle fill="#F0F4FF" cx="650" cy="100" r="80"></circle>
+        <circle fill="#F0FDFA" cx="150" cy="500" r="100"></circle>
+        <circle fill="#FDF2F8" cx="700" cy="450" r="60"></circle>
+        
+        <!-- Main screen -->
+        <rect fill="#FFFFFF" x="200" y="100" width="400" height="300" rx="8"></rect>
+        <rect fill="#F9FAFB" x="200" y="100" width="400" height="40" rx="8"></rect>
+        <rect fill="#6366F1" x="220" y="117" width="12" height="12" rx="6"></rect>
+        <rect fill="#EC4899" x="242" y="117" width="12" height="12" rx="6"></rect>
+        <rect fill="#10B981" x="264" y="117" width="12" height="12" rx="6"></rect>
+        
+        <!-- Command Bar -->
+        <rect fill="#F3F4F6" x="220" y="160" width="360" height="40" rx="6"></rect>
+        <text font-family="Arial" font-size="12" fill="#6B7280" x="240" y="184">Tell me about sales in the last quarter</text>
+        
+        <!-- Result Box -->
+        <rect fill="#F9FAFB" x="220" y="220" width="360" height="150" rx="6"></rect>
+        
+        <!-- SQL Code -->
+        <rect fill="#F0F4FF" x="240" y="240" width="320" height="40" rx="4"></rect>
+        <text font-family="monospace" font-size="10" fill="#4338CA" x="250" y="260">SELECT * FROM sales WHERE date >= '2024-01-01'</text>
+        <text font-family="monospace" font-size="10" fill="#4338CA" x="250" y="272">AND date <= '2024-03-31'</text>
+        
+        <!-- Result Table -->
+        <rect fill="#FFFFFF" x="240" y="290" width="320" height="60" rx="4"></rect>
+        <line x1="240" y1="310" x2="560" y2="310" stroke="#E5E7EB" stroke-width="1"></line>
+        <line x1="320" y1="290" x2="320" y2="350" stroke="#E5E7EB" stroke-width="1"></line>
+        <line x1="400" y1="290" x2="400" y2="350" stroke="#E5E7EB" stroke-width="1"></line>
+        <line x1="480" y1="290" x2="480" y2="350" stroke="#E5E7EB" stroke-width="1"></line>
+        
+        <text font-family="Arial" font-size="10" fill="#374151" x="250" y="304">Month</text>
+        <text font-family="Arial" font-size="10" fill="#374151" x="330" y="304">Products</text>
+        <text font-family="Arial" font-size="10" fill="#374151" x="410" y="304">Revenue</text>
+        <text font-family="Arial" font-size="10" fill="#374151" x="490" y="304">Growth</text>
+        
+        <text font-family="Arial" font-size="10" fill="#6B7280" x="250" y="330">Q1 2024</text>
+        <text font-family="Arial" font-size="10" fill="#6B7280" x="330" y="330">1,245</text>
+        <text font-family="Arial" font-size="10" fill="#6B7280" x="410" y="330">$85,420</text>
+        <text font-family="Arial" font-size="10" fill="#10B981" x="490" y="330">+12.3%</text>
+        
+        <!-- Decorative Icons -->
+        <circle fill="url(#gradient-1)" cx="150" cy="150" r="30"></circle>
+        <rect fill="url(#gradient-2)" x="650" y="200" width="60" height="60" rx="8"></rect>
+        <polygon fill="url(#gradient-3)" points="650,400 700,450 650,500"></polygon>
+        
+        <!-- Database icon -->
+        <g transform="translate(110, 300)">
+            <ellipse fill="#6366F1" cx="40" cy="15" rx="40" ry="15"></ellipse>
+            <path d="M0,15 L0,65 C0,73.3 17.9,80 40,80 C62.1,80 80,73.3 80,65 L80,15" stroke="#6366F1" stroke-width="2" fill="none"></path>
+            <path d="M0,40 C0,48.3 17.9,55 40,55 C62.1,55 80,48.3 80,40" stroke="#6366F1" stroke-width="2" fill="none"></path>
+        </g>
+        
+        <!-- Chat bubbles -->
+        <g transform="translate(600, 320)">
+            <rect fill="#6366F1" x="0" y="0" width="80" height="30" rx="15"></rect>
+            <rect fill="#E5E7EB" x="20" y="40" width="60" height="30" rx="15"></rect>
+            <rect fill="#6366F1" x="0" y="80" width="60" height="30" rx="15"></rect>
+        </g>
+        
+        <!-- Connector Lines -->
+        <path d="M190,330 C220,330 220,250 250,250" stroke="#D1D5DB" stroke-width="2" stroke-dasharray="4,4" fill="none"></path>
+        <path d="M560,250 C590,250 590,330 620,330" stroke="#D1D5DB" stroke-width="2" stroke-dasharray="4,4" fill="none"></path>
+    </g>
 </svg>

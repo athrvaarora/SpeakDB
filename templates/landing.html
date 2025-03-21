@@ -2,186 +2,224 @@
 
 {% block title %}SpeakDB - Natural Language Database Interface{% endblock %}
 
-{% block content %}
-<div class="container-fluid py-5 hero-section">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6 mb-5 mb-lg-0">
-                <h1 class="display-4 fw-bold mb-4">Talk to your databases using natural language</h1>
-                <p class="lead mb-4">
-                    SpeakDB transforms complex database queries into simple conversations. Connect to any database type and ask questions in plain English.
-                </p>
-                <div class="d-grid gap-2 d-md-flex justify-content-md-start">
-                    {% if current_user.is_authenticated %}
-                        <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-lg px-4 me-md-2">Go to Dashboard</a>
-                    {% else %}
-                        <a href="{{ url_for('signup') }}" class="btn btn-primary btn-lg px-4 me-md-2">Get Started</a>
-                        <a href="{{ url_for('login') }}" class="btn btn-outline-secondary btn-lg px-4">Log In</a>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="illustration-container">
-                    <img src="/static/img/hero-illustration.svg" alt="SpeakDB Illustration" class="img-fluid hero-illustration">
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+{% block styles %}
+<style>
+  .hero-section {
+    min-height: 85vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .feature-icon {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+  
+  .animate-in {
+    animation: fadeInUp 0.8s ease-out;
+  }
+  
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .hero-bg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--bs-primary-bg-subtle) 0%, var(--bs-tertiary-bg) 100%);
+    opacity: 0.1;
+    z-index: -1;
+  }
+  
+  .btn-hero {
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-hero:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  }
+  
+  .feature-card {
+    border-radius: 1rem;
+    border: 1px solid var(--bs-border-color);
+    transition: all 0.3s ease;
+    padding: 2rem;
+    height: 100%;
+  }
+  
+  .feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    border-color: var(--bs-primary);
+  }
+  
+  .testimonial {
+    border-radius: 1rem;
+    padding: 2rem;
+    position: relative;
+    background-color: var(--bs-tertiary-bg);
+  }
+  
+  .testimonial::before {
+    content: """;
+    position: absolute;
+    top: 0;
+    left: 1rem;
+    font-size: 4rem;
+    color: var(--bs-primary);
+    line-height: 1;
+    opacity: 0.2;
+  }
+</style>
+{% endblock %}
 
-<div class="container py-5">
-    <div class="row text-center mb-5">
-        <div class="col-lg-8 mx-auto">
-            <h2 class="fw-bold mb-3">Connect to any database system</h2>
-            <p class="lead">SpeakDB works with a wide range of database platforms, from relational to NoSQL, graph to time-series.</p>
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="hero-bg"></div>
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-6 animate-in">
+        <h1 class="display-4 fw-bold mb-4">Speak to your database in plain English</h1>
+        <p class="lead mb-4">SpeakDB transforms complex database queries into natural language conversations. Connect to any database and get insights instantly.</p>
+        <div class="d-flex gap-3">
+          <a href="{{ url_for('login') }}" class="btn btn-primary btn-hero">Log In</a>
+          <a href="{{ url_for('signup') }}" class="btn btn-outline-primary btn-hero">Sign Up</a>
         </div>
+      </div>
+      <div class="col-lg-6 d-none d-lg-block animate-in" style="animation-delay: 0.3s;">
+        <img src="{{ url_for('static', filename='img/hero-illustration.svg') }}" alt="SpeakDB Illustration" class="img-fluid">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5 bg-body-tertiary">
+  <div class="container py-5">
+    <div class="text-center mb-5">
+      <h2 class="fw-bold">Powerful Features</h2>
+      <p class="lead text-muted">Everything you need to interact with your data effortlessly</p>
     </div>
     
     <div class="row g-4">
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-4">
-                    <div class="feature-icon mb-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-database" viewBox="0 0 16 16">
-                            <path d="M4.318 2.687C5.234 2.271 6.536 2 8 2s2.766.27 3.682.687C12.644 3.125 13 3.627 13 4c0 .374-.356.875-1.318 1.313C10.766 5.729 9.464 6 8 6s-2.766-.27-3.682-.687C3.356 4.875 3 4.373 3 4c0-.374.356-.875 1.318-1.313z"/>
-                            <path d="M13 5.698V7c0 .374-.356.875-1.318 1.313C10.766 8.729 9.464 9 8 9s-2.766-.27-3.682-.687C3.356 7.875 3 7.373 3 7V5.698c.271.202.58.378.904.525C4.978 6.711 6.427 7 8 7s3.022-.289 4.096-.777A4.92 4.92 0 0 0 13 5.698zM14 4c0-1.007-.875-1.755-1.904-2.223C11.022 1.289 9.573 1 8 1s-3.022.289-4.096.777C2.875 2.245 2 2.993 2 4v9c0 1.007.875 1.755 1.904 2.223C4.978 15.71 6.427 16 8 16s3.022-.289 4.096-.777C13.125 14.755 14 14.007 14 13V4z"/>
-                        </svg>
-                    </div>
-                    <h4 class="fw-bold mb-2">Relational Databases</h4>
-                    <p class="text-muted">Connect to PostgreSQL, MySQL, SQL Server, Oracle and more using natural language.</p>
-                </div>
-            </div>
+      <div class="col-md-4">
+        <div class="feature-card">
+          <div class="feature-icon bg-primary-subtle">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-database"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+          </div>
+          <h4>Multi-Database Support</h4>
+          <p>Connect to PostgreSQL, MySQL, MongoDB, and 30+ other database types with the same intuitive interface.</p>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="feature-card">
+          <div class="feature-icon bg-success-subtle">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-message-square"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          </div>
+          <h4>Natural Language Queries</h4>
+          <p>Ask questions in plain English and get accurate database queries and results without knowing SQL.</p>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="feature-card">
+          <div class="feature-icon bg-info-subtle">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-bar-chart-2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+          </div>
+          <h4>Instant Visualizations</h4>
+          <p>Automatically generate charts and visualizations from your query results for better insights.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-5">
+  <div class="container py-5">
+    <div class="text-center mb-5">
+      <h2 class="fw-bold">How It Works</h2>
+      <p class="lead text-muted">Get started in minutes</p>
+    </div>
+    
+    <div class="row align-items-center">
+      <div class="col-lg-6 mb-4 mb-lg-0">
+        <img src="{{ url_for('static', filename='img/workflow.svg') }}" alt="How SpeakDB Works" class="img-fluid rounded shadow-sm">
+      </div>
+      <div class="col-lg-6">
+        <div class="d-flex mb-4">
+          <div class="me-3">
+            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 2.5rem; height: 2.5rem;">1</div>
+          </div>
+          <div>
+            <h4>Connect your database</h4>
+            <p>Securely connect SpeakDB to your database with standard credentials</p>
+          </div>
         </div>
         
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-4">
-                    <div class="feature-icon mb-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-hdd-network" viewBox="0 0 16 16">
-                            <path d="M4.5 5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1zM3 4.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z"/>
-                            <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2H8.5v3a1.5 1.5 0 0 1 1.5 1.5h5.5a.5.5 0 0 1 0 1H10A1.5 1.5 0 0 1 8.5 14h-1A1.5 1.5 0 0 1 6 12.5H.5a.5.5 0 0 1 0-1H6A1.5 1.5 0 0 1 7.5 10V7H2a2 2 0 0 1-2-2V4zm1 0v1a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1zm6 7.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5z"/>
-                        </svg>
-                    </div>
-                    <h4 class="fw-bold mb-2">NoSQL & Document DBs</h4>
-                    <p class="text-muted">Access MongoDB, DynamoDB, Elasticsearch, Cassandra and Redis with ease.</p>
-                </div>
-            </div>
+        <div class="d-flex mb-4">
+          <div class="me-3">
+            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 2.5rem; height: 2.5rem;">2</div>
+          </div>
+          <div>
+            <h4>Ask questions in plain English</h4>
+            <p>Type your question or data request using everyday language</p>
+          </div>
         </div>
         
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-4">
-                    <div class="feature-icon mb-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-diagram-3" viewBox="0 0 16 16">
-                            <path fill-rule="evenodd" d="M6 3.5A1.5 1.5 0 0 1 7.5 2h1A1.5 1.5 0 0 1 10 3.5v1A1.5 1.5 0 0 1 8.5 6v1H14a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0V8h-5v.5a.5.5 0 0 1-1 0V8h-5v.5a.5.5 0 0 1-1 0v-1A.5.5 0 0 1 2 7h5.5V6A1.5 1.5 0 0 1 6 4.5v-1zM8.5 5a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1zM0 11.5A1.5 1.5 0 0 1 1.5 10h1A1.5 1.5 0 0 1 4 11.5v1A1.5 1.5 0 0 1 2.5 14h-1A1.5 1.5 0 0 1 0 12.5v-1zm1.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1zm4.5.5A1.5 1.5 0 0 1 7.5 10h1a1.5 1.5 0 0 1 1.5 1.5v1A1.5 1.5 0 0 1 8.5 14h-1A1.5 1.5 0 0 1 6 12.5v-1zm1.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1zm4.5.5a1.5 1.5 0 0 1 1.5-1.5h1a1.5 1.5 0 0 1 1.5 1.5v1a1.5 1.5 0 0 1-1.5 1.5h-1a1.5 1.5 0 0 1-1.5-1.5v-1zm1.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1z"/>
-                        </svg>
-                    </div>
-                    <h4 class="fw-bold mb-2">Graph & Specialized</h4>
-                    <p class="text-muted">Explore Neo4j, TigerGraph, InfluxDB and other specialized databases with intuitive queries.</p>
-                </div>
-            </div>
+        <div class="d-flex mb-4">
+          <div class="me-3">
+            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 2.5rem; height: 2.5rem;">3</div>
+          </div>
+          <div>
+            <h4>Get instant answers</h4>
+            <p>SpeakDB translates your question, executes the query, and presents the results</p>
+          </div>
         </div>
-    </div>
-</div>
-
-<div class="container-fluid py-5 bg-light">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6 order-lg-2 mb-4 mb-lg-0">
-                <img src="/static/img/workflow.svg" alt="SpeakDB Workflow" class="img-fluid rounded">
-            </div>
-            <div class="col-lg-6 order-lg-1">
-                <h2 class="fw-bold mb-4">How SpeakDB works</h2>
-                <div class="workflow-steps">
-                    <div class="d-flex mb-4">
-                        <div class="step-number me-3">1</div>
-                        <div>
-                            <h5 class="fw-bold">Connect your database</h5>
-                            <p class="text-muted">Provide connection details for any supported database system.</p>
-                        </div>
-                    </div>
-                    <div class="d-flex mb-4">
-                        <div class="step-number me-3">2</div>
-                        <div>
-                            <h5 class="fw-bold">Ask natural questions</h5>
-                            <p class="text-muted">Type your query in plain English and let SpeakDB do the translation.</p>
-                        </div>
-                    </div>
-                    <div class="d-flex">
-                        <div class="step-number me-3">3</div>
-                        <div>
-                            <h5 class="fw-bold">Get instant results</h5>
-                            <p class="text-muted">View database results along with the generated query and visualizations.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        
+        <div class="d-flex">
+          <div class="me-3">
+            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 2.5rem; height: 2.5rem;">4</div>
+          </div>
+          <div>
+            <h4>Visualize and export</h4>
+            <p>View your data as charts, download as CSV or JSON, or share with your team</p>
+          </div>
         </div>
+      </div>
     </div>
-</div>
+  </div>
+</section>
 
-<div class="container py-5">
-    <div class="row text-center mb-5">
-        <div class="col-lg-8 mx-auto">
-            <h2 class="fw-bold mb-3">Get started with SpeakDB today</h2>
-            <p class="lead">Join thousands of developers and data professionals who are simplifying database interactions.</p>
-            
-            {% if current_user.is_authenticated %}
-                <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-lg mt-3">Go to your Dashboard</a>
-            {% else %}
-                <a href="{{ url_for('signup') }}" class="btn btn-primary btn-lg mt-3">Create your free account</a>
-            {% endif %}
-        </div>
+<!-- CTA Section -->
+<section class="py-5 bg-primary text-white">
+  <div class="container py-5 text-center">
+    <h2 class="fw-bold mb-4">Ready to speak to your data?</h2>
+    <p class="lead mb-4">Join thousands of users who are transforming how they work with databases</p>
+    <div class="d-flex justify-content-center gap-3">
+      <a href="{{ url_for('signup') }}" class="btn btn-light btn-lg">Get Started</a>
+      <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg">Sign In</a>
     </div>
-</div>
-
-<style>
-.hero-section {
-    background-color: #f8f9fa;
-    padding-top: 5rem;
-    padding-bottom: 5rem;
-}
-
-.feature-icon {
-    color: var(--bs-primary);
-    background: rgba(var(--bs-primary-rgb), 0.1);
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.step-number {
-    background-color: var(--bs-primary);
-    color: white;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    flex-shrink: 0;
-}
-
-.hero-illustration {
-    max-width: 100%;
-    height: auto;
-    animation: float 6s ease-in-out infinite;
-}
-
-@keyframes float {
-    0% {
-        transform: translateY(0px);
-    }
-    50% {
-        transform: translateY(-20px);
-    }
-    100% {
-        transform: translateY(0px);
-    }
-}
-</style>
+  </div>
+</section>
 {% endblock %}

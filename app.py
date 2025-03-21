@@ -96,15 +96,26 @@ def signup():
     """Handle user registration"""
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
-    
-    form = SignupForm()
-    if form.validate_on_submit():
-        # Create new user (validation happens in the form class)
-        new_user = User(
-            username=form.username.data,
-            email=form.email.data,
-            password=form.password.data
-        )
+        
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        
+        # Check if username or email already exists
+        user_by_username = User.query.filter_by(username=username).first()
+        user_by_email = User.query.filter_by(email=email).first()
+        
+        if user_by_username:
+            flash('Username already exists. Please choose a different one.', 'danger')
+            return render_template('signup.html')
+            
+        if user_by_email:
+            flash('Email already exists. Please use a different email or log in.', 'danger')
+            return render_template('signup.html')
+            
+        # Create new user
+        new_user = User(username=username, email=email, password=password)
         
         # Add user to database
         db.session.add(new_user)
@@ -112,8 +123,8 @@ def signup():
         
         flash('Account created successfully! You can now log in.', 'success')
         return redirect(url_for('login'))
-    
-    return render_template('signup.html', form=form)
+        
+    return render_template('signup.html')
     
 @app.route('/logout')
 @login_required
@@ -175,22 +186,13 @@ def test_db_connection():
             chat_id = str(uuid.uuid4())
             session['chat_id'] = chat_id
             
-            # Create a new chat record with user_id if authenticated
-            if current_user.is_authenticated:
-                chat = Chat(
-                    id=chat_id,
-                    user_id=current_user.id,
-                    db_type=db_type,
-                    db_name=credentials.get('db_name', db_type.upper()),
-                    db_credentials=json.dumps(credentials)  # Store credentials as JSON string
-                )
-            else:
-                chat = Chat(
-                    id=chat_id,
-                    db_type=db_type,
-                    db_name=credentials.get('db_name', db_type.upper()),
-                    db_credentials=json.dumps(credentials)  # Store credentials as JSON string
-                )
+            # Create a new chat record
+            chat = Chat(
+                id=chat_id,
+                db_type=db_type,
+                db_name=credentials.get('db_name', db_type.upper()),
+                db_credentials=json.dumps(credentials)  # Store credentials as JSON string
+            )
             
             # Save the chat to the database
             db.session.add(chat)
