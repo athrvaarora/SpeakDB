@@ -28,8 +28,13 @@
                     <img src="{{ url_for('static', filename='images/speakdb-logo.svg') }}" alt="SpeakDB Logo" width="40" height="40" class="me-2">
                     <h1 class="h4 m-0 fw-semibold">Speak<span class="text-primary">DB</span></h1>
                 </div>
-                <div class="animate__animated animate__fadeIn animate__delay-1s">
-                    <span class="text-primary fw-light">Smart Database Conversations</span>
+                <div class="d-flex align-items-center animate__animated animate__fadeIn animate__delay-1s">
+                    <span class="text-primary fw-light me-3">Smart Database Conversations</span>
+                    {% if current_user.is_authenticated or request.path != '/' %}
+                    <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger rounded-pill" title="Logout">
+                        <i class="fas fa-sign-out-alt me-1"></i> Logout
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </header>
