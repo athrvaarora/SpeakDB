@@ -266,17 +266,40 @@ class CassandraConnector(BaseNoSQLConnector):
         """Connect to a Cassandra database"""
         if not self.client:
             try:
-                host = self.credentials.get("host", "localhost")
-                port = self.credentials.get("port", 9042)
-                username = self.credentials.get("username")
-                password = self.credentials.get("password")
+                # Get credentials from credentials dict or environment variables
+                host = self.credentials.get("host") or os.environ.get("CASSANDRA_HOST", "localhost")
+                port = self.credentials.get("port") or os.environ.get("CASSANDRA_PORT", "9042")
+                username = self.credentials.get("username") or os.environ.get("CASSANDRA_USERNAME")
+                password = self.credentials.get("password") or os.environ.get("CASSANDRA_PASSWORD")
+                keyspace = self.credentials.get("keyspace") or os.environ.get("CASSANDRA_KEYSPACE")
+                
+                # Log if using environment variables
+                if os.environ.get("CASSANDRA_HOST") and not self.credentials.get("host"):
+                    logger.info("Using CASSANDRA_HOST environment variable")
+                if os.environ.get("CASSANDRA_PORT") and not self.credentials.get("port"):
+                    logger.info("Using CASSANDRA_PORT environment variable")
+                if os.environ.get("CASSANDRA_USERNAME") and not self.credentials.get("username"):
+                    logger.info("Using CASSANDRA_USERNAME environment variable")
+                if os.environ.get("CASSANDRA_PASSWORD") and not self.credentials.get("password"):
+                    logger.info("Using CASSANDRA_PASSWORD environment variable")
+                if os.environ.get("CASSANDRA_KEYSPACE") and not self.credentials.get("keyspace"):
+                    logger.info("Using CASSANDRA_KEYSPACE environment variable")
+                
+                # Convert port to integer if it's a string
+                if isinstance(port, str):
+                    port = int(port)
                 
                 auth_provider = None
                 if username and password:
                     auth_provider = PlainTextAuthProvider(username=username, password=password)
                 
                 self.client = Cluster([host], port=port, auth_provider=auth_provider)
-                self.session = self.client.connect()
+                
+                # Connect with keyspace if provided, otherwise connect without keyspace
+                if keyspace:
+                    self.session = self.client.connect(keyspace)
+                else:
+                    self.session = self.client.connect()
                 
             except Exception as e:
                 logger.exception("Error connecting to Cassandra")
@@ -392,14 +415,33 @@ class RedisConnector(BaseNoSQLConnector):
         """Connect to a Redis database"""
         if not self.client:
             try:
-                host = self.credentials.get("host", "localhost")
-                port = self.credentials.get("port", 6379)
-                password = self.credentials.get("password")
+                # Get credentials from credentials dict or environment variables
+                host = self.credentials.get("host") or os.environ.get("REDIS_HOST", "localhost")
+                port = self.credentials.get("port") or os.environ.get("REDIS_PORT", "6379")
+                password = self.credentials.get("password") or os.environ.get("REDIS_PASSWORD")
+                db = self.credentials.get("db") or os.environ.get("REDIS_DB", "0")
+                
+                # Log if using environment variables
+                if os.environ.get("REDIS_HOST") and not self.credentials.get("host"):
+                    logger.info("Using REDIS_HOST environment variable")
+                if os.environ.get("REDIS_PORT") and not self.credentials.get("port"):
+                    logger.info("Using REDIS_PORT environment variable")
+                if os.environ.get("REDIS_PASSWORD") and not self.credentials.get("password"):
+                    logger.info("Using REDIS_PASSWORD environment variable")
+                if os.environ.get("REDIS_DB") and not self.credentials.get("db"):
+                    logger.info("Using REDIS_DB environment variable")
+                
+                # Convert port and db to integers if they're strings
+                if isinstance(port, str):
+                    port = int(port)
+                if isinstance(db, str):
+                    db = int(db)
                 
                 self.client = redis.Redis(
                     host=host,
                     port=port,
                     password=password,
+                    db=db,
                     decode_responses=True
                 )
                 
@@ -860,11 +902,30 @@ class Neo4jConnector(BaseNoSQLConnector):
         """Connect to a Neo4j database"""
         if not self.client:
             try:
-                uri = self.credentials.get("uri", "bolt://localhost:7687")
-                username = self.credentials.get("username")
-                password = self.credentials.get("password")
+                # Get credentials from credentials dict or environment variables
+                uri = self.credentials.get("uri") or os.environ.get("NEO4J_URI", "bolt://localhost:7687")
+                username = self.credentials.get("username") or os.environ.get("NEO4J_USERNAME")
+                password = self.credentials.get("password") or os.environ.get("NEO4J_PASSWORD")
+                database = self.credentials.get("database") or os.environ.get("NEO4J_DATABASE")
                 
-                self.client = GraphDatabase.driver(uri, auth=(username, password))
+                # Log if using environment variables
+                if os.environ.get("NEO4J_URI") and not self.credentials.get("uri"):
+                    logger.info("Using NEO4J_URI environment variable")
+                if os.environ.get("NEO4J_USERNAME") and not self.credentials.get("username"):
+                    logger.info("Using NEO4J_USERNAME environment variable")
+                if os.environ.get("NEO4J_PASSWORD") and not self.credentials.get("password"):
+                    logger.info("Using NEO4J_PASSWORD environment variable")
+                if os.environ.get("NEO4J_DATABASE") and not self.credentials.get("database"):
+                    logger.info("Using NEO4J_DATABASE environment variable")
+                
+                # Connect with auth if credentials are provided
+                if username and password:
+                    self.client = GraphDatabase.driver(uri, auth=(username, password))
+                else:
+                    self.client = GraphDatabase.driver(uri)
+                
+                # Set default database if provided
+                self.database = database
                 
             except Exception as e:
                 logger.exception("Error connecting to Neo4j")
@@ -875,7 +936,12 @@ class Neo4jConnector(BaseNoSQLConnector):
         try:
             self.connect()
             
-            with self.client.session() as session:
+            # Use the specified database if available
+            session_params = {}
+            if hasattr(self, 'database') and self.database:
+                session_params['database'] = self.database
+            
+            with self.client.session(**session_params) as session:
                 # Get node labels
                 labels_result = session.run("CALL db.labels()")
                 labels = [record["label"] for record in labels_result]
@@ -910,7 +976,12 @@ class Neo4jConnector(BaseNoSQLConnector):
         try:
             self.connect()
             
-            with self.client.session() as session:
+            # Use the specified database if available
+            session_params = {}
+            if hasattr(self, 'database') and self.database:
+                session_params['database'] = self.database
+            
+            with self.client.session(**session_params) as session:
                 result = session.run(query)
                 
                 # Convert records to dictionaries
