@@ -10,6 +10,7 @@ function getExampleQueries(dbType, schema) {
     
     // Database-specific examples
     switch (dbType) {
+        // Relational Databases
         case 'postgresql':
         case 'mysql':
         case 'sqlserver':
@@ -19,6 +20,14 @@ function getExampleQueries(dbType, schema) {
         case 'cloudsql':
         case 'mariadb':
         case 'db2':
+        case 'teradata':
+        case 'saphana':
+        case 'planetscale':
+        case 'vertica':
+        case 'timescaledb':
+        case 'heroku':
+        case 'crunchybridge':
+        case 'neon':
         case 'snowflake':
         case 'synapse':
             // SQL databases
@@ -28,53 +37,82 @@ function getExampleQueries(dbType, schema) {
             examples.push("Find all records in [table] where [column] equals [value]");
             examples.push("Join [table1] and [table2] on [common_column]");
             break;
-            
+        
+        // NoSQL Document Databases    
         case 'mongodb':
+        case 'cosmosdb':
+        case 'firestore':
+        case 'supabase':
             examples.push("Find documents in [collection] where [field] equals [value]");
             examples.push("Count documents in [collection]");
             examples.push("Aggregate documents in [collection] by [field]");
+            examples.push("Insert a new document into [collection]");
             break;
             
+        // Key-Value Stores    
         case 'redis':
             examples.push("Get the value of [key]");
             examples.push("List all keys matching [pattern]");
             examples.push("Get all fields in hash [key]");
+            examples.push("Set expiration time for [key]");
             break;
             
+        // Search Engines    
         case 'elasticsearch':
             examples.push("Search for [term] in [index]");
             examples.push("Count documents in [index]");
             examples.push("Get mapping for [index]");
+            examples.push("Analyze text with [analyzer]");
             break;
             
+        // Wide Column Stores    
         case 'cassandra':
             examples.push("Select all records from [table]");
             examples.push("Count records in [table]");
             examples.push("Select records from [table] where [column] equals [value]");
+            examples.push("Create a new table with time series data");
             break;
             
+        // Distributed Key-Value    
         case 'dynamodb':
             examples.push("Scan [table] for all items");
             examples.push("Get item from [table] with key [key_value]");
             examples.push("Query [table] where [key] equals [value]");
+            examples.push("List all DynamoDB tables");
             break;
             
+        // Graph Databases    
         case 'neo4j':
+        case 'tigergraph':
+        case 'neptune':
             examples.push("Match all nodes with label [Label]");
             examples.push("Find relationships between nodes");
             examples.push("Count nodes with label [Label]");
+            examples.push("Find shortest path between [node1] and [node2]");
             break;
             
+        // Time Series Databases    
         case 'influxdb':
+        case 'kdb':
             examples.push("Get the last 10 measurements from [bucket]");
             examples.push("Calculate mean of [field] from [bucket] grouped by [tag]");
             examples.push("Count measurements in [bucket] over the last hour");
+            examples.push("Find the maximum value of [field] in [bucket]");
+            break;
+            
+        // Specialized Systems    
+        case 'prometheus':
+            examples.push("Query [metric] for the last hour");
+            examples.push("Calculate rate of [counter] over 5 minutes");
+            examples.push("Show histogram of [metric]");
+            examples.push("Compare [metric1] and [metric2] values");
             break;
             
         default:
-            // Add more generic examples
+            // Generic examples for any other database types
             examples.push("Get all data from [table/collection]");
             examples.push("Find records matching [criteria]");
+            examples.push("Count total records in [table/collection]");
     }
     
     // If we have schema information, use it to make more specific examples
