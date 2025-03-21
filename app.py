@@ -647,11 +647,12 @@ def get_required_credentials():
         
         # Specialized Systems
         'prometheus': {
-            'fields': ['hostname', 'port'],
+            'fields': ['hostname', 'port', 'username', 'password'],
             'url_option': True,
-            'url_field': 'connection_string',
+            'url_field': 'url',
             'url_example': 'http://hostname:9090',
-            'terminal_command': 'curl -G \'http://hostname:9090/api/v1/query\' --data-urlencode \'query=up\''
+            'terminal_command': 'curl -G \'http://hostname:9090/api/v1/query\' --data-urlencode \'query=up\'',
+            'notes': 'If authentication is enabled, include username and password. URL is in format: http://hostname:9090'
         }
     }
     

@@ -79,7 +79,8 @@ def get_connector(db_type, credentials):
         # Time-series databases
         'influxdb': ('database_connectors.timeseries', 'InfluxDBConnector'),
         'timescaledb': ('database_connectors.timescaledb', 'TimescaleDBConnector'),
-        'kdb': ('database_connectors.kdb', 'KdbConnector')
+        'kdb': ('database_connectors.kdb', 'KdbConnector'),
+        'prometheus': ('database_connectors.timeseries', 'PrometheusConnector')
     }
     
     if db_type not in connector_map:
