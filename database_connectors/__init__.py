@@ -77,7 +77,9 @@ def get_connector(db_type, credentials):
         'supabase': ('database_connectors.cloud', 'SupabaseConnector'),
         
         # Time-series databases
-        'influxdb': ('database_connectors.timeseries', 'InfluxDBConnector')
+        'influxdb': ('database_connectors.timeseries', 'InfluxDBConnector'),
+        'timescaledb': ('database_connectors.timescaledb', 'TimescaleDBConnector'),
+        'kdb': ('database_connectors.kdb', 'KdbConnector')
     }
     
     if db_type not in connector_map:

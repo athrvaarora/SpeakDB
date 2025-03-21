@@ -1,7 +1,26 @@
 import logging
 import json
-from influxdb_client import InfluxDBClient
-from influxdb_client.client.write_api import SYNCHRONOUS
+import os
+from decimal import Decimal
+
+# Import time-series database libraries with try/except to handle missing dependencies
+try:
+    from influxdb_client import InfluxDBClient
+    from influxdb_client.client.write_api import SYNCHRONOUS
+except ImportError:
+    InfluxDBClient = None
+
+try:
+    import psycopg2
+    from sqlalchemy import create_engine
+except ImportError:
+    psycopg2 = None
+
+try:
+    import qpython
+    from qpython import qconnection
+except ImportError:
+    qpython = None
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -61,14 +80,31 @@ class InfluxDBConnector(BaseTimeSeriesConnector):
         """Connect to an InfluxDB time-series database"""
         if not self.client:
             try:
-                host = self.credentials.get("host", "localhost")
-                port = self.credentials.get("port", 8086)
+                # Support both direct URL and individual parameters
+                if self.credentials.get("url"):
+                    url = self.credentials.get("url")
+                else:
+                    host = self.credentials.get("host", "localhost")
+                    port = self.credentials.get("port", 8086)
+                    url = f"http://{host}:{port}"
+                
+                # Use token authentication if provided
                 token = self.credentials.get("token")
                 org = self.credentials.get("org")
                 
-                url = f"http://{host}:{port}"
+                # Fall back to username/password auth if token not provided
+                username = self.credentials.get("username")
+                password = self.credentials.get("password")
+                bucket = self.credentials.get("bucket")
                 
-                self.client = InfluxDBClient(url=url, token=token, org=org)
+                if token:
+                    self.client = InfluxDBClient(url=url, token=token, org=org)
+                elif username and password:
+                    # For InfluxDB 1.x compatibility
+                    self.client = InfluxDBClient(url=url, username=username, password=password, org=org)
+                else:
+                    raise Exception("Either token or username/password must be provided")
+                
                 self.query_api = self.client.query_api()
                 self.write_api = self.client.write_api(write_options=SYNCHRONOUS)
                 
