@@ -124,69 +124,80 @@ def format_response(db_result, user_query):
             table = f"{header_row}\n{separator_row}\n" + "\n".join(data_rows)
             markdown_response += table
             
-            # Store the original data in a hidden format for CSV export
-            json_data = json.dumps(db_result, cls=DateTimeEncoder)
-            # Avoid f-string with replacements
-            markdown_response += "\n\n<div class='hidden-data' style='display:none;' data-result='"
-            markdown_response += json_data.replace('"', '&quot;')
-            markdown_response += "'></div>"
-            
-            # Add record count and export button
+            # Add record count
             record_count = len(db_result)
             plural = "s" if record_count != 1 else ""
             markdown_response += f"\n\n<div class='result-footer'>"
             markdown_response += f"<span class='record-count'>{record_count} record{plural} returned</span>"
-            markdown_response += f"<button class='btn btn-sm btn-outline-secondary export-csv-btn ms-2'>Export CSV</button>"
             markdown_response += "</div>"
+            
+            # Try to store the original data for export, but continue if it fails
+            try:
+                json_data = json.dumps(db_result, cls=DateTimeEncoder)
+                markdown_response += f"\n\n<div class='export-controls'>"
+                markdown_response += f"<button class='btn btn-sm btn-outline-secondary export-csv-btn ms-2'>Export CSV</button>"
+                markdown_response += "</div>"
+                markdown_response += "\n\n<div class='hidden-data' style='display:none;' data-result='"
+                markdown_response += json_data.replace('"', '&quot;')
+                markdown_response += "'></div>"
+            except Exception as json_err:
+                logger.error(f"Error serializing to JSON: {str(json_err)}")
+                # Skip export functionality but continue showing the results
             
         # If the result is a dictionary (common for NoSQL databases or aggregation results)
         elif isinstance(db_result, dict):
-            # Format as JSON in a code block
-            formatted_result = json.dumps(db_result, indent=2, cls=DateTimeEncoder)
-            markdown_response += f"```json\n{formatted_result}\n```"
-            
-            # Store the original data in a hidden format for export
-            json_data = json.dumps(db_result, cls=DateTimeEncoder)
-            # Avoid f-string with replacements
-            markdown_response += "\n\n<div class='hidden-data' style='display:none;' data-result='"
-            markdown_response += json_data.replace('"', '&quot;')
-            markdown_response += "'></div>"
-            
-            # Add export button for JSON
-            markdown_response += f"\n\n<div class='result-footer'>"
-            markdown_response += f"<button class='btn btn-sm btn-outline-secondary export-json-btn'>Export JSON</button>"
-            markdown_response += "</div>"
-            
+            try:
+                # Format as JSON in a code block
+                formatted_result = json.dumps(db_result, indent=2, cls=DateTimeEncoder)
+                markdown_response += f"```json\n{formatted_result}\n```"
+                
+                # Try to add export functionality
+                json_data = json.dumps(db_result, cls=DateTimeEncoder)
+                markdown_response += f"\n\n<div class='export-controls'>"
+                markdown_response += f"<button class='btn btn-sm btn-outline-secondary export-json-btn'>Export JSON</button>"
+                markdown_response += "</div>"
+                markdown_response += "\n\n<div class='hidden-data' style='display:none;' data-result='"
+                markdown_response += json_data.replace('"', '&quot;')
+                markdown_response += "'></div>"
+            except Exception as json_err:
+                logger.error(f"Error serializing dict to JSON: {str(json_err)}")
+                # Fall back to just showing the basic string representation
+                markdown_response += f"```\n{str(db_result)}\n```"
+                
         # If it's a simple list or other data type
         else:
-            # Format as JSON in a code block
-            formatted_result = json.dumps(db_result, indent=2, cls=DateTimeEncoder)
-            markdown_response += f"```json\n{formatted_result}\n```"
-            
-            # Store the original data in a hidden format for export
-            json_data = json.dumps(db_result, cls=DateTimeEncoder)
-            # Avoid f-string with replacements
-            markdown_response += "\n\n<div class='hidden-data' style='display:none;' data-result='"
-            markdown_response += json_data.replace('"', '&quot;')
-            markdown_response += "'></div>"
-            
-            # Add count information and export button for lists
-            if isinstance(db_result, list):
-                count = len(db_result)
-                plural = "s" if count != 1 else ""
-                markdown_response += f"\n\n<div class='result-footer'>"
-                markdown_response += f"<span class='record-count'>{count} result{plural} returned</span>"
-                markdown_response += f"<button class='btn btn-sm btn-outline-secondary export-json-btn ms-2'>Export JSON</button>"
-                markdown_response += "</div>"
+            try:
+                # Format as JSON in a code block
+                formatted_result = json.dumps(db_result, indent=2, cls=DateTimeEncoder)
+                markdown_response += f"```json\n{formatted_result}\n```"
+                
+                # Add count information for lists
+                if isinstance(db_result, list):
+                    count = len(db_result)
+                    plural = "s" if count != 1 else ""
+                    markdown_response += f"\n\n<div class='result-footer'>"
+                    markdown_response += f"<span class='record-count'>{count} result{plural} returned</span>"
+                    markdown_response += "</div>"
+                
+                # Try to add export functionality
+                try:
+                    json_data = json.dumps(db_result, cls=DateTimeEncoder)
+                    markdown_response += f"\n\n<div class='export-controls'>"
+                    markdown_response += f"<button class='btn btn-sm btn-outline-secondary export-json-btn ms-2'>Export JSON</button>"
+                    markdown_response += "</div>"
+                    markdown_response += "\n\n<div class='hidden-data' style='display:none;' data-result='"
+                    markdown_response += json_data.replace('"', '&quot;')
+                    markdown_response += "'></div>"
+                except Exception as json_err:
+                    logger.error(f"Error serializing list to JSON: {str(json_err)}")
+                    # Skip export functionality
+            except Exception as format_err:
+                logger.error(f"Error formatting as JSON: {str(format_err)}")
+                # Fall back to just showing the basic string representation
+                markdown_response += f"```\n{str(db_result)}\n```"
         
         markdown_response += "</div>"
         return markdown_response
     except Exception as e:
-        logger.exception("Error formatting response")
-        try:
-            # Try using the custom encoder for the error message too
-            raw_result = json.dumps(db_result, indent=2, cls=DateTimeEncoder)
-            return f"Error formatting response: {str(e)}\n\nRaw result:\n```json\n{raw_result}\n```"
-        except:
-            # If that also fails, return a simpler error
-            return f"Error formatting response: {str(e)}\n\nCannot format raw result due to serialization issues."
+        logger.error(f"Error formatting response: {str(e)}")
+        return f"Error formatting response: {str(e)}\n\nThe query executed correctly but the results couldn't be displayed properly due to formatting issues."
