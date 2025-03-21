@@ -2,27 +2,69 @@ import uuid
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy import Column, String, DateTime, Text, Boolean, ForeignKey
+from sqlalchemy import Column, String, DateTime, Text, Boolean, ForeignKey, Integer
 from sqlalchemy.orm import relationship
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin
 
 # Initialize SQLAlchemy
 db = SQLAlchemy()
+
+class User(UserMixin, db.Model):
+    __tablename__ = 'users'
+    
+    id = Column(Integer, primary_key=True)
+    username = Column(String(64), unique=True, nullable=False)
+    email = Column(String(120), unique=True, nullable=False)
+    full_name = Column(String(120))
+    password_hash = Column(String(256))
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    chats = relationship("Chat", back_populates="user", cascade="all, delete-orphan")
+    
+    def __init__(self, username=None, email=None, full_name=None, password=None):
+        self.username = username
+        self.email = email
+        self.full_name = full_name
+        if password:
+            self.set_password(password)
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+        
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'email': self.email,
+            'full_name': self.full_name,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
 
 class Chat(db.Model):
     __tablename__ = 'chats'
     
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True)  # Nullable to support guest mode
     db_type = Column(String(50), nullable=False)
     db_name = Column(String(100))
     db_credentials = Column(Text)  # JSON string of database credentials
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationship with messages
+    # Relationships
     messages = relationship("ChatMessage", back_populates="chat", cascade="all, delete-orphan")
+    user = relationship("User", back_populates="chats")
     
-    def __init__(self, id=None, db_type=None, db_name=None, db_credentials=None):
+    def __init__(self, id=None, user_id=None, db_type=None, db_name=None, db_credentials=None):
         self.id = id or str(uuid.uuid4())
+        self.user_id = user_id
         self.db_type = db_type
         self.db_name = db_name
         self.db_credentials = db_credentials
@@ -30,6 +72,7 @@ class Chat(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
+            'user_id': self.user_id,
             'db_type': self.db_type,
             'db_name': self.db_name,
             'created_at': self.created_at.isoformat() if self.created_at else None,

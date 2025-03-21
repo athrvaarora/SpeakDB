@@ -3,10 +3,11 @@ import logging
 import json
 import uuid
 from datetime import datetime
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from openai_service import generate_query, format_response
 from database_connectors import get_connector, test_connection
-from models import db, Chat, ChatMessage
+from models import db, Chat, ChatMessage, User
 from utils import DateTimeEncoder
 
 # Configure logging
@@ -28,13 +29,115 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 # Initialize the database
 db.init_app(app)
 
+# Initialize Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'auth'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return db.session.query(User).get(int(user_id))
+
 with app.app_context():
     db.create_all()
 
 # Routes
 @app.route('/')
+def landing():
+    """Render the marketing landing page"""
+    return render_template('landing.html')
+
+@app.route('/auth')
+def auth():
+    """Render the authentication page"""
+    return render_template('auth.html')
+
+@app.route('/login', methods=['POST'])
+def login():
+    """Handle user login"""
+    email = request.form.get('email')
+    password = request.form.get('password')
+    remember = 'remember' in request.form
+    
+    # Find the user by email
+    user = db.session.query(User).filter(User.email == email).first()
+    
+    if user and user.check_password(password):
+        # Login successful
+        login_user(user, remember=remember)
+        flash('Logged in successfully!', 'success')
+        return redirect(url_for('index'))
+    else:
+        # Login failed
+        flash('Invalid email or password', 'danger')
+        return redirect(url_for('auth'))
+
+@app.route('/signup', methods=['POST'])
+def signup():
+    """Handle user signup"""
+    full_name = request.form.get('name')
+    email = request.form.get('email')
+    password = request.form.get('password')
+    confirm_password = request.form.get('confirm_password')
+    
+    # Validate password match
+    if password != confirm_password:
+        flash('Passwords do not match', 'danger')
+        return redirect(url_for('auth'))
+    
+    # Check if user already exists
+    existing_user = db.session.query(User).filter(User.email == email).first()
+    if existing_user:
+        flash('Email already registered', 'danger')
+        return redirect(url_for('auth'))
+    
+    # Create username from email
+    username = email.split('@')[0]
+    
+    # Check if username exists
+    base_username = username
+    counter = 1
+    while db.session.query(User).filter(User.username == username).first():
+        username = f"{base_username}{counter}"
+        counter += 1
+    
+    # Create new user
+    new_user = User(
+        username=username,
+        email=email,
+        full_name=full_name,
+        password=password
+    )
+    
+    # Save user to database
+    try:
+        db.session.add(new_user)
+        db.session.commit()
+        
+        # Auto-login the user
+        login_user(new_user)
+        flash('Account created successfully!', 'success')
+        return redirect(url_for('index'))
+    except Exception as e:
+        db.session.rollback()
+        logger.exception("Error creating user")
+        flash(f'Error creating account: {str(e)}', 'danger')
+        return redirect(url_for('auth'))
+
+@app.route('/logout')
+def logout():
+    """Handle user logout"""
+    logout_user()
+    if 'database_credentials' in session:
+        session.pop('database_credentials')
+    if 'chat_id' in session:
+        session.pop('chat_id')
+    flash('You have been logged out', 'info')
+    return redirect(url_for('landing'))
+
+@app.route('/app')
 def index():
-    """Render the landing page with database selection"""
+    """Render the database selection page"""
     # Clear any existing session data when landing on homepage
     if 'database_credentials' in session:
         session.pop('database_credentials')

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="600" viewBox="0 0 800 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background Elements -->
+    <path d="M720 160C742.091 160 760 142.091 760 120C760 97.9086 742.091 80 720 80C697.909 80 680 97.9086 680 120C680 142.091 697.909 160 720 160Z" fill="#E6F0FF" fill-opacity="0.8"/>
+    <path d="M100 500C122.091 500 140 482.091 140 460C140 437.909 122.091 420 100 420C77.9086 420 60 437.909 60 460C60 482.091 77.9086 500 100 500Z" fill="#E6F0FF" fill-opacity="0.8"/>
+    <path d="M650 520C661.046 520 670 511.046 670 500C670 488.954 661.046 480 650 480C638.954 480 630 488.954 630 500C630 511.046 638.954 520 650 520Z" fill="#E6F0FF" fill-opacity="0.8"/>
+    
+    <!-- Main Elements -->
+    <g transform="translate(150, 100)">
+        <!-- Database/Server Icon -->
+        <rect x="200" y="50" width="300" height="400" rx="15" fill="#FFFFFF" stroke="#6E9DE4" stroke-width="2"/>
+        
+        <!-- Terminal Window with Query -->
+        <rect x="220" y="80" width="260" height="120" rx="8" fill="#F8F9FA" stroke="#DEE2E6" stroke-width="2"/>
+        <rect x="220" y="80" width="260" height="30" rx="8" fill="#6E9DE4" stroke="#6E9DE4" stroke-width="2"/>
+        <circle cx="235" cy="95" r="5" fill="#FFFFFF"/>
+        <circle cx="255" cy="95" r="5" fill="#FFFFFF"/>
+        <circle cx="275" cy="95" r="5" fill="#FFFFFF"/>
+        
+        <text x="230" y="130" font-family="monospace" font-size="12" fill="#495057">SELECT * FROM users</text>
+        <text x="230" y="150" font-family="monospace" font-size="12" fill="#495057">WHERE signup_date > '2024-01-01'</text>
+        <text x="230" y="170" font-family="monospace" font-size="12" fill="#495057">ORDER BY username;</text>
+        
+        <!-- Results Table -->
+        <rect x="220" y="220" width="260" height="200" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="2"/>
+        
+        <!-- Table Header -->
+        <rect x="220" y="220" width="260" height="30" rx="8" fill="#F8F9FA" stroke="#DEE2E6" stroke-width="2"/>
+        <text x="240" y="240" font-family="sans-serif" font-size="12" font-weight="bold" fill="#495057">ID</text>
+        <text x="290" y="240" font-family="sans-serif" font-size="12" font-weight="bold" fill="#495057">Username</text>
+        <text x="380" y="240" font-family="sans-serif" font-size="12" font-weight="bold" fill="#495057">Signup Date</text>
+        
+        <!-- Table Rows -->
+        <rect x="220" y="250" width="260" height="30" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1"/>
+        <text x="240" y="270" font-family="sans-serif" font-size="12" fill="#495057">1</text>
+        <text x="290" y="270" font-family="sans-serif" font-size="12" fill="#495057">johndoe</text>
+        <text x="380" y="270" font-family="sans-serif" font-size="12" fill="#495057">2024-02-15</text>
+        
+        <rect x="220" y="280" width="260" height="30" fill="#F8F9FA" stroke="#DEE2E6" stroke-width="1"/>
+        <text x="240" y="300" font-family="sans-serif" font-size="12" fill="#495057">2</text>
+        <text x="290" y="300" font-family="sans-serif" font-size="12" fill="#495057">janedoe</text>
+        <text x="380" y="300" font-family="sans-serif" font-size="12" fill="#495057">2024-03-01</text>
+        
+        <rect x="220" y="310" width="260" height="30" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1"/>
+        <text x="240" y="330" font-family="sans-serif" font-size="12" fill="#495057">3</text>
+        <text x="290" y="330" font-family="sans-serif" font-size="12" fill="#495057">mike_s</text>
+        <text x="380" y="330" font-family="sans-serif" font-size="12" fill="#495057">2024-03-10</text>
+        
+        <rect x="220" y="340" width="260" height="30" fill="#F8F9FA" stroke="#DEE2E6" stroke-width="1"/>
+        <text x="240" y="360" font-family="sans-serif" font-size="12" fill="#495057">4</text>
+        <text x="290" y="360" font-family="sans-serif" font-size="12" fill="#495057">sara_t</text>
+        <text x="380" y="360" font-family="sans-serif" font-size="12" fill="#495057">2024-03-15</text>
+        
+        <!-- Speech Bubble -->
+        <path d="M50 180C50 171.716 56.7157 165 65 165H135C143.284 165 150 171.716 150 180V230C150 238.284 143.284 245 135 245H115L100 260L85 245H65C56.7157 245 50 238.284 50 230V180Z" fill="#6E9DE4" stroke="#6E9DE4" stroke-width="2"/>
+        
+        <text x="75" y="195" font-family="sans-serif" font-size="14" fill="#FFFFFF">Show me all</text>
+        <text x="60" y="215" font-family="sans-serif" font-size="14" fill="#FFFFFF">users who signed</text>
+        <text x="80" y="235" font-family="sans-serif" font-size="14" fill="#FFFFFF">up in 2024</text>
+        
+        <!-- Person Icon -->
+        <circle cx="100" cy="320" r="40" fill="#F8F9FA" stroke="#6E9DE4" stroke-width="2"/>
+        <circle cx="100" cy="300" r="15" fill="#6E9DE4"/>
+        <path d="M70 335C70 320.641 83.9543 310 100 310C116.046 310 130 320.641 130 335V340H70V335Z" fill="#6E9DE4"/>
+        
+        <!-- Connecting Lines -->
+        <path d="M150 200L200 200" stroke="#6E9DE4" stroke-width="2" stroke-dasharray="5 5"/>
+        
+        <!-- Chart/Visualization Button -->
+        <rect x="315" y="380" width="150" height="30" rx="15" fill="#6E9DE4" stroke="#6E9DE4" stroke-width="1"/>
+        <text x="350" y="400" font-family="sans-serif" font-size="12" fill="#FFFFFF">Visualize Data</text>
+        
+        <!-- Search Button/Box with AI -->
+        <rect x="220" y="30" width="260" height="30" rx="15" fill="#FFFFFF" stroke="#6E9DE4" stroke-width="2"/>
+        <text x="240" y="50" font-family="sans-serif" font-size="12" fill="#6E9DE4">Ask a question in natural language...</text>
+        <circle cx="460" cy="45" r="10" fill="#6E9DE4"/>
+        <text x="457" y="50" font-family="sans-serif" font-size="14" font-weight="bold" fill="#FFFFFF">AI</text>
+    </g>
+</svg>
