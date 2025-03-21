@@ -164,28 +164,32 @@ class PostgreSQLConnector(BaseRelationalConnector):
                     logger.info("Using provided connection string")
                     self.connection = psycopg2.connect(self.credentials.get("connection_string"))
                     self.engine = create_engine(self.credentials.get("connection_string"))
-                # Check if individual credentials are provided
-                elif all(self.credentials.get(key) for key in ["host", "username", "password", "db_name"]):
-                    logger.info("Using individual credentials")
-                    self.connection = psycopg2.connect(
-                        host=self.credentials.get("host"),
-                        port=self.credentials.get("port", 5432),
-                        user=self.credentials.get("username"),
-                        password=self.credentials.get("password"),
-                        dbname=self.credentials.get("db_name")
-                    )
-                    
-                    # Create SQLAlchemy engine for schema inspection
-                    conn_string = f"postgresql://{self.credentials.get('username')}:{self.credentials.get('password')}@{self.credentials.get('host')}:{self.credentials.get('port', 5432)}/{self.credentials.get('db_name')}"
-                    self.engine = create_engine(conn_string)
                 # Fall back to environment variables if available
                 elif os.environ.get("DATABASE_URL"):
                     logger.info("Using DATABASE_URL from environment variables")
                     self.connection = psycopg2.connect(os.environ["DATABASE_URL"])
                     self.engine = create_engine(os.environ["DATABASE_URL"])
+                # Check if individual credentials are provided
                 else:
-                    logger.error("No valid PostgreSQL credentials provided")
-                    raise Exception("No valid PostgreSQL credentials provided")
+                    logger.info("Using individual credentials")
+                    # Support both old and new field names from form
+                    host = self.credentials.get("host") or self.credentials.get("hostname", "localhost") 
+                    db_name = self.credentials.get("database_name") or self.credentials.get("db_name")
+                    
+                    if not db_name:
+                        raise Exception("No database name provided")
+                    
+                    self.connection = psycopg2.connect(
+                        host=host,
+                        port=self.credentials.get("port", 5432),
+                        user=self.credentials.get("username"),
+                        password=self.credentials.get("password"),
+                        dbname=db_name
+                    )
+                    
+                    # Create SQLAlchemy engine for schema inspection
+                    conn_string = f"postgresql://{self.credentials.get('username')}:{self.credentials.get('password')}@{host}:{self.credentials.get('port', 5432)}/{db_name}"
+                    self.engine = create_engine(conn_string)
                 
             except Exception as e:
                 logger.exception("Error connecting to PostgreSQL")
@@ -276,10 +280,16 @@ class SQLiteConnector(BaseRelationalConnector):
         """Connect to a SQLite database"""
         if not self.connection:
             try:
-                self.connection = sqlite3.connect(self.credentials.get("file_path"))
+                # Match the field name from the updated credential form
+                path = self.credentials.get("path_to_database_file") or self.credentials.get("file_path")
+                
+                if not path:
+                    raise Exception("No database file path provided")
+                
+                self.connection = sqlite3.connect(path)
                 
                 # Create SQLAlchemy engine for schema inspection
-                conn_string = f"sqlite:///{self.credentials.get('file_path')}"
+                conn_string = f"sqlite:///{path}"
                 self.engine = create_engine(conn_string)
                 
             except Exception as e:
