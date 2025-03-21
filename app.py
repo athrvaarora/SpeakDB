@@ -420,14 +420,14 @@ def get_required_credentials():
             'url_option': True,
             'url_field': 'connection_string',
             'url_example': 'postgresql://username:password@host:5432/database_name',
-            'terminal_command': 'psql -h host -p 5432 -U username -d database_name',
+            'terminal_command': 'psql -h localhost -p 5432 -U username -d database_name',
             'env_variables': [
-                'POSTGRES_HOST=host',
+                'POSTGRES_HOST=localhost',
                 'POSTGRES_PORT=5432',
                 'POSTGRES_USER=username',
                 'POSTGRES_PASSWORD=your_password',
                 'POSTGRES_DB=database_name',
-                'DATABASE_URL=postgresql://username:password@host:5432/database_name'
+                'DATABASE_URL=postgresql://username:password@localhost:5432/database_name'
             ]
         },
         'mysql': {
@@ -435,14 +435,14 @@ def get_required_credentials():
             'url_option': True,
             'url_field': 'connection_string',
             'url_example': 'mysql://username:password@host:3306/database_name',
-            'terminal_command': 'mysql -h host -P 3306 -u username -p database_name',
+            'terminal_command': 'mysql -h localhost -P 3306 -u username -p database_name',
             'env_variables': [
-                'MYSQL_HOST=host',
+                'MYSQL_HOST=localhost',
                 'MYSQL_PORT=3306',
                 'MYSQL_USER=username',
                 'MYSQL_PASSWORD=your_password',
                 'MYSQL_DATABASE=database_name',
-                'MYSQL_URL=mysql://username:password@host:3306/database_name'
+                'MYSQL_URL=mysql://username:password@localhost:3306/database_name'
             ]
         },
         'mariadb': {
