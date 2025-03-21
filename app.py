@@ -318,8 +318,18 @@ def process_query():
                 mimetype='application/json'
             )
         
-        # Execute the primary query against the database
-        result, execution_success, error_message = connector.execute_query(query)
+        # Execute the primary query against the database (if we have one)
+        if query:
+            result, execution_success, error_message = connector.execute_query(query)
+        else:
+            # If we don't have a primary query but have additional queries, use the first one as primary
+            if needs_multiple_queries and additional_queries:
+                query = additional_queries.pop(0)
+                result, execution_success, error_message = connector.execute_query(query)
+            else:
+                execution_success = False
+                error_message = "No query was generated"
+                result = None
         
         # If we need to run multiple queries, handle them here
         if execution_success and needs_multiple_queries and additional_queries:
