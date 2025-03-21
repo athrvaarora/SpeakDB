@@ -259,9 +259,6 @@ function sendQuery(query) {
     // Add user message to chat
     addMessageToChat(query, 'user');
     
-    // Ensure the input is visible
-    scrollToBottom();
-    
     // Show typing indicator
     addTypingIndicator();
     
@@ -584,9 +581,8 @@ function showWelcomeMessage() {
     
     // Only show if the messages container is empty
     if (messagesContainer.children.length === 0) {
-        // Create the welcome element
         const welcomeElement = document.createElement('div');
-        welcomeElement.className = 'text-center py-3 welcome-container'; // Added welcome-container class
+        welcomeElement.className = 'text-center my-4';
         
         // Get database name
         const dbName = document.querySelector('#db-info')?.getAttribute('data-db-name') || 'database';
@@ -618,7 +614,6 @@ function showWelcomeMessage() {
             </div>
         `;
         
-        // Add welcome element directly (no spacers)
         messagesContainer.appendChild(welcomeElement);
     }
 }
@@ -636,37 +631,8 @@ function useExample(element) {
 // Scroll the chat to the bottom
 function scrollToBottom() {
     const messagesContainer = document.getElementById('chat-messages');
-    
     if (messagesContainer) {
-        // Calculate if scrolling is needed
-        const isScrollNeeded = 
-            messagesContainer.scrollHeight > messagesContainer.clientHeight &&
-            messagesContainer.scrollTop + messagesContainer.clientHeight < messagesContainer.scrollHeight - 50;
-            
-        // Only smooth scroll if necessary
-        if (isScrollNeeded) {
-            messagesContainer.scrollTo({
-                top: messagesContainer.scrollHeight,
-                behavior: 'smooth'
-            });
-        } else {
-            // Immediate scroll if not visible at all
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-        
-        // Focus the input text area with a slight delay to ensure it's visible
-        setTimeout(() => {
-            const queryInput = document.getElementById('query-input');
-            if (queryInput) {
-                queryInput.focus();
-                
-                // Make sure the input is fully visible
-                const chatInputContainer = document.querySelector('.chat-input-container');
-                if (chatInputContainer) {
-                    chatInputContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                }
-            }
-        }, 150);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 }
 
