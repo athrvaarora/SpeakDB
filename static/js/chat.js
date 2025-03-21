@@ -31,6 +31,7 @@ function initChatInterface() {
     const chatForm = document.getElementById('chat-form');
     const newChatButton = document.getElementById('new-chat-btn');
     const exampleContainer = document.getElementById('example-queries');
+    const chatMessages = document.getElementById('chat-messages');
     
     // Get database info from the page
     const dbInfoElement = document.getElementById('db-info');
@@ -69,6 +70,33 @@ function initChatInterface() {
         queryInput.addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight) + 'px';
+        });
+    }
+    
+    // Add event delegation for export buttons
+    if (chatMessages) {
+        chatMessages.addEventListener('click', function(e) {
+            // Handle CSV export button clicks
+            if (e.target.classList.contains('export-csv-btn') || e.target.closest('.export-csv-btn')) {
+                const container = e.target.closest('.query-result-container');
+                if (container) {
+                    const hiddenData = container.querySelector('.hidden-data');
+                    if (hiddenData && hiddenData.dataset.result) {
+                        exportToCSV(hiddenData.dataset.result);
+                    }
+                }
+            }
+            
+            // Handle JSON export button clicks
+            if (e.target.classList.contains('export-json-btn') || e.target.closest('.export-json-btn')) {
+                const container = e.target.closest('.query-result-container');
+                if (container) {
+                    const hiddenData = container.querySelector('.hidden-data');
+                    if (hiddenData && hiddenData.dataset.result) {
+                        exportToJSON(hiddenData.dataset.result);
+                    }
+                }
+            }
         });
     }
 }
@@ -317,6 +345,9 @@ function addMessageToChat(content, sender, timestamp = null) {
             gfm: true
         });
         
+        // Check if content contains table - could be query result
+        const isQueryResult = content.includes('|') && content.includes('---') && (content.includes('SELECT') || content.includes('select'));
+        
         // Parse markdown and sanitize HTML
         try {
             const parsedContent = marked.parse(content);
@@ -341,6 +372,51 @@ function addMessageToChat(content, sender, timestamp = null) {
                     }
                 });
             }, 0);
+            
+            // If this appears to be a query result, add export buttons
+            if (isQueryResult) {
+                // Try to extract JSON data from the message content
+                let jsonData = null;
+                try {
+                    // Look for JSON structure in the content - common pattern in our system responses
+                    const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/);
+                    if (jsonMatch && jsonMatch[1]) {
+                        jsonData = jsonMatch[1];
+                    }
+                } catch (e) {
+                    console.log('No valid JSON data found for export', e);
+                }
+                
+                if (jsonData) {
+                    // Create export container
+                    const exportContainer = document.createElement('div');
+                    exportContainer.className = 'query-result-container mt-2';
+                    
+                    // Add export buttons
+                    const exportButtons = document.createElement('div');
+                    exportButtons.className = 'btn-group btn-group-sm';
+                    
+                    const csvButton = document.createElement('button');
+                    csvButton.className = 'btn btn-outline-secondary export-csv-btn';
+                    csvButton.innerHTML = '<i class="fas fa-file-csv me-1"></i> Export CSV';
+                    
+                    const jsonButton = document.createElement('button');
+                    jsonButton.className = 'btn btn-outline-secondary export-json-btn';
+                    jsonButton.innerHTML = '<i class="fas fa-file-code me-1"></i> Export JSON';
+                    
+                    exportButtons.appendChild(csvButton);
+                    exportButtons.appendChild(jsonButton);
+                    exportContainer.appendChild(exportButtons);
+                    
+                    // Hidden data element to store the raw JSON
+                    const hiddenData = document.createElement('div');
+                    hiddenData.className = 'hidden-data d-none';
+                    hiddenData.dataset.result = jsonData;
+                    exportContainer.appendChild(hiddenData);
+                    
+                    messageContent.appendChild(exportContainer);
+                }
+            }
         } catch (e) {
             console.error('Error parsing markdown:', e);
             messageContent.innerHTML = DOMPurify.sanitize(content);
