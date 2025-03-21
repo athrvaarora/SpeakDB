@@ -1,5 +1,6 @@
 import logging
 import json
+import os
 
 # Import cloud database libraries with try/except to handle missing dependencies
 try:
@@ -14,6 +15,12 @@ except ImportError:
     firebase_admin = None
     credentials = None
     firestore = None
+
+try:
+    from supabase import create_client, Client
+except ImportError:
+    create_client = None
+    Client = None
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -176,10 +183,36 @@ class FirestoreConnector(BaseCloudConnector):
         if not self.client:
             try:
                 project_id = self.credentials.get("project_id")
+                service_account_key = self.credentials.get("service_account_key")
                 
-                # Initialize Firebase Admin SDK (assumed service account key is available in env)
+                # Try different connection methods
+                if not firebase_admin:
+                    raise ImportError("firebase_admin package is not installed")
+                
                 if not firebase_admin._apps:
-                    firebase_admin.initialize_app()
+                    # Check if service account key is provided
+                    if service_account_key:
+                        # If provided as a string, convert to dict
+                        if isinstance(service_account_key, str):
+                            try:
+                                service_account_info = json.loads(service_account_key)
+                            except json.JSONDecodeError:
+                                raise ValueError("Invalid service account key format: not valid JSON")
+                        else:
+                            service_account_info = service_account_key
+                            
+                        cred = credentials.Certificate(service_account_info)
+                        firebase_admin.initialize_app(cred, {
+                            'projectId': project_id
+                        })
+                    elif project_id:
+                        # Try to initialize with just project ID
+                        firebase_admin.initialize_app(options={
+                            'projectId': project_id
+                        })
+                    else:
+                        # Try to initialize with default credentials
+                        firebase_admin.initialize_app()
                 
                 self.client = firestore.client()
                 
@@ -333,6 +366,197 @@ class FirestoreConnector(BaseCloudConnector):
             return None, False, "Invalid JSON query format"
         except Exception as e:
             logger.exception(f"Error executing Firestore operation: {query}")
+            return None, False, f"Error executing operation: {str(e)}"
+        finally:
+            self.disconnect()
+
+
+class SupabaseConnector(BaseCloudConnector):
+    """Connector for Supabase"""
+    
+    def connect(self):
+        """Connect to a Supabase project"""
+        if not self.client:
+            try:
+                # Get credentials
+                supabase_url = self.credentials.get("supabase_url")
+                supabase_key = self.credentials.get("supabase_key")
+                
+                # Validate credentials
+                if not supabase_url or not supabase_key:
+                    raise ValueError("Supabase URL and API key are required")
+                
+                # Check if supabase package is installed
+                if not create_client:
+                    raise ImportError("supabase package is not installed")
+                
+                # Connect to Supabase
+                self.client = create_client(supabase_url, supabase_key)
+                
+            except Exception as e:
+                logger.exception("Error connecting to Supabase")
+                raise Exception(f"Error connecting to Supabase: {str(e)}")
+    
+    def get_schema(self):
+        """Get the schema of the Supabase project"""
+        try:
+            self.connect()
+            
+            # Get a list of tables from Postgres system tables
+            # Note: This requires the right permissions for the API key
+            result = self.client.rpc('get_schema_info').execute()
+            
+            if hasattr(result, 'data') and result.data:
+                return result.data
+            
+            return {"message": "Schema retrieval limited with current API key permissions"}
+            
+        except Exception as e:
+            logger.exception("Error getting Supabase schema")
+            return {"error": str(e)}
+        finally:
+            self.disconnect()
+    
+    def execute_query(self, query):
+        """
+        Execute a query against Supabase
+        
+        Args:
+            query (str): A JSON string representing a Supabase operation
+            
+        Returns:
+            tuple: (result, success, error_message)
+        """
+        try:
+            self.connect()
+            
+            # Parse the query string as JSON
+            query_obj = json.loads(query)
+            
+            operation = query_obj.get("operation")
+            table = query_obj.get("table")
+            
+            if not operation:
+                return None, False, "Query must specify operation"
+                
+            if operation in ["select", "insert", "update", "delete"] and not table:
+                return None, False, f"Operation '{operation}' requires table name"
+            
+            # Execute appropriate operation
+            if operation == "select":
+                # Get filters
+                select_columns = query_obj.get("select", "*")
+                filters = query_obj.get("filters", {})
+                order = query_obj.get("order")
+                limit = query_obj.get("limit")
+                offset = query_obj.get("offset")
+                
+                # Build query
+                query_builder = self.client.from_(table).select(select_columns)
+                
+                # Apply filters
+                for column, criteria in filters.items():
+                    if isinstance(criteria, dict):
+                        for operator, value in criteria.items():
+                            query_builder = query_builder.filter(column, operator, value)
+                    else:
+                        query_builder = query_builder.eq(column, criteria)
+                
+                # Apply ordering
+                if order:
+                    if isinstance(order, dict):
+                        column = order.get("column")
+                        ascending = order.get("ascending", True)
+                        if column:
+                            query_builder = query_builder.order(column, desc=not ascending)
+                    elif isinstance(order, str):
+                        query_builder = query_builder.order(order)
+                
+                # Apply pagination
+                if limit:
+                    query_builder = query_builder.limit(limit)
+                if offset:
+                    query_builder = query_builder.offset(offset)
+                
+                # Execute
+                result = query_builder.execute()
+                return result.data, True, None
+                
+            elif operation == "insert":
+                data = query_obj.get("data")
+                
+                if not data:
+                    return None, False, "Insert operation requires data"
+                
+                result = self.client.from_(table).insert(data).execute()
+                return result.data, True, None
+                
+            elif operation == "update":
+                data = query_obj.get("data")
+                filters = query_obj.get("filters", {})
+                
+                if not data:
+                    return None, False, "Update operation requires data"
+                
+                query_builder = self.client.from_(table).update(data)
+                
+                # Apply filters
+                for column, criteria in filters.items():
+                    if isinstance(criteria, dict):
+                        for operator, value in criteria.items():
+                            query_builder = query_builder.filter(column, operator, value)
+                    else:
+                        query_builder = query_builder.eq(column, criteria)
+                
+                result = query_builder.execute()
+                return result.data, True, None
+                
+            elif operation == "delete":
+                filters = query_obj.get("filters", {})
+                
+                if not filters:
+                    return None, False, "Delete operation requires filters to avoid accidental deletion of all records"
+                
+                query_builder = self.client.from_(table).delete()
+                
+                # Apply filters
+                for column, criteria in filters.items():
+                    if isinstance(criteria, dict):
+                        for operator, value in criteria.items():
+                            query_builder = query_builder.filter(column, operator, value)
+                    else:
+                        query_builder = query_builder.eq(column, criteria)
+                
+                result = query_builder.execute()
+                return result.data, True, None
+                
+            elif operation == "rpc":
+                function_name = query_obj.get("function")
+                params = query_obj.get("params", {})
+                
+                if not function_name:
+                    return None, False, "RPC operation requires function name"
+                
+                result = self.client.rpc(function_name, params).execute()
+                return result.data, True, None
+                
+            elif operation == "storage_list":
+                bucket = query_obj.get("bucket")
+                path = query_obj.get("path", "")
+                
+                if not bucket:
+                    return None, False, "Storage list operation requires bucket name"
+                
+                result = self.client.storage.from_(bucket).list(path)
+                return result, True, None
+                
+            else:
+                return None, False, f"Unsupported operation: {operation}"
+                
+        except json.JSONDecodeError:
+            return None, False, "Invalid JSON query format"
+        except Exception as e:
+            logger.exception(f"Error executing Supabase operation: {query}")
             return None, False, f"Error executing operation: {str(e)}"
         finally:
             self.disconnect()

@@ -74,6 +74,7 @@ def get_connector(db_type, credentials):
         # Cloud databases
         'cosmosdb': ('database_connectors.cloud', 'CosmosDBConnector'),
         'firestore': ('database_connectors.cloud', 'FirestoreConnector'),
+        'supabase': ('database_connectors.cloud', 'SupabaseConnector'),
         
         # Time-series databases
         'influxdb': ('database_connectors.timeseries', 'InfluxDBConnector')

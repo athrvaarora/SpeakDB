@@ -5,6 +5,7 @@ description = "Add your description here"
 requires-python = ">=3.11"
 dependencies = [
     "email-validator>=2.2.0",
+    "firebase-admin>=6.7.0",
     "flask>=3.1.0",
     "flask-sqlalchemy>=3.1.1",
     "gunicorn>=23.0.0",
@@ -12,4 +13,6 @@ dependencies = [
     "openai>=1.68.0",
     "psycopg2-binary>=2.9.10",
     "pyodbc>=5.2.0",
+    "sqlalchemy>=2.0.39",
+    "supabase>=2.14.0",
 ]
