@@ -175,6 +175,96 @@ function getLogoSvg(dbType) {
                 <path d="M10 18L16 8L22 18" stroke="white" stroke-width="1.5"/>
             </svg>`;
             
+        // New databases
+        case 'supabase':
+            return `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 8L10 4H26L22 8H6Z" fill="#3ECF8E"/>
+                <path d="M6 8V24L10 28H26V12L22 8H6Z" fill="#3ECF8E"/>
+                <path d="M14 16L18 12V20L14 24V16Z" fill="white"/>
+            </svg>`;
+            
+        case 'teradata':
+            return `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="6" y="6" width="20" height="20" rx="2" fill="#F8981D"/>
+                <path d="M10 12H22M10 16H22M10 20H22" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>`;
+            
+        case 'saphana':
+            return `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 8L16 4L28 8V24L16 28L4 24V8Z" fill="#0066B3"/>
+                <path d="M16 10L10 12V20L16 22L22 20V12L16 10Z" fill="white"/>
+            </svg>`;
+            
+        case 'planetscale':
+            return `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16 4L28 16L16 28L4 16L16 4Z" fill="#0000FF"/>
+                <circle cx="16" cy="16" r="6" fill="white"/>
+            </svg>`;
+            
+        case 'vertica':
+            return `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 6H26L16 26L6 6Z" fill="#7848AD"/>
+            </svg>`;
+            
+        case 'timescaledb':
+            return `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 6L12 12H20L26 6H6Z" fill="#FDB515"/>
+                <path d="M12 12V20L6 26V6L12 12Z" fill="#FDB515"/>
+                <path d="M20 12V20L26 26V6L20 12Z" fill="#FDB515"/>
+                <path d="M12 20L20 20L26 26H6L12 20Z" fill="#FDB515"/>
+                <path d="M12 12H20V20H12V12Z" fill="#FDB515"/>
+            </svg>`;
+            
+        case 'kdb':
+            return `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 6H26V26H6V6Z" fill="#142E65"/>
+                <path d="M10 10V22L16 16L10 10Z" fill="white"/>
+                <path d="M16 10H22V16H16V10Z" fill="white"/>
+                <path d="M16 16H22V22H16V16Z" fill="white"/>
+            </svg>`;
+            
+        case 'tigergraph':
+            return `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M5 16C5 10.477 9.477 6 15 6H26V17C26 22.523 21.523 27 16 27H5V16Z" fill="#FF6A00"/>
+                <path d="M10 13L13 16L10 19M19 13L22 16L19 19" stroke="white" stroke-width="1.5"/>
+                <path d="M13 16H19" stroke="white" stroke-width="1.5"/>
+            </svg>`;
+            
+        case 'neptune':
+            return `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16 4C9.373 4 4 9.373 4 16C4 22.627 9.373 28 16 28C22.627 28 28 22.627 28 16C28 9.373 22.627 4 16 4Z" fill="#2E27AD"/>
+                <path d="M11 10L16 16L11 22M21 10L16 16L21 22" stroke="white" stroke-width="1.5"/>
+            </svg>`;
+            
+        case 'heroku':
+            return `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 6C6.895 6 6 6.895 6 8V24C6 25.105 6.895 26 8 26H24C25.105 26 26 25.105 26 24V8C26 6.895 25.105 6 24 6H8Z" fill="#430098"/>
+                <path d="M12 22L12 16L10 18L12 22Z" fill="white"/>
+                <path d="M20 22L20 16L22 18L20 22Z" fill="white"/>
+                <path d="M16 16L16 10L20 16L16 22L12 16L16 10Z" fill="white"/>
+            </svg>`;
+            
+        case 'crunchybridge':
+            return `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="5" y="5" width="22" height="22" rx="2" fill="#27455C"/>
+                <path d="M8 12H24V20H8V12Z" fill="#EF4925"/>
+                <path d="M13 12V20M19 12V20" stroke="white" stroke-width="1.5"/>
+            </svg>`;
+            
+        case 'neon':
+            return `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16 4L4 16L16 28L28 16L16 4Z" fill="#00E699"/>
+                <path d="M16 10L10 16L16 22L22 16L16 10Z" fill="white"/>
+                <path d="M16 13L13 16L16 19L19 16L16 13Z" fill="#00E699"/>
+            </svg>`;
+            
+        case 'prometheus':
+            return `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16 4L8 12V20L16 28L24 20V12L16 4Z" fill="#E6522C"/>
+                <path d="M16 8C12.686 8 10 10.686 10 14V18C10 21.314 12.686 24 16 24C19.314 24 22 21.314 22 18V14C22 10.686 19.314 8 16 8Z" fill="white"/>
+                <path d="M16 12C14.895 12 14 12.895 14 14V18C14 19.105 14.895 20 16 20C17.105 20 18 19.105 18 18V14C18 12.895 17.105 12 16 12Z" fill="#E6522C"/>
+            </svg>`;
+            
         default:
             // Generic database icon for any unmatched database types
             return `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">

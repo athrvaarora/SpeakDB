@@ -17,6 +17,10 @@ const databases = {
     'cloudsql': { name: 'Google Cloud SQL', category: 'Relational' },
     'mariadb': { name: 'MariaDB', category: 'Relational' },
     'db2': { name: 'IBM Db2', category: 'Relational' },
+    'teradata': { name: 'Teradata', category: 'Relational' },
+    'saphana': { name: 'SAP HANA', category: 'Relational' },
+    'planetscale': { name: 'PlanetScale', category: 'Relational' },
+    'vertica': { name: 'Vertica', category: 'Relational' },
     
     // NoSQL Databases
     'mongodb': { name: 'MongoDB', category: 'NoSQL' },
@@ -32,12 +36,25 @@ const databases = {
     'bigquery': { name: 'Google BigQuery', category: 'Data Warehouse' },
     'synapse': { name: 'Azure Synapse Analytics', category: 'Data Warehouse' },
     
+    // Graph Databases
+    'tigergraph': { name: 'TigerGraph', category: 'Graph' },
+    'neptune': { name: 'Amazon Neptune', category: 'Graph' },
+    
     // Cloud Databases
     'cosmosdb': { name: 'Azure Cosmos DB', category: 'Cloud' },
-    'firestore': { name: 'Firestore', category: 'Cloud' },
+    'firestore': { name: 'Firebase Firestore', category: 'Cloud' },
+    'supabase': { name: 'Supabase', category: 'Cloud' },
+    'heroku': { name: 'Heroku Postgres', category: 'Cloud' },
+    'crunchybridge': { name: 'Crunchy Bridge', category: 'Cloud' },
+    'neon': { name: 'Neon.tech', category: 'Cloud' },
     
     // Time Series Databases
-    'influxdb': { name: 'InfluxDB', category: 'Time Series' }
+    'influxdb': { name: 'InfluxDB', category: 'Time Series' },
+    'timescaledb': { name: 'TimescaleDB', category: 'Time Series' },
+    'kdb': { name: 'Kdb+', category: 'Time Series' },
+    
+    // Specialized Systems
+    'prometheus': { name: 'Prometheus', category: 'Specialized' }
 };
 
 // Initialize the database selection page
