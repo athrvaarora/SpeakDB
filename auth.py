@@ -13,26 +13,47 @@ from flask_login import LoginManager, login_user, logout_user, current_user, log
 from models import db, User, Subscription
 
 # Initialize Firebase Admin SDK
-if not firebase_admin._apps:
-    # Check if we have the Firebase credentials in environment variables
-    firebase_credentials = {
-        "type": "service_account",
-        "project_id": os.environ.get("FIREBASE_PROJECT_ID"),
-        "private_key_id": os.environ.get("FIREBASE_PRIVATE_KEY_ID", ""),
-        "private_key": os.environ.get("FIREBASE_PRIVATE_KEY", "").replace("\\n", "\n"),
-        "client_email": os.environ.get("FIREBASE_CLIENT_EMAIL", ""),
-        "client_id": os.environ.get("FIREBASE_CLIENT_ID", ""),
-        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-        "token_uri": "https://oauth2.googleapis.com/token",
-        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-        "client_x509_cert_url": os.environ.get("FIREBASE_CLIENT_CERT_URL", "")
-    }
-    
+# Only initialize Firebase if we have the required environment variables
+firebase_initialized = False
+firebase_project_id = os.environ.get("FIREBASE_PROJECT_ID")
+firebase_api_key = os.environ.get("FIREBASE_API_KEY")
+
+if not firebase_admin._apps and firebase_project_id and firebase_api_key:
+    # First, try to initialize with service account credentials if available
     try:
-        firebase_admin.initialize_app(credentials.Certificate(firebase_credentials))
+        firebase_private_key = os.environ.get("FIREBASE_PRIVATE_KEY")
+        if firebase_private_key:
+            # Check if we have the Firebase credentials in environment variables
+            firebase_credentials = {
+                "type": "service_account",
+                "project_id": firebase_project_id,
+                "private_key_id": os.environ.get("FIREBASE_PRIVATE_KEY_ID", ""),
+                "private_key": firebase_private_key.replace("\\n", "\n"),
+                "client_email": os.environ.get("FIREBASE_CLIENT_EMAIL", ""),
+                "client_id": os.environ.get("FIREBASE_CLIENT_ID", ""),
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                "client_x509_cert_url": os.environ.get("FIREBASE_CLIENT_CERT_URL", "")
+            }
+            
+            firebase_admin.initialize_app(credentials.Certificate(firebase_credentials))
+            firebase_initialized = True
+            print("Firebase initialized with service account credentials")
     except (ValueError, firebase_admin.exceptions.FirebaseError) as e:
-        print(f"Firebase initialization error: {e}")
-        # Continue without Firebase, will initialize later when credentials are available
+        print(f"Firebase service account initialization error: {e}")
+        
+    # If service account initialization failed, try with default credentials
+    if not firebase_initialized:
+        try:
+            firebase_admin.initialize_app()
+            firebase_initialized = True
+            print("Firebase initialized with default credentials")
+        except (ValueError, firebase_admin.exceptions.FirebaseError) as e:
+            print(f"Firebase default initialization error: {e}")
+            # Continue without Firebase, will initialize later when credentials are available
+else:
+    print("Firebase credentials not found in environment. Authentication with Google will not work.")
 
 login_manager = LoginManager()
 

@@ -1,15 +1,19 @@
 import os
 import stripe
-from flask import redirect, url_for, request, jsonify, render_template
-from flask_login import current_user, login_required
-from models import db, Subscription
 from datetime import datetime, timedelta
+from flask import request, redirect, url_for, render_template, jsonify
+from flask_login import current_user, login_required
 
-# Set Stripe API key
+from models import db, User, Subscription, ChatMessage
+
+# Initialize Stripe
 stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
+endpoint_secret = os.environ.get('STRIPE_WEBHOOK_SECRET')
 
-# Enterprise plan price ID (to be created in Stripe Dashboard)
-ENTERPRISE_PLAN_PRICE_ID = "price_enterprise"
+# Set the domain for redirects
+domain_url = os.environ.get('REPLIT_DOMAINS', '').split(',')[0]
+if domain_url:
+    domain_url = f"https://{domain_url}"
 
 def init_app(app):
     """Initialize payment routes and services for the Flask app."""
@@ -19,92 +23,74 @@ def init_app(app):
     def create_checkout_session():
         """Create a Stripe checkout session for the enterprise plan."""
         try:
-            if not current_user.is_authenticated:
-                return redirect(url_for('login'))
-            
-            # Create or get customer
-            customer = None
-            if current_user.subscription and current_user.subscription.stripe_customer_id:
-                customer = current_user.subscription.stripe_customer_id
-            else:
-                # Create a customer in Stripe
-                stripe_customer = stripe.Customer.create(
-                    email=current_user.email,
-                    name=current_user.name,
-                    metadata={
-                        'user_id': current_user.id
-                    }
-                )
-                customer = stripe_customer.id
-                
-                # Update user's subscription record if it exists
-                if current_user.subscription:
-                    current_user.subscription.stripe_customer_id = customer
-                    db.session.commit()
-            
-            # Create a checkout session
+            # Create a new checkout session for the enterprise plan
             checkout_session = stripe.checkout.Session.create(
-                customer=customer,
+                customer_email=current_user.email,
                 payment_method_types=['card'],
                 line_items=[{
-                    'price': ENTERPRISE_PLAN_PRICE_ID,
+                    'price_data': {
+                        'currency': 'usd',
+                        'product_data': {
+                            'name': 'SpeakDB Enterprise Plan',
+                            'description': 'Unlimited database queries, advanced features, and priority support'
+                        },
+                        'unit_amount': 4900,  # $49.00
+                        'recurring': {
+                            'interval': 'month'
+                        }
+                    },
                     'quantity': 1,
                 }],
                 mode='subscription',
-                success_url=f"{request.host_url}payment/success?session_id={{CHECKOUT_SESSION_ID}}",
-                cancel_url=f"{request.host_url}payment/cancel",
+                success_url=f"{domain_url}/payment/success?session_id={{CHECKOUT_SESSION_ID}}",
+                cancel_url=f"{domain_url}/payment/cancel",
                 metadata={
-                    'user_id': current_user.id,
+                    'user_id': current_user.id
                 }
             )
             
             return redirect(checkout_session.url, code=303)
-            
         except Exception as e:
-            return str(e), 400
+            app.logger.error(f"Error creating checkout session: {str(e)}")
+            return render_template('error.html', error=str(e))
     
     @app.route('/payment/success')
-    @login_required
     def payment_success():
         """Handle successful payment."""
         session_id = request.args.get('session_id')
-        if not session_id:
-            return redirect(url_for('pricing'))
         
-        try:
-            # Retrieve the checkout session
-            checkout_session = stripe.checkout.Session.retrieve(session_id)
-            
-            # Get the subscription ID
-            subscription_id = checkout_session.subscription
-            
-            # Update the user's subscription in the database
-            if current_user.subscription:
-                current_user.subscription.stripe_subscription_id = subscription_id
-                current_user.subscription.plan_type = 'enterprise'
-                current_user.subscription.status = 'active'
-                current_user.subscription.end_date = datetime.utcnow() + timedelta(days=365)  # Set to 1 year by default
-            else:
-                # Create a new subscription record
-                subscription = Subscription(
-                    user_id=current_user.id,
-                    stripe_customer_id=checkout_session.customer,
-                    stripe_subscription_id=subscription_id,
-                    plan_type='enterprise',
-                    status='active',
-                    end_date=datetime.utcnow() + timedelta(days=365)
-                )
-                db.session.add(subscription)
-            
-            db.session.commit()
-            
-            return render_template('payment_success.html')
-            
-        except Exception as e:
-            return str(e), 400
+        if session_id:
+            try:
+                # Retrieve the session to get customer details
+                session = stripe.checkout.Session.retrieve(session_id)
+                
+                # Get the subscription details
+                subscription = stripe.Subscription.retrieve(session.subscription)
+                
+                # Update user's subscription
+                if current_user.is_authenticated:
+                    user_subscription = current_user.subscription
+                    
+                    if not user_subscription:
+                        user_subscription = Subscription(user_id=current_user.id)
+                        db.session.add(user_subscription)
+                    
+                    user_subscription.stripe_customer_id = session.customer
+                    user_subscription.stripe_subscription_id = session.subscription
+                    user_subscription.plan_type = 'enterprise'
+                    user_subscription.status = subscription.status
+                    
+                    # Set subscription end date based on the current period end
+                    end_timestamp = subscription.current_period_end
+                    user_subscription.end_date = datetime.fromtimestamp(end_timestamp)
+                    
+                    db.session.commit()
+            except Exception as e:
+                app.logger.error(f"Error processing successful payment: {str(e)}")
+                
+        return render_template('payment_success.html')
     
     @app.route('/payment/cancel')
-    @login_required
     def payment_cancel():
         """Handle cancelled payment."""
         return render_template('payment_cancel.html')
@@ -112,81 +98,72 @@ def init_app(app):
     @app.route('/webhook', methods=['POST'])
     def webhook():
         """Handle Stripe webhook events."""
-        payload = request.data
+        payload = request.get_data(as_text=True)
         sig_header = request.headers.get('Stripe-Signature')
         
-        # This is your webhook endpoint secret from the Stripe dashboard
-        webhook_secret = os.environ.get('STRIPE_WEBHOOK_SECRET')
-        
         try:
-            if webhook_secret:
-                event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
-            else:
-                # For testing, you can parse the payload directly
-                payload_json = request.json
-                event = stripe.Event.construct_from(payload_json, stripe.api_key)
-            
-            # Handle the event
-            if event['type'] == 'invoice.paid':
-                # Handle successful payment
-                invoice = event['data']['object']
-                subscription_id = invoice.get('subscription')
-                
-                # Update subscription status if found
-                if subscription_id:
-                    subscription = Subscription.query.filter_by(stripe_subscription_id=subscription_id).first()
-                    if subscription:
-                        subscription.status = 'active'
-                        db.session.commit()
-                
-            elif event['type'] == 'invoice.payment_failed':
-                # Handle failed payment
-                invoice = event['data']['object']
-                subscription_id = invoice.get('subscription')
-                
-                # Update subscription status if found
-                if subscription_id:
-                    subscription = Subscription.query.filter_by(stripe_subscription_id=subscription_id).first()
-                    if subscription:
-                        subscription.status = 'past_due'
-                        db.session.commit()
-                
-            elif event['type'] == 'customer.subscription.deleted':
-                # Handle subscription cancellation
-                subscription_object = event['data']['object']
-                subscription_id = subscription_object.get('id')
-                
-                # Update subscription status if found
-                if subscription_id:
-                    subscription = Subscription.query.filter_by(stripe_subscription_id=subscription_id).first()
-                    if subscription:
-                        subscription.status = 'canceled'
-                        db.session.commit()
-            
-            return jsonify(success=True)
-            
-        except Exception as e:
-            return jsonify(success=False, error=str(e)), 400
+            event = stripe.Webhook.construct_event(
+                payload, sig_header, endpoint_secret
+            )
+        except ValueError as e:
+            # Invalid payload
+            app.logger.error(f"Invalid payload: {str(e)}")
+            return jsonify(success=False), 400
+        except stripe.error.SignatureVerificationError as e:
+            # Invalid signature
+            app.logger.error(f"Invalid signature: {str(e)}")
+            return jsonify(success=False), 400
+        
+        # Handle the event
+        if event['type'] == 'customer.subscription.updated':
+            subscription = event['data']['object']
+            handle_subscription_updated(subscription)
+        elif event['type'] == 'customer.subscription.deleted':
+            subscription = event['data']['object']
+            handle_subscription_deleted(subscription)
+        
+        return jsonify(success=True)
+
+def handle_subscription_updated(subscription):
+    """Handle subscription updated event."""
+    # Find the subscription in our database
+    user_subscription = Subscription.query.filter_by(
+        stripe_subscription_id=subscription.id
+    ).first()
+    
+    if user_subscription:
+        # Update the subscription status and end date
+        user_subscription.status = subscription.status
+        end_timestamp = subscription.current_period_end
+        user_subscription.end_date = datetime.fromtimestamp(end_timestamp)
+        db.session.commit()
+
+def handle_subscription_deleted(subscription):
+    """Handle subscription deleted event."""
+    # Find the subscription in our database
+    user_subscription = Subscription.query.filter_by(
+        stripe_subscription_id=subscription.id
+    ).first()
+    
+    if user_subscription:
+        # Update the subscription type to free and status to inactive
+        user_subscription.plan_type = 'free'
+        user_subscription.status = 'inactive'
+        db.session.commit()
 
 def cancel_subscription(subscription_id):
     """Cancel a Stripe subscription."""
     try:
-        # Cancel the subscription in Stripe
         stripe.Subscription.delete(subscription_id)
-        
-        # Update the subscription in the database
-        subscription = Subscription.query.filter_by(stripe_subscription_id=subscription_id).first()
-        if subscription:
-            subscription.status = 'canceled'
-            db.session.commit()
-        
-        return True, None
+        return True, "Subscription cancelled successfully."
     except Exception as e:
         return False, str(e)
 
 def get_remaining_queries(user):
     """Get remaining queries for a user."""
-    if user.subscription and user.subscription.is_active() and user.subscription.plan_type == 'enterprise':
-        return float('inf')  # Enterprise users get unlimited queries
-    else:
-        return user.get_remaining_free_queries()  # Free users get 10 queries per day
+    # If user has an active enterprise subscription, return unlimited
+    if user.subscription and user.subscription.plan_type == 'enterprise' and user.subscription.is_active():
+        return 'unlimited'
+    
+    # Otherwise, calculate remaining queries for free users
+    return user.get_remaining_free_queries()
