@@ -155,7 +155,81 @@ function showCredentialForm(dbType, credentialInfo) {
     // Check if the credential info is in the new format (object) or old format (array)
     const useIndividualFields = Array.isArray(credentialInfo) || (credentialInfo && credentialInfo.fields);
     const requiredFields = Array.isArray(credentialInfo) ? credentialInfo : (credentialInfo ? credentialInfo.fields : []);
+    const optionalFields = credentialInfo && credentialInfo.optional_fields ? credentialInfo.optional_fields : [];
     const supportsConnectionString = credentialInfo && credentialInfo.url_option;
+    
+    // Helper function to create form fields
+    const createFormField = (container, credential, isRequired) => {
+        const formGroup = document.createElement('div');
+        formGroup.className = 'form-group mb-3';
+        
+        const label = document.createElement('label');
+        label.setAttribute('for', `credential-${credential}`);
+        label.textContent = formatCredentialLabel(credential);
+        
+        // Add optional indicator if field is not required
+        if (!isRequired) {
+            const optionalSpan = document.createElement('span');
+            optionalSpan.className = 'text-muted ms-2';
+            optionalSpan.textContent = '(Optional)';
+            label.appendChild(optionalSpan);
+        }
+        formGroup.appendChild(label);
+        
+        const input = document.createElement('input');
+        // Set type to password for sensitive fields
+        if (credential.includes('password') || credential.includes('key') || 
+            credential.includes('secret') || credential.includes('token')) {
+            input.type = 'password';
+        } else {
+            input.type = 'text';
+        }
+        input.className = 'form-control';
+        input.id = `credential-${credential}`;
+        input.name = credential;
+        input.required = isRequired;
+        
+        // Set default values or placeholders based on credential type
+        if (credential === 'port') {
+            switch (dbType) {
+                case 'postgresql':
+                    input.placeholder = '5432';
+                    break;
+                case 'mysql':
+                case 'mariadb':
+                    input.placeholder = '3306';
+                    break;
+                case 'mongodb':
+                    input.placeholder = '27017';
+                    break;
+                case 'redis':
+                    input.placeholder = '6379';
+                    break;
+                case 'elasticsearch':
+                    input.placeholder = '9200';
+                    break;
+                case 'cassandra':
+                    input.placeholder = '9042';
+                    break;
+                case 'influxdb':
+                    input.placeholder = '8086';
+                    break;
+                default:
+                    input.placeholder = 'Enter port...';
+            }
+        } else if (credential === 'host') {
+            input.placeholder = 'localhost';
+        } else if (credential === 'project_id' && dbType === 'firestore') {
+            input.placeholder = 'your-project-id';
+        } else if (credential === 'api_key' && dbType === 'firestore') {
+            input.placeholder = 'your-firebase-api-key';
+        } else if (credential === 'collection' && dbType === 'firestore') {
+            input.placeholder = 'users';
+        }
+        
+        formGroup.appendChild(input);
+        container.appendChild(formGroup);
+    };
     
     // If connection string is supported, create a toggle switch
     if (supportsConnectionString) {
@@ -236,7 +310,11 @@ function showCredentialForm(dbType, credentialInfo) {
             const individualInputs = individualFieldsContainer.querySelectorAll('input');
             const urlInputs = urlFieldContainer.querySelectorAll('input');
             
-            individualInputs.forEach(input => input.required = true);
+            individualInputs.forEach(input => {
+                if (!optionalFields.includes(input.name)) {
+                    input.required = true;
+                }
+            });
             urlInputs.forEach(input => input.required = false);
         });
         
@@ -260,109 +338,23 @@ function showCredentialForm(dbType, credentialInfo) {
         
         // Create form fields for each required credential
         requiredFields.forEach(credential => {
-            const formGroup = document.createElement('div');
-            formGroup.className = 'form-group mb-3';
-            
-            const label = document.createElement('label');
-            label.setAttribute('for', `credential-${credential}`);
-            label.textContent = formatCredentialLabel(credential);
-            formGroup.appendChild(label);
-            
-            const input = document.createElement('input');
-            input.type = credential.includes('password') ? 'password' : 'text';
-            input.className = 'form-control';
-            input.id = `credential-${credential}`;
-            input.name = credential;
-            input.required = true;
-            
-            // Set default values or placeholders based on credential type
-            if (credential === 'port') {
-                switch (dbType) {
-                    case 'postgresql':
-                        input.placeholder = '5432';
-                        break;
-                    case 'mysql':
-                    case 'mariadb':
-                        input.placeholder = '3306';
-                        break;
-                    case 'mongodb':
-                        input.placeholder = '27017';
-                        break;
-                    case 'redis':
-                        input.placeholder = '6379';
-                        break;
-                    case 'elasticsearch':
-                        input.placeholder = '9200';
-                        break;
-                    case 'cassandra':
-                        input.placeholder = '9042';
-                        break;
-                    case 'influxdb':
-                        input.placeholder = '8086';
-                        break;
-                    default:
-                        input.placeholder = 'Enter port...';
-                }
-            } else if (credential === 'host') {
-                input.placeholder = 'localhost';
-            }
-            
-            formGroup.appendChild(input);
-            individualFieldsContainer.appendChild(formGroup);
+            createFormField(individualFieldsContainer, credential, !optionalFields.includes(credential));
+        });
+        
+        // Create form fields for optional credentials if any
+        optionalFields.forEach(credential => {
+            createFormField(individualFieldsContainer, credential, false);
         });
     } else {
         // Standard form without connection string option
         // Create form fields for each required credential
         requiredFields.forEach(credential => {
-            const formGroup = document.createElement('div');
-            formGroup.className = 'form-group mb-3';
-            
-            const label = document.createElement('label');
-            label.setAttribute('for', `credential-${credential}`);
-            label.textContent = formatCredentialLabel(credential);
-            formGroup.appendChild(label);
-            
-            const input = document.createElement('input');
-            input.type = credential.includes('password') ? 'password' : 'text';
-            input.className = 'form-control';
-            input.id = `credential-${credential}`;
-            input.name = credential;
-            input.required = true;
-            
-            // Set default values or placeholders based on credential type
-            if (credential === 'port') {
-                switch (dbType) {
-                    case 'postgresql':
-                        input.placeholder = '5432';
-                        break;
-                    case 'mysql':
-                    case 'mariadb':
-                        input.placeholder = '3306';
-                        break;
-                    case 'mongodb':
-                        input.placeholder = '27017';
-                        break;
-                    case 'redis':
-                        input.placeholder = '6379';
-                        break;
-                    case 'elasticsearch':
-                        input.placeholder = '9200';
-                        break;
-                    case 'cassandra':
-                        input.placeholder = '9042';
-                        break;
-                    case 'influxdb':
-                        input.placeholder = '8086';
-                        break;
-                    default:
-                        input.placeholder = 'Enter port...';
-                }
-            } else if (credential === 'host') {
-                input.placeholder = 'localhost';
-            }
-            
-            formGroup.appendChild(input);
-            credentialForm.appendChild(formGroup);
+            createFormField(credentialForm, credential, true);
+        });
+        
+        // Create form fields for optional credentials if any
+        optionalFields.forEach(credential => {
+            createFormField(credentialForm, credential, false);
         });
     }
     
