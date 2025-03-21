@@ -80,84 +80,36 @@ function initDatabaseSelection() {
     // Create category sections
     for (const [category, dbs] of Object.entries(categories)) {
         const categorySection = document.createElement('div');
-        categorySection.className = 'db-category mb-5';
+        categorySection.className = 'db-category';
         
-        // Create category header with icon
-        const categoryHeader = document.createElement('div');
-        categoryHeader.className = 'db-category-header';
-        
-        // Get icon class based on category
-        const iconClass = category.toLowerCase().replace(' ', '-');
-        
-        // Create icon container
-        const iconContainer = document.createElement('div');
-        iconContainer.className = `db-category-icon ${iconClass}-icon`;
-        
-        // Add appropriate icon based on category
-        let iconHTML = '<i class="fas fa-database"></i>'; // Default
-        if (category === 'Relational') {
-            iconHTML = '<i class="fas fa-table"></i>';
-        } else if (category === 'NoSQL') {
-            iconHTML = '<i class="fas fa-cubes"></i>';
-        } else if (category === 'Data Warehouse') {
-            iconHTML = '<i class="fas fa-warehouse"></i>';
-        } else if (category === 'Cloud') {
-            iconHTML = '<i class="fas fa-cloud"></i>';
-        } else if (category === 'Graph') {
-            iconHTML = '<i class="fas fa-project-diagram"></i>';
-        } else if (category === 'Time Series') {
-            iconHTML = '<i class="fas fa-chart-line"></i>';
-        }
-        
-        iconContainer.innerHTML = iconHTML;
-        categoryHeader.appendChild(iconContainer);
-        
-        const categoryTitle = document.createElement('h3');
-        categoryTitle.className = 'db-category-title';
+        const categoryTitle = document.createElement('h2');
         categoryTitle.textContent = category + ' Databases';
-        categoryHeader.appendChild(categoryTitle);
-        
-        categorySection.appendChild(categoryHeader);
+        categorySection.appendChild(categoryTitle);
         
         const dbGrid = document.createElement('div');
-        dbGrid.className = 'row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4';
+        dbGrid.className = 'db-grid';
         
         // Create database tiles
         dbs.forEach(db => {
-            const colDiv = document.createElement('div');
-            colDiv.className = 'col';
-            
             const dbTile = document.createElement('div');
-            dbTile.className = 'card h-100 border shadow-sm hover-card';
+            dbTile.className = 'db-tile';
             dbTile.setAttribute('data-db-type', db.type);
-            
-            // Logo container
-            const logoContainer = document.createElement('div');
-            logoContainer.className = 'card-body text-center d-flex flex-column align-items-center justify-content-center py-4';
             
             // Create SVG logo using our database_logos.js utility
             const logoSvg = getDatabaseLogo(db.type);
-            const logoDiv = document.createElement('div');
-            logoDiv.className = 'db-logo mb-3';
-            logoDiv.style.width = '64px';
-            logoDiv.style.height = '64px';
-            logoDiv.innerHTML = logoSvg;
-            logoContainer.appendChild(logoDiv);
+            dbTile.innerHTML = logoSvg;
             
-            const dbName = document.createElement('h5');
-            dbName.className = 'card-title mb-0 mt-2';
+            const dbName = document.createElement('div');
+            dbName.className = 'db-name';
             dbName.textContent = db.name;
-            logoContainer.appendChild(dbName);
-            
-            dbTile.appendChild(logoContainer);
+            dbTile.appendChild(dbName);
             
             // Add click event
             dbTile.addEventListener('click', function() {
                 selectDatabase(db.type);
             });
             
-            colDiv.appendChild(dbTile);
-            dbGrid.appendChild(colDiv);
+            dbGrid.appendChild(dbTile);
         });
         
         categorySection.appendChild(dbGrid);
