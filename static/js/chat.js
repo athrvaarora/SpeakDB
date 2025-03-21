@@ -425,7 +425,7 @@ function addMessageToChat(content, sender, timestamp = null) {
                     
                     // Add export buttons
                     const exportButtons = document.createElement('div');
-                    exportButtons.className = 'btn-group btn-group-sm';
+                    exportButtons.className = 'btn-group btn-group-sm me-2';
                     
                     const csvButton = document.createElement('button');
                     csvButton.className = 'btn btn-outline-secondary export-csv-btn';
@@ -437,7 +437,30 @@ function addMessageToChat(content, sender, timestamp = null) {
                     
                     exportButtons.appendChild(csvButton);
                     exportButtons.appendChild(jsonButton);
-                    exportContainer.appendChild(exportButtons);
+                    
+                    // Create container for all buttons
+                    const buttonContainer = document.createElement('div');
+                    buttonContainer.className = 'd-flex align-items-center mb-2';
+                    buttonContainer.appendChild(exportButtons);
+                    
+                    // Try to create visualization buttons
+                    try {
+                        // Parse the JSON data to see if we can create visualizations
+                        const jsonDataObj = JSON.parse(jsonData);
+                        
+                        // Check if the data is visualizable
+                        if (Array.isArray(jsonDataObj) && jsonDataObj.length > 0) {
+                            // Create visualization buttons
+                            const vizButtons = createVisualizationButtons(jsonDataObj);
+                            if (vizButtons) {
+                                buttonContainer.appendChild(vizButtons);
+                            }
+                        }
+                    } catch (e) {
+                        console.log('Could not create visualization buttons:', e);
+                    }
+                    
+                    exportContainer.appendChild(buttonContainer);
                     
                     // Hidden data element to store the raw JSON
                     const hiddenData = document.createElement('div');
