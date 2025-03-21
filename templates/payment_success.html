@@ -1,0 +1,36 @@
+{% extends "landing_layout.html" %}
+
+{% block title %}Payment Successful - SpeakDB{% endblock %}
+
+{% block content %}
+<div class="container py-5 mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 fade-up">
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4">
+                        <div class="display-1 text-success">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                    </div>
+                    <h2 class="mb-3">Payment Successful!</h2>
+                    <p class="text-muted mb-4">Thank you for upgrading to the Enterprise plan. Your account has been successfully upgraded, and you now have access to all premium features.</p>
+                    
+                    <div class="alert alert-info mb-4">
+                        <h5 class="alert-heading">You now have access to:</h5>
+                        <ul class="mb-0 text-start">
+                            <li>Unlimited database queries</li>
+                            <li>Advanced natural language processing</li>
+                            <li>Advanced data visualizations</li>
+                            <li>Deep AI schema analysis</li>
+                            <li>Priority support</li>
+                        </ul>
+                    </div>
+                    
+                    <a href="{{ url_for('select_database') }}" class="btn btn-primary btn-lg">Go to Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

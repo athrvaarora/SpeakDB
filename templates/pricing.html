@@ -1,0 +1,278 @@
+{% extends "landing_layout.html" %}
+
+{% block title %}Pricing - SpeakDB{% endblock %}
+
+{% block content %}
+<!-- Pricing Section -->
+<section class="pricing-section pt-10">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-lg-8 mx-auto">
+                <h1 class="section-title fade-up">Transparent, Simple Pricing</h1>
+                <p class="section-subtitle fade-up">Choose the plan that works best for your needs. No hidden fees, no complicated tiers.</p>
+                
+                <div class="pricing-toggle fade-up mt-4">
+                    <div class="form-check form-switch d-flex justify-content-center align-items-center gap-3">
+                        <span class="fw-semibold">Monthly</span>
+                        <input class="form-check-input mx-2" type="checkbox" id="annual-toggle" style="width: 3rem; height: 1.5rem;">
+                        <span class="fw-semibold">Annual <span class="badge bg-primary ms-2">Save 20%</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-5 mb-4 fade-up">
+                <div class="pricing-card h-100">
+                    <h3 class="pricing-title">Free Plan</h3>
+                    <div class="monthly-price">
+                        <span class="pricing-price">$0</span>
+                        <span class="pricing-period">Forever</span>
+                    </div>
+                    <div class="annual-price d-none">
+                        <span class="pricing-price">$0</span>
+                        <span class="pricing-period">Forever</span>
+                    </div>
+                    <p class="text-muted mb-4">Perfect for trying out SpeakDB or occasional database queries.</p>
+                    <ul class="pricing-features">
+                        <li class="pricing-feature">
+                            <i class="fas fa-check"></i>
+                            <span><strong>10</strong> database queries per day</span>
+                        </li>
+                        <li class="pricing-feature">
+                            <i class="fas fa-check"></i>
+                            <span>Connect to any database type</span>
+                        </li>
+                        <li class="pricing-feature">
+                            <i class="fas fa-check"></i>
+                            <span>Natural language queries</span>
+                        </li>
+                        <li class="pricing-feature">
+                            <i class="fas fa-check"></i>
+                            <span>Basic data visualizations</span>
+                        </li>
+                        <li class="pricing-feature">
+                            <i class="fas fa-check"></i>
+                            <span>Chat history (7 days)</span>
+                        </li>
+                        <li class="pricing-feature disabled">
+                            <i class="fas fa-times"></i>
+                            <span>Advanced AI schema analysis</span>
+                        </li>
+                        <li class="pricing-feature disabled">
+                            <i class="fas fa-times"></i>
+                            <span>Unlimited queries</span>
+                        </li>
+                        <li class="pricing-feature disabled">
+                            <i class="fas fa-times"></i>
+                            <span>Priority support</span>
+                        </li>
+                    </ul>
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.subscription and current_user.subscription.plan_type == 'free' %}
+                            <button class="btn btn-outline-primary btn-lg d-block" disabled>Current Plan</button>
+                        {% else %}
+                            <a href="{{ url_for('downgrade_plan') }}" class="btn btn-outline-primary btn-lg d-block">Switch to Free</a>
+                        {% endif %}
+                    {% else %}
+                        <a href="{{ url_for('signup') }}" class="btn btn-outline-primary btn-lg d-block">Get Started</a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="col-lg-5 mb-4 fade-up">
+                <div class="pricing-card popular h-100">
+                    <div class="popular-badge">Most Popular</div>
+                    <h3 class="pricing-title">Enterprise Plan</h3>
+                    <div class="monthly-price">
+                        <span class="pricing-price">$49</span>
+                        <span class="pricing-period">per month</span>
+                    </div>
+                    <div class="annual-price d-none">
+                        <span class="pricing-price">$39</span>
+                        <span class="pricing-period">per month, billed annually</span>
+                    </div>
+                    <p class="text-muted mb-4">For power users and teams who need unlimited access.</p>
+                    <ul class="pricing-features">
+                        <li class="pricing-feature">
+                            <i class="fas fa-check"></i>
+                            <span><strong>Unlimited</strong> database queries</span>
+                        </li>
+                        <li class="pricing-feature">
+                            <i class="fas fa-check"></i>
+                            <span>Connect to any database type</span>
+                        </li>
+                        <li class="pricing-feature">
+                            <i class="fas fa-check"></i>
+                            <span>Advanced natural language processing</span>
+                        </li>
+                        <li class="pricing-feature">
+                            <i class="fas fa-check"></i>
+                            <span>Advanced data visualizations</span>
+                        </li>
+                        <li class="pricing-feature">
+                            <i class="fas fa-check"></i>
+                            <span>Unlimited chat history</span>
+                        </li>
+                        <li class="pricing-feature">
+                            <i class="fas fa-check"></i>
+                            <span>Deep AI schema analysis</span>
+                        </li>
+                        <li class="pricing-feature">
+                            <i class="fas fa-check"></i>
+                            <span>Export data (CSV, JSON, Excel)</span>
+                        </li>
+                        <li class="pricing-feature">
+                            <i class="fas fa-check"></i>
+                            <span>Priority support</span>
+                        </li>
+                    </ul>
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.subscription and current_user.subscription.plan_type == 'enterprise' %}
+                            <button class="btn btn-primary btn-lg d-block" disabled>Current Plan</button>
+                        {% else %}
+                            <a href="{{ url_for('create_checkout_session') }}" class="btn btn-primary btn-lg d-block">Upgrade Now</a>
+                        {% endif %}
+                    {% else %}
+                        <a href="{{ url_for('signup', plan='enterprise') }}" class="btn btn-primary btn-lg d-block">Get Started</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-5">
+            <div class="col-lg-10 mx-auto">
+                <div class="bg-white p-5 rounded-4 shadow-sm fade-up">
+                    <h3 class="text-center mb-4">Need a custom solution?</h3>
+                    <p class="text-center text-muted mb-4">Contact us to discuss your specific requirements and get a tailored plan for your organization.</p>
+                    <div class="text-center">
+                        <a href="#" class="btn btn-outline-primary">Contact Sales</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="py-5 mt-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-lg-8 mx-auto">
+                <h2 class="section-title fade-up">Frequently Asked Questions</h2>
+                <p class="section-subtitle fade-up">Find answers to common questions about SpeakDB</p>
+            </div>
+        </div>
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="accordion fade-up" id="faqAccordion">
+                    <div class="accordion-item mb-3 border rounded-3 shadow-sm">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="false" aria-controls="faq1">
+                                How does the daily query limit work on the free plan?
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                The free plan includes 10 queries per day. A query is counted each time you ask a natural language question that requires database access. Your quota resets every 24 hours at midnight UTC. You can always see your remaining daily queries in your dashboard.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item mb-3 border rounded-3 shadow-sm">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" aria-expanded="false" aria-controls="faq2">
+                                What database systems does SpeakDB support?
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                SpeakDB supports a wide range of database systems including relational databases (PostgreSQL, MySQL, Oracle, SQL Server), NoSQL databases (MongoDB, Cassandra, Redis), data warehouses (Snowflake, BigQuery), cloud databases (Firestore, Azure Cosmos DB), time-series databases (InfluxDB, TimescaleDB), and graph databases (Neo4j, TigerGraph).
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item mb-3 border rounded-3 shadow-sm">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" aria-expanded="false" aria-controls="faq3">
+                                Are my database credentials secure?
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Yes, we take security very seriously. All database credentials are encrypted before being stored, and we use industry-standard security protocols for all database connections. SpeakDB never stores your actual data, only the minimal schema information needed to generate accurate queries.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item mb-3 border rounded-3 shadow-sm">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4" aria-expanded="false" aria-controls="faq4">
+                                Can I cancel or change my subscription at any time?
+                            </button>
+                        </h2>
+                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Yes, you can upgrade, downgrade, or cancel your subscription at any time. If you downgrade or cancel, you'll continue to have access to your current plan until the end of your billing period, after which you'll be moved to the new plan or free plan.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item mb-3 border rounded-3 shadow-sm">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5" aria-expanded="false" aria-controls="faq5">
+                                What is AI schema analysis and why is it important?
+                            </button>
+                        </h2>
+                        <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                AI schema analysis is a powerful feature that examines your database structure to better understand relationships between tables, data types, and common query patterns. This helps SpeakDB generate more accurate queries from natural language inputs and provide better suggestions. The enterprise plan includes deeper analysis that continuously learns from your query patterns to improve accuracy over time.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section mt-5">
+    <div class="cta-shape"></div>
+    <div class="container">
+        <div class="cta-content">
+            <h2 class="cta-title fade-up">Ready to Transform Your Database Experience?</h2>
+            <p class="cta-subtitle fade-up">Choose the plan that's right for you and start talking to your databases today.</p>
+            <div class="fade-up">
+                <a href="{{ url_for('signup') }}" class="btn btn-light btn-lg me-3">Get Started Free</a>
+                <a href="{{ url_for('features') }}" class="btn btn-outline-light btn-lg">Explore Features</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const annualToggle = document.getElementById('annual-toggle');
+        const monthlyPrices = document.querySelectorAll('.monthly-price');
+        const annualPrices = document.querySelectorAll('.annual-price');
+        
+        if (annualToggle) {
+            annualToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    // Show annual prices
+                    monthlyPrices.forEach(el => el.classList.add('d-none'));
+                    annualPrices.forEach(el => el.classList.remove('d-none'));
+                } else {
+                    // Show monthly prices
+                    monthlyPrices.forEach(el => el.classList.remove('d-none'));
+                    annualPrices.forEach(el => el.classList.add('d-none'));
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends "landing_layout.html" %}
+
+{% block title %}Sign Up - SpeakDB{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="auth-card fade-up">
+                    <div class="auth-header text-center">
+                        <h3 class="mb-2">Create Your Account</h3>
+                        <p>Sign up for SpeakDB and start querying your databases</p>
+                    </div>
+                    <div class="auth-body">
+                        {% if error %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ error }}
+                        </div>
+                        {% endif %}
+
+                        <div id="error-message" class="alert alert-danger d-none" role="alert"></div>
+
+                        <button id="google-login-btn" class="social-login-btn mb-3" data-next="{{ next }}">
+                            <img src="{{ url_for('static', filename='images/google-logo.svg') }}" alt="Google">
+                            Continue with Google
+                        </button>
+
+                        <div class="auth-divider">
+                            <span>or sign up with email</span>
+                        </div>
+
+                        <form action="{{ url_for('signup') }}" method="post">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="confirm-password" class="form-label">Confirm Password</label>
+                                <input type="password" class="form-control" id="confirm-password" name="confirm_password" required>
+                            </div>
+                            
+                            {% if request.args.get('plan') == 'enterprise' %}
+                            <input type="hidden" name="plan" value="enterprise">
+                            {% endif %}
+                            
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="terms" name="terms" required>
+                                <label class="form-check-label" for="terms">
+                                    I agree to the <a href="#" class="text-primary">Terms of Service</a> and <a href="#" class="text-primary">Privacy Policy</a>
+                                </label>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Create Account</button>
+                        </form>
+
+                        <div class="text-center mt-4">
+                            <p class="mb-0">Already have an account? <a href="{{ url_for('login') }}" class="text-primary">Log in</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "landing_layout.html" %}
+
+{% block title %}Log In - SpeakDB{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="auth-card fade-up">
+                    <div class="auth-header text-center">
+                        <h3 class="mb-2">Welcome Back</h3>
+                        <p>Log in to your SpeakDB account</p>
+                    </div>
+                    <div class="auth-body">
+                        {% if error %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ error }}
+                        </div>
+                        {% endif %}
+
+                        <div id="error-message" class="alert alert-danger d-none" role="alert"></div>
+
+                        <button id="google-login-btn" class="social-login-btn mb-3" data-next="{{ next }}">
+                            <img src="{{ url_for('static', filename='images/google-logo.svg') }}" alt="Google">
+                            Continue with Google
+                        </button>
+
+                        <div class="auth-divider">
+                            <span>or continue with email</span>
+                        </div>
+
+                        <form action="{{ url_for('login') }}" method="post">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="remember-me" name="remember">
+                                    <label class="form-check-label" for="remember-me">
+                                        Remember me
+                                    </label>
+                                </div>
+                                <a href="#" class="text-primary">Forgot password?</a>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Log In</button>
+                        </form>
+
+                        <div class="text-center mt-4">
+                            <p class="mb-0">Don't have an account? <a href="{{ url_for('signup') }}" class="text-primary">Sign up</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
