@@ -27,7 +27,12 @@ def generate_query(user_query, db_type, schema_info):
         schema_info (dict): Information about the database schema
         
     Returns:
-        tuple: (success, query, explanation)
+        tuple: (success, query, explanation, needs_multiple_queries, additional_queries)
+            - success (bool): Whether the query generation was successful
+            - query (str): The generated primary query
+            - explanation (str): Explanation of what the query does
+            - needs_multiple_queries (bool): Whether multiple queries are needed
+            - additional_queries (list): List of additional queries if needed
     """
     try:
         # Create a prompt that includes the database type and schema information
@@ -39,11 +44,22 @@ def generate_query(user_query, db_type, schema_info):
         The database schema is as follows:
         {json.dumps(schema_info, indent=2)}
         
+        Important requirements:
+        1. For SQLite: NEVER generate multiple SQL statements separated by semicolons, as SQLite can only execute one statement at a time.
+        2. For MySQL/PostgreSQL/SQL Server: If multiple statements are needed, ensure they are compatible with the specific database's transaction requirements.
+        3. When a user wants to see data from multiple tables, use JOIN operations or UNION when appropriate, rather than multiple separate SELECT statements.
+        4. For NoSQL databases, ensure the query format matches the database's specific API requirements.
+        5. If a user wants "all records from all tables", use UNION ALL with consistent column structures, or generate a query that retrieves one table at a time.
+        
         Respond with JSON in the following format:
         {{
             "query": "the generated query",
-            "explanation": "explanation of what the query does and why it satisfies the request"
+            "explanation": "explanation of what the query does and why it satisfies the request",
+            "needs_multiple_queries": false,
+            "additional_queries": []
         }}
+        
+        If the request genuinely requires multiple separate queries to be run in sequence (not simultaneously), set "needs_multiple_queries" to true and provide each query in the "additional_queries" array.
         
         Ensure the query is valid for {db_type} syntax.
         """
@@ -62,14 +78,16 @@ def generate_query(user_query, db_type, schema_info):
         result = json.loads(response.choices[0].message.content)
         query = result.get("query")
         explanation = result.get("explanation")
+        needs_multiple_queries = result.get("needs_multiple_queries", False)
+        additional_queries = result.get("additional_queries", [])
         
         if not query:
-            return False, None, "Failed to generate a query from the GPT response"
+            return False, None, "Failed to generate a query from the GPT response", False, []
         
-        return True, query, explanation
+        return True, query, explanation, needs_multiple_queries, additional_queries
     except Exception as e:
         logger.exception("Error generating query with GPT")
-        return False, None, f"Error generating query: {str(e)}"
+        return False, None, f"Error generating query: {str(e)}", False, []
 
 def format_response(db_result, user_query):
     """
