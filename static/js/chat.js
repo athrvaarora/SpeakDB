@@ -1,4 +1,4 @@
-// chat.js - Chat interface functionality for DB Chat application
+// chat.js - Chat interface functionality for SpeakDB application
 
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize the chat interface
@@ -320,7 +320,14 @@ function addMessageToChat(content, sender, timestamp = null) {
     if (!messagesContainer) return;
     
     const messageElement = document.createElement('div');
-    messageElement.className = `message message-${sender}`;
+    messageElement.className = `message message-${sender} animate__animated`;
+    
+    // Add different animation based on sender
+    if (sender === 'user') {
+        messageElement.classList.add('animate__fadeInRight');
+    } else {
+        messageElement.classList.add('animate__fadeInLeft');
+    }
     
     const messageContent = document.createElement('div');
     messageContent.className = 'message-content';
@@ -553,14 +560,14 @@ function showWelcomeMessage() {
         const dbName = document.querySelector('#db-info')?.getAttribute('data-db-name') || 'database';
         
         welcomeElement.innerHTML = `
-            <div class="mb-3">
-                <i class="fas fa-database fa-3x text-secondary mb-3"></i>
-                <h4>Welcome to DB Chat</h4>
+            <div class="mb-4 animate__animated animate__fadeIn">
+                <img src="/static/images/speakdb-logo.svg" alt="SpeakDB Logo" class="mb-3" width="80" height="80">
+                <h4 class="fw-semibold">Welcome to SpeakDB</h4>
                 <p class="text-muted">You are connected to <strong>${dbName}</strong>.</p>
-                <p>Ask questions about your database in natural language.</p>
+                <p>Ask questions about your database using natural language.</p>
             </div>
-            <div class="mb-3">
-                <p class="text-muted small">Examples:</p>
+            <div class="mb-3 animate__animated animate__fadeIn animate__delay-1s">
+                <p class="text-muted small">Try these examples:</p>
                 <div id="welcome-examples" class="d-flex flex-column gap-2">
                     <div class="example-query" onclick="useExample(this)">Show me all tables in this database</div>
                     <div class="example-query" onclick="useExample(this)">How many records are in each table?</div>
