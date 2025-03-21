@@ -188,7 +188,7 @@ class FirestoreConnector(BaseCloudConnector):
         """Connect to a Google Firestore database"""
         if not self.client:
             try:
-                # Get Firebase credentials
+                # Get Firebase credentials (matching the env variables format)
                 project_id = self.credentials.get("project_id")
                 api_key = self.credentials.get("api_key")
                 auth_domain = self.credentials.get("auth_domain")
