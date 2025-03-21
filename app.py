@@ -55,7 +55,7 @@ def auth():
 
 @app.route('/login', methods=['POST'])
 def login():
-    """Handle user login"""
+    """Handle user login with password verification"""
     email = request.form.get('email')
     password = request.form.get('password')
     remember = 'remember' in request.form
@@ -63,15 +63,14 @@ def login():
     # Find the user by email
     user = db.session.query(User).filter(User.email == email).first()
     
-    if user:
-        # For now, we'll automatically log in any existing user
-        # since we don't have password storage in the database
+    if user and user.check_password(password):
+        # Password is correct, log in the user
         login_user(user, remember=remember)
         flash('Logged in successfully!', 'success')
         
         # Check if the user has any recent chats
-        # We'll look at most recent chats from the database to see if there's an active one
-        recent_chat = db.session.query(Chat).order_by(Chat.updated_at.desc()).first()
+        # We get the user's most recent chat
+        recent_chat = db.session.query(Chat).filter(Chat.user_id == user.id).order_by(Chat.updated_at.desc()).first()
         
         if recent_chat:
             # Found a recent chat, set it in the session and redirect to chat page
@@ -93,17 +92,24 @@ def login():
         # No valid recent chat found, go to database selection page
         return redirect(url_for('index'))
     else:
-        # User doesn't exist
-        flash('User not found. Please sign up first.', 'danger')
+        # Either user doesn't exist or password is incorrect
+        if not user:
+            flash('User not found. Please sign up first.', 'danger')
+        else:
+            flash('Invalid password. Please try again.', 'danger')
         return redirect(url_for('auth'))
 
 @app.route('/signup', methods=['POST'])
 def signup():
-    """Handle user signup"""
+    """Handle user signup with password storage"""
     name = request.form.get('name')
     email = request.form.get('email')
-    # We still collect password for a consistent UI experience
-    # But we don't store it since our model doesn't have a password_hash field
+    password = request.form.get('password')
+    
+    # Basic validation
+    if not email or not password or not name:
+        flash('All fields are required', 'danger')
+        return redirect(url_for('auth'))
     
     # Check if user already exists
     existing_user = db.session.query(User).filter(User.email == email).first()
@@ -111,10 +117,11 @@ def signup():
         flash('Email already registered', 'danger')
         return redirect(url_for('auth'))
     
-    # Create new user without password
+    # Create new user with password
     new_user = User(
         email=email,
-        name=name
+        name=name,
+        password=password  # This will use the set_password method
     )
     
     # Save user to database
@@ -210,7 +217,8 @@ def test_db_connection():
                 id=chat_id,
                 db_type=db_type,
                 db_name=credentials.get('db_name', db_type.upper()),
-                db_credentials=json.dumps(credentials)  # Store credentials as JSON string
+                db_credentials=json.dumps(credentials),  # Store credentials as JSON string
+                user_id=current_user.id if current_user.is_authenticated else None  # Link to user if logged in
             )
             
             # Save the chat to the database
