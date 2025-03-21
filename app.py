@@ -589,16 +589,20 @@ def get_required_credentials():
         },
         'firestore': {
             'fields': [
-                'project_id', 
+                'auth_method',
+                'project_id',
+                'collection',
+                # Service Account method fields
+                'service_account_key_path',
+                'service_account_key',
+                # Web Config method fields
                 'api_key', 
                 'auth_domain', 
                 'storage_bucket', 
                 'messaging_sender_id', 
                 'app_id',
                 'measurement_id',
-                'database_url',
-                'service_account_key_path',
-                'collection'
+                'database_url'
             ],
             'url_option': False,
             'terminal_command': 'firebase firestore:get --project project_id collections/documents',
@@ -609,8 +613,11 @@ def get_required_credentials():
                 'app_id',
                 'measurement_id',
                 'database_url',
-                'service_account_key_path'
-            ]
+                'service_account_key_path',
+                'service_account_key',
+                'api_key'
+            ],
+            'description': 'Connect to Firebase Firestore using either a Service Account key (recommended for backend applications) or Web Config (for frontend/testing).'
         },
         'supabase': {
             'fields': ['supabase_url', 'supabase_key'],

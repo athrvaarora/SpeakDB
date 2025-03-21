@@ -177,54 +177,110 @@ function showCredentialForm(dbType, credentialInfo) {
         formGroup.appendChild(label);
         
         const input = document.createElement('input');
+        // Special handling for 'auth_method' credential (Firebase)
+        if (credential === 'auth_method' && dbType === 'firestore') {
+            // Create a select element instead of input
+            input = document.createElement('select');
+            input.className = 'form-select';
+            input.id = `credential-${credential}`;
+            input.name = credential;
+            input.required = isRequired;
+            
+            // Add options for different authentication methods
+            const serviceOption = document.createElement('option');
+            serviceOption.value = 'service_account';
+            serviceOption.textContent = 'Service Account (Recommended)';
+            
+            const webOption = document.createElement('option');
+            webOption.value = 'web_config';
+            webOption.textContent = 'Web Config';
+            
+            input.appendChild(serviceOption);
+            input.appendChild(webOption);
+            
+            // Add event listener to show/hide fields based on the selected auth method
+            input.addEventListener('change', function() {
+                const authMethod = input.value;
+                const serviceFields = document.querySelectorAll('[id^="credential-service_account"]');
+                const webFields = document.querySelectorAll('[id^="credential-api_key"], [id^="credential-auth_domain"], [id^="credential-storage_bucket"], [id^="credential-messaging_sender_id"], [id^="credential-app_id"], [id^="credential-measurement_id"], [id^="credential-database_url"]');
+                
+                if (authMethod === 'service_account') {
+                    // Show service account fields, hide web config fields
+                    serviceFields.forEach(field => field.closest('.form-group').style.display = 'block');
+                    webFields.forEach(field => field.closest('.form-group').style.display = 'none');
+                } else {
+                    // Show web config fields, hide service account fields
+                    serviceFields.forEach(field => field.closest('.form-group').style.display = 'none');
+                    webFields.forEach(field => field.closest('.form-group').style.display = 'block');
+                }
+            });
+        } 
         // Set type to password for sensitive fields
-        if (credential.includes('password') || credential.includes('key') || 
+        else if (credential.includes('password') || credential.includes('key') || 
             credential.includes('secret') || credential.includes('token')) {
             input.type = 'password';
         } else {
             input.type = 'text';
         }
-        input.className = 'form-control';
+        
+        // Set common properties for all input types
+        if (input.tagName !== 'SELECT') {
+            input.className = 'form-control';
+        }
         input.id = `credential-${credential}`;
         input.name = credential;
         input.required = isRequired;
         
         // Set default values or placeholders based on credential type
-        if (credential === 'port') {
-            switch (dbType) {
-                case 'postgresql':
-                    input.placeholder = '5432';
-                    break;
-                case 'mysql':
-                case 'mariadb':
-                    input.placeholder = '3306';
-                    break;
-                case 'mongodb':
-                    input.placeholder = '27017';
-                    break;
-                case 'redis':
-                    input.placeholder = '6379';
-                    break;
-                case 'elasticsearch':
-                    input.placeholder = '9200';
-                    break;
-                case 'cassandra':
-                    input.placeholder = '9042';
-                    break;
-                case 'influxdb':
-                    input.placeholder = '8086';
-                    break;
-                default:
-                    input.placeholder = 'Enter port...';
+        if (input.tagName !== 'SELECT') {
+            if (credential === 'port') {
+                switch (dbType) {
+                    case 'postgresql':
+                        input.placeholder = '5432';
+                        break;
+                    case 'mysql':
+                    case 'mariadb':
+                        input.placeholder = '3306';
+                        break;
+                    case 'mongodb':
+                        input.placeholder = '27017';
+                        break;
+                    case 'redis':
+                        input.placeholder = '6379';
+                        break;
+                    case 'elasticsearch':
+                        input.placeholder = '9200';
+                        break;
+                    case 'cassandra':
+                        input.placeholder = '9042';
+                        break;
+                    case 'influxdb':
+                        input.placeholder = '8086';
+                        break;
+                    default:
+                        input.placeholder = 'Enter port...';
+                }
+            } else if (credential === 'host') {
+                input.placeholder = 'localhost';
+            } 
+            // Firebase Firestore field placeholders
+            else if (dbType === 'firestore') {
+                if (credential === 'project_id') {
+                    input.placeholder = 'your-project-id';
+                } else if (credential === 'api_key') {
+                    input.placeholder = 'your-firebase-api-key';
+                } else if (credential === 'collection') {
+                    input.placeholder = 'users';
+                } else if (credential === 'service_account_key_path') {
+                    input.placeholder = '/path/to/serviceAccount.json';
+                } else if (credential === 'service_account_key') {
+                    input.placeholder = '{ "type": "service_account", "project_id": "..." }';
+                } else if (credential === 'auth_domain') {
+                    input.placeholder = 'your-project-id.firebaseapp.com';
+                } else if (credential === 'storage_bucket') {
+                    input.placeholder = 'your-project-id.appspot.com';
+                }
             }
-        } else if (credential === 'host') {
-            input.placeholder = 'localhost';
-        } else if (credential === 'project_id' && dbType === 'firestore') {
-            input.placeholder = 'your-project-id';
-        } else if (credential === 'api_key' && dbType === 'firestore') {
-            input.placeholder = 'your-firebase-api-key';
-        } else if (credential === 'collection' && dbType === 'firestore') {
-            input.placeholder = 'users';
         }
         
         formGroup.appendChild(input);
