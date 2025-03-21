@@ -150,10 +150,15 @@ def get_chat_history():
         # Convert the messages to dictionaries
         message_list = [message.to_dict() for message in messages]
         
-        return jsonify({
-            'success': True,
-            'history': message_list
-        })
+        # Use the custom DateTimeEncoder to handle datetime objects
+        return app.response_class(
+            response=json.dumps({
+                'success': True,
+                'history': message_list
+            }, cls=DateTimeEncoder),
+            status=200,
+            mimetype='application/json'
+        )
     except Exception as e:
         logger.exception("Error getting chat history")
         return jsonify({
@@ -171,10 +176,15 @@ def get_previous_chats():
         # Convert the chats to dictionaries
         chat_list = [chat.to_dict() for chat in chats]
         
-        return jsonify({
-            'success': True,
-            'chats': chat_list
-        })
+        # Use custom DateTimeEncoder to handle datetime objects
+        return app.response_class(
+            response=json.dumps({
+                'success': True,
+                'chats': chat_list
+            }, cls=DateTimeEncoder),
+            status=200,
+            mimetype='application/json'
+        )
     except Exception as e:
         logger.exception("Error getting previous chats")
         return jsonify({
@@ -213,29 +223,45 @@ def load_chat(chat_id):
                 if not success:
                     # If the connection fails, we should inform the user but still load the chat
                     logger.warning(f"Failed to reconnect to database: {message}")
-                    return jsonify({
-                        'success': True,
-                        'chat': chat.to_dict(),
-                        'warning': f"Could not reconnect to the database: {message}"
-                    })
+                    return app.response_class(
+                        response=json.dumps({
+                            'success': True,
+                            'chat': chat.to_dict(),
+                            'warning': f"Could not reconnect to the database: {message}"
+                        }, cls=DateTimeEncoder),
+                        status=200,
+                        mimetype='application/json'
+                    )
             except json.JSONDecodeError:
                 logger.error(f"Invalid JSON in db_credentials for chat {chat_id}")
-                return jsonify({
+                return app.response_class(
+                    response=json.dumps({
+                        'success': True,
+                        'chat': chat.to_dict(),
+                        'warning': "Could not restore database connection. The stored credentials are invalid."
+                    }, cls=DateTimeEncoder),
+                    status=200,
+                    mimetype='application/json'
+                )
+        else:
+            return app.response_class(
+                response=json.dumps({
                     'success': True,
                     'chat': chat.to_dict(),
-                    'warning': "Could not restore database connection. The stored credentials are invalid."
-                })
-        else:
-            return jsonify({
-                'success': True,
-                'chat': chat.to_dict(),
-                'warning': "No database credentials were stored with this chat."
-            })
+                    'warning': "No database credentials were stored with this chat."
+                }, cls=DateTimeEncoder),
+                status=200,
+                mimetype='application/json'
+            )
         
-        return jsonify({
-            'success': True,
-            'chat': chat.to_dict()
-        })
+        return app.response_class(
+            response=json.dumps({
+                'success': True,
+                'chat': chat.to_dict()
+            }, cls=DateTimeEncoder),
+            status=200,
+            mimetype='application/json'
+        )
     except Exception as e:
         logger.exception("Error loading chat")
         return jsonify({
@@ -283,10 +309,14 @@ def process_query():
             db.session.add(error_message)
             db.session.commit()
             
-            return jsonify({
-                'success': False,
-                'message': explanation
-            })
+            return app.response_class(
+                response=json.dumps({
+                    'success': False,
+                    'message': explanation
+                }, cls=DateTimeEncoder),
+                status=400,
+                mimetype='application/json'
+            )
         
         # Execute the query against the database
         result, execution_success, error_message = connector.execute_query(query)
@@ -304,12 +334,16 @@ def process_query():
             db.session.add(error_entry)
             db.session.commit()
             
-            return jsonify({
-                'success': False,
-                'message': f"Query generation succeeded, but execution failed: {error_message}",
-                'query': query,
-                'explanation': explanation
-            })
+            return app.response_class(
+                response=json.dumps({
+                    'success': False,
+                    'message': f"Query generation succeeded, but execution failed: {error_message}",
+                    'query': query,
+                    'explanation': explanation
+                }, cls=DateTimeEncoder),
+                status=400,
+                mimetype='application/json'
+            )
         
         # Format the response and include the generated query
         formatted_result = f"""
@@ -338,12 +372,16 @@ def process_query():
         
         db.session.commit()
         
-        return jsonify({
-            'success': True,
-            'query': query,
-            'explanation': explanation,
-            'result': formatted_result
-        })
+        return app.response_class(
+            response=json.dumps({
+                'success': True,
+                'query': query,
+                'explanation': explanation,
+                'result': formatted_result
+            }, cls=DateTimeEncoder),
+            status=200,
+            mimetype='application/json'
+        )
     except Exception as e:
         logger.exception("Error processing query")
         
@@ -361,10 +399,14 @@ def process_query():
             except Exception as inner_e:
                 logger.exception("Error saving error message")
         
-        return jsonify({
-            'success': False,
-            'message': f"Error processing query: {str(e)}"
-        })
+        return app.response_class(
+            response=json.dumps({
+                'success': False,
+                'message': f"Error processing query: {str(e)}"
+            }, cls=DateTimeEncoder),
+            status=500,
+            mimetype='application/json'
+        )
 
 @app.route('/get_required_credentials', methods=['GET'])
 def get_required_credentials():
