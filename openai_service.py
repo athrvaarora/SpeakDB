@@ -71,7 +71,7 @@ def generate_query(user_query, db_type, schema_info):
 
 def format_response(db_result, user_query):
     """
-    Format the database query result to be more user-friendly
+    Format the database query result to be more direct and straightforward
     
     Args:
         db_result (any): The result from the database query
@@ -81,26 +81,19 @@ def format_response(db_result, user_query):
         str: A formatted response
     """
     try:
-        prompt = f"""
-        You are an expert at explaining database query results in a clear and concise manner.
+        # Format raw results as JSON string with nice indentation
+        formatted_result = json.dumps(db_result, indent=2)
         
-        The user asked: "{user_query}"
+        # Create a markdown-formatted response that just shows the query and raw results
+        markdown_response = f"""
+## Query Results
+
+```json
+{formatted_result}
+```
+"""
         
-        The query returned the following result:
-        {json.dumps(db_result, indent=2)}
-        
-        Please provide a clear, concise explanation of these results. Format your response as markdown for easy reading.
-        """
-        
-        response = openai.chat.completions.create(
-            model=MODEL,
-            messages=[
-                {"role": "system", "content": "You are an expert at explaining database query results."},
-                {"role": "user", "content": prompt}
-            ]
-        )
-        
-        return response.choices[0].message.content
+        return markdown_response
     except Exception as e:
-        logger.exception("Error formatting response with GPT")
+        logger.exception("Error formatting response")
         return f"Error formatting response: {str(e)}\n\nRaw result: {json.dumps(db_result, indent=2)}"

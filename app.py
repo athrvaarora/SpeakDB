@@ -310,8 +310,15 @@ def process_query():
                 'explanation': explanation
             })
         
-        # Format the response
-        formatted_result = format_response(result, user_query)
+        # Format the response and include the generated query
+        formatted_result = f"""
+## Generated Query
+```sql
+{query}
+```
+
+{format_response(result, user_query)}
+"""
         
         # Save the successful query to the database
         chat_message = ChatMessage(
