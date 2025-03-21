@@ -869,3 +869,233 @@ class Neo4jConnector(BaseNoSQLConnector):
             return {k: self._neo4j_to_dict(v) for k, v in value.items()}
         else:
             return value
+
+
+class TigerGraphConnector(BaseNoSQLConnector):
+    """Connector for TigerGraph graph databases"""
+    
+    def __init__(self, credentials):
+        super().__init__(credentials)
+        self.client = None
+        
+    def connect(self):
+        """Connect to a TigerGraph database"""
+        if not self.client:
+            try:
+                import requests
+                import json
+                
+                self.host = self.credentials.get("host", "localhost")
+                self.username = self.credentials.get("username")
+                self.password = self.credentials.get("password")
+                self.graph = self.credentials.get("graph", "default")
+                self.secret = self.credentials.get("secret")
+                
+                # TigerGraph uses a REST API for most operations
+                # We'll use the requests library to communicate with it
+                self.client = requests
+                
+                # We'll store the base URL for the REST endpoints
+                self.base_url = f"http://{self.host}:9000/graph/{self.graph}"
+                
+                # Test authentication if secret is provided
+                if self.secret:
+                    auth_url = f"http://{self.host}:9000/requesttoken?secret={self.secret}&lifetime=1000000"
+                    response = self.client.get(auth_url)
+                    if response.status_code != 200:
+                        raise Exception(f"Authentication failed: {response.text}")
+                    
+                    # Store the token for future requests
+                    self.token = response.json().get("token")
+                    self.headers = {"Authorization": f"Bearer {self.token}"}
+                else:
+                    self.headers = {}
+                
+            except ImportError:
+                logger.exception("Requests library not installed")
+                raise Exception("The 'requests' library is required for TigerGraph connection")
+            except Exception as e:
+                logger.exception("Error connecting to TigerGraph")
+                raise Exception(f"Error connecting to TigerGraph: {str(e)}")
+    
+    def disconnect(self):
+        """Disconnect from the TigerGraph database"""
+        # No persistent connection to close
+        self.client = None
+        self.token = None
+        self.headers = {}
+    
+    def test_connection(self):
+        """Test the connection to the TigerGraph database"""
+        try:
+            self.connect()
+            
+            # Test the connection by fetching the endpoints
+            response = self.client.get(f"http://{self.host}:9000/endpoints")
+            
+            if response.status_code == 200:
+                return True, "Connection successful"
+            else:
+                return False, f"Connection failed: {response.text}"
+                
+        except Exception as e:
+            return False, f"Connection failed: {str(e)}"
+        finally:
+            self.disconnect()
+    
+    def get_schema(self):
+        """Get the schema of the TigerGraph database"""
+        try:
+            self.connect()
+            
+            # Get the schema by querying the /gsqlserver/gsql/schema endpoint
+            response = self.client.get(
+                f"http://{self.host}:9000/gsqlserver/gsql/schema",
+                headers=self.headers
+            )
+            
+            if response.status_code != 200:
+                return {"error": f"Error getting schema: {response.text}"}
+            
+            schema = response.json()
+            
+            schema_info = {
+                "vertex_types": [],
+                "edge_types": [],
+                "graph_name": self.graph
+            }
+            
+            # Extract vertex types
+            if "VertexTypes" in schema:
+                for vertex in schema["VertexTypes"]:
+                    attributes = []
+                    if "attributes" in vertex:
+                        for attr in vertex["attributes"]:
+                            attributes.append({
+                                "name": attr.get("attributeName", ""),
+                                "type": attr.get("attributeType", {}).get("name", "")
+                            })
+                    
+                    schema_info["vertex_types"].append({
+                        "name": vertex.get("name", ""),
+                        "attributes": attributes
+                    })
+            
+            # Extract edge types
+            if "EdgeTypes" in schema:
+                for edge in schema["EdgeTypes"]:
+                    attributes = []
+                    if "attributes" in edge:
+                        for attr in edge["attributes"]:
+                            attributes.append({
+                                "name": attr.get("attributeName", ""),
+                                "type": attr.get("attributeType", {}).get("name", "")
+                            })
+                    
+                    schema_info["edge_types"].append({
+                        "name": edge.get("name", ""),
+                        "from": edge.get("fromVertexTypeName", ""),
+                        "to": edge.get("toVertexTypeName", ""),
+                        "attributes": attributes
+                    })
+            
+            return schema_info
+            
+        except Exception as e:
+            logger.exception("Error getting TigerGraph schema")
+            return {"error": f"Error getting schema: {str(e)}"}
+        finally:
+            self.disconnect()
+    
+    def execute_query(self, query):
+        """
+        Execute a GSQL query against TigerGraph
+        
+        Args:
+            query (str): A GSQL query string or a JSON string with query parameters
+            
+        Returns:
+            tuple: (result, success, error_message)
+        """
+        try:
+            self.connect()
+            
+            # Check if the query is a JSON string
+            try:
+                query_data = json.loads(query)
+                is_json_query = True
+            except json.JSONDecodeError:
+                is_json_query = False
+            
+            if is_json_query:
+                # Handle the JSON query format
+                query_type = query_data.get("type", "").lower()
+                
+                if query_type == "interpreted":
+                    # Run an interpreted query
+                    endpoint = f"http://{self.host}:9000/gsqlserver/interpreted_query"
+                    response = self.client.post(
+                        endpoint,
+                        headers=self.headers,
+                        json={"query": query_data.get("query", "")}
+                    )
+                
+                elif query_type == "installed":
+                    # Run an installed query
+                    query_name = query_data.get("name", "")
+                    params = query_data.get("params", {})
+                    endpoint = f"{self.base_url}/query/{query_name}"
+                    response = self.client.post(
+                        endpoint,
+                        headers=self.headers,
+                        json=params
+                    )
+                
+                elif query_type == "restpp":
+                    # Run a REST++ endpoint
+                    endpoint = query_data.get("endpoint", "")
+                    method = query_data.get("method", "GET").upper()
+                    params = query_data.get("params", {})
+                    
+                    full_url = f"http://{self.host}:9000{endpoint}"
+                    
+                    if method == "GET":
+                        response = self.client.get(
+                            full_url,
+                            headers=self.headers,
+                            params=params
+                        )
+                    else:
+                        response = self.client.post(
+                            full_url,
+                            headers=self.headers,
+                            json=params
+                        )
+                
+                else:
+                    raise Exception(f"Unknown query type: {query_type}")
+                
+            else:
+                # Treat it as a GSQL query string
+                endpoint = f"http://{self.host}:9000/gsqlserver/interpreted_query"
+                response = self.client.post(
+                    endpoint,
+                    headers=self.headers,
+                    json={"query": query}
+                )
+            
+            # Check the response
+            if response.status_code >= 200 and response.status_code < 300:
+                try:
+                    result = response.json()
+                    return result, True, None
+                except json.JSONDecodeError:
+                    return response.text, True, None
+            else:
+                return None, False, f"Query failed with status {response.status_code}: {response.text}"
+                
+        except Exception as e:
+            logger.exception(f"Error executing TigerGraph query: {query}")
+            return None, False, f"Error executing query: {str(e)}"
+        finally:
+            self.disconnect()
