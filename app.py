@@ -554,17 +554,40 @@ def get_required_credentials():
             'url_option': True,
             'url_field': 'connection_string',
             'url_example': 'snowflake://username:password@account_identifier/database_name/schema_name?role=role_name',
-            'terminal_command': 'snowsql -a account_identifier -u username -d database_name -s schema_name -r role_name'
+            'terminal_command': 'snowsql -a account_identifier -u username -d database_name -s schema_name -r role_name',
+            'env_variables': [
+                'SNOWFLAKE_ACCOUNT=your_account_identifier',
+                'SNOWFLAKE_USER=your_username',
+                'SNOWFLAKE_PASSWORD=your_password',
+                'SNOWFLAKE_DATABASE=your_database_name',
+                'SNOWFLAKE_SCHEMA=your_schema_name',
+                'SNOWFLAKE_ROLE=your_role_name'
+            ]
         },
         'bigquery': {
-            'fields': ['project_id', 'dataset'],
+            'fields': ['project_id', 'dataset', 'service_account_key_path'],
             'url_option': False,
-            'terminal_command': 'bq query --use_legacy_sql=false \'SELECT * FROM project_id.dataset.table LIMIT 10\''
+            'terminal_command': '# First authenticate (interactive)\ngcloud auth login\n# Then query\nbq query --use_legacy_sql=false \'SELECT * FROM dataset.table LIMIT 10\'',
+            'env_variables': [
+                'GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json',
+                'GCP_PROJECT_ID=your_project_id',
+                'BIGQUERY_DATASET=your_dataset'
+            ],
+            'auth_popup': True,
+            'auth_type': 'google'
         },
         'synapse': {
             'fields': ['server_name', 'database_name', 'username', 'password'],
             'url_option': False,
-            'terminal_command': 'sqlcmd -S server_name.sql.azuresynapse.net -d database_name -U username -P password'
+            'terminal_command': '# First login (interactive)\naz login\n# Then connect\nsqlcmd -S servername.sql.azuresynapse.net -d database_name -U username -P password',
+            'env_variables': [
+                'AZURE_SYNAPSE_SERVER=servername.sql.azuresynapse.net',
+                'AZURE_SYNAPSE_DATABASE=database_name',
+                'AZURE_SYNAPSE_USER=username',
+                'AZURE_SYNAPSE_PASSWORD=your_password'
+            ],
+            'auth_popup': True,
+            'auth_type': 'azure'
         },
         
         # Graph Databases
@@ -574,22 +597,45 @@ def get_required_credentials():
             'url_field': 'uri',
             'url_example': 'bolt://hostname:7687',
             'terminal_command': 'cypher-shell -a bolt://hostname:7687 -u username -p password -d database',
-            'notes': 'Neo4j database connection requires the Bolt URL (neo4j:// or bolt://), username, and password. Database name is optional.'
+            'notes': 'Neo4j database connection requires the Bolt URL (neo4j:// or bolt://), username, and password. Database name is optional.',
+            'env_variables': [
+                'NEO4J_URI=bolt://hostname:7687',
+                'NEO4J_USERNAME=username',
+                'NEO4J_PASSWORD=your_password',
+                'NEO4J_DATABASE=your_database_name'
+            ]
         },
         'tigergraph': {
             'fields': ['endpoint', 'token', 'graph_name', 'username', 'password', 'secret'],
             'url_option': True,
             'url_field': 'endpoint',
             'url_example': 'https://your-instance.i.tgcloud.io',
-            'terminal_command': 'gadmin config get Authentication.TokenSecret && curl -X GET "https://your-instance.i.tgcloud.io:9000/echo" -H "Authorization: Bearer YOUR_TOKEN"',
-            'notes': 'TigerGraph requires an endpoint URL. Provide either a token, username/password, or secret for authentication.'
+            'terminal_command': '# First authenticate\ngadmin config get Authentication.TokenSecret\n# Then connect\ngsql -g graph_name',
+            'notes': 'TigerGraph requires an endpoint URL. Provide either a token, username/password, or secret for authentication.',
+            'env_variables': [
+                'TIGERGRAPH_HOST=hostname',
+                'TIGERGRAPH_USERNAME=username',
+                'TIGERGRAPH_PASSWORD=your_password',
+                'TIGERGRAPH_GRAPH=graph_name',
+                'TIGERGRAPH_SECRET=your_auth_token_secret'
+            ],
+            'auth_popup': False
         },
         'neptune': {
-            'fields': ['neptune_endpoint', 'aws_credentials'],
+            'fields': ['neptune_endpoint', 'aws_region', 'aws_access_key_id', 'aws_secret_access_key'],
             'url_option': True,
-            'url_field': 'connection_string',
+            'url_field': 'neptune_endpoint',
             'url_example': 'wss://your-neptune-endpoint:8182/gremlin',
-            'terminal_command': 'curl -X POST https://your-neptune-endpoint:port/sparql -d "query=SELECT ?s ?p ?o WHERE {?s ?p ?o} LIMIT 10"'
+            'terminal_command': '# First configure AWS credentials (interactive)\naws configure\n# Then query\ncurl -X POST https://your-neptune-endpoint:port/sparql -d "query=SELECT ?s ?p ?o WHERE {?s ?p ?o} LIMIT 10"',
+            'env_variables': [
+                'AWS_ACCESS_KEY_ID=your_access_key',
+                'AWS_SECRET_ACCESS_KEY=your_secret_key',
+                'AWS_REGION=your_region',
+                'NEPTUNE_ENDPOINT=your-neptune-endpoint:port',
+                'NEPTUNE_IAM_AUTH_ENABLED=True'
+            ],
+            'auth_popup': True,
+            'auth_type': 'aws'
         },
         
         # Cloud Databases
@@ -598,14 +644,35 @@ def get_required_credentials():
             'url_option': True,
             'url_field': 'endpoint',
             'url_example': 'https://your-account.documents.azure.com:443/',
-            'terminal_command': 'az cosmosdb sql query --account-name account_name --database-name database_name --container-name container_name --query-text "SELECT * FROM c"',
-            'notes': 'Requires AZURE_COSMOS_ENDPOINT, AZURE_COSMOS_KEY, AZURE_COSMOS_DATABASE, and AZURE_COSMOS_CONTAINER.'
+            'terminal_command': '# First login to Azure (interactive)\naz login\n# Then query\naz cosmosdb sql query --account-name account_name --database-name database_name --container-name container_name --query-text "SELECT * FROM c"',
+            'notes': 'Requires AZURE_COSMOS_ENDPOINT, AZURE_COSMOS_KEY, AZURE_COSMOS_DATABASE, and AZURE_COSMOS_CONTAINER.',
+            'env_variables': [
+                'AZURE_COSMOS_ENDPOINT=https://your-account.documents.azure.com:443/',
+                'AZURE_COSMOS_KEY=your_primary_key',
+                'AZURE_COSMOS_DATABASE=your_database_name',
+                'AZURE_COSMOS_CONTAINER=your_container_name'
+            ],
+            'auth_popup': True,
+            'auth_type': 'azure'
         },
         'firestore': {
             'fields': ['api_key', 'auth_domain', 'project_id', 'storage_bucket', 'messaging_sender_id', 'app_id', 'measurement_id', 'database_url', 'service_account_key_path'],
             'url_option': False,
-            'terminal_command': 'firebase firestore:get --project project_id collections/documents',
-            'notes': 'Requires Firebase credentials including project ID and service account key.'
+            'terminal_command': '# First login to Firebase (interactive)\nfirebase login\n# Then query\nfirebase firestore:get --project project_id collections/documents',
+            'notes': 'Requires Firebase credentials including project ID and service account key.',
+            'env_variables': [
+                'GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json',
+                'FIREBASE_API_KEY=your_api_key',
+                'FIREBASE_AUTH_DOMAIN=your-project-id.firebaseapp.com',
+                'FIREBASE_PROJECT_ID=your-project-id',
+                'FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com',
+                'FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id',
+                'FIREBASE_APP_ID=your_app_id',
+                'FIREBASE_MEASUREMENT_ID=your_measurement_id',
+                'FIREBASE_DATABASE_URL=https://your-project-id.firebaseio.com'
+            ],
+            'auth_popup': True,
+            'auth_type': 'google'
         },
         'supabase': {
             'fields': ['url', 'anon_key', 'service_role_key', 'db_url'],
@@ -613,15 +680,27 @@ def get_required_credentials():
             'url_field': 'url',
             'url_example': 'https://your-project-id.supabase.co',
             'terminal_command': 'psql "postgres://postgres:password@db.supabase.co:5432/postgres"',
-            'notes': 'Requires Supabase URL, anon key, and service role key.'
+            'notes': 'Requires Supabase URL, anon key, and service role key.',
+            'env_variables': [
+                'SUPABASE_URL=https://your-project-id.supabase.co',
+                'SUPABASE_ANON_KEY=your_anon_key',
+                'SUPABASE_SERVICE_ROLE_KEY=your_service_role_key',
+                'SUPABASE_DB_URL=postgres://postgres:password@db.supabase.co:5432/postgres'
+            ]
         },
         'heroku': {
             'fields': ['api_key', 'app_name', 'database_url'],
             'url_option': True,
             'url_field': 'database_url',
             'url_example': 'postgres://username:password@hostname:port/database_name',
-            'terminal_command': 'heroku pg:psql postgresql-shaped-12345 --app your-app-name',
-            'notes': 'Requires Heroku API key and app name.'
+            'terminal_command': '# First login to Heroku (interactive)\nheroku login\n# Then connect\nheroku pg:psql postgresql-shaped-12345 --app your-app-name',
+            'notes': 'Requires Heroku API key and app name.',
+            'env_variables': [
+                'HEROKU_API_KEY=your_api_key',
+                'HEROKU_APP_NAME=your_app_name',
+                'HEROKU_DATABASE_URL=postgres://username:password@hostname:port/database_name'
+            ],
+            'auth_popup': True
         },
         'crunchybridge': {
             'fields': ['db_url', 'username', 'password', 'host', 'port', 'database_name'],
@@ -629,7 +708,15 @@ def get_required_credentials():
             'url_field': 'db_url',
             'url_example': 'postgres://username:password@db.crunchybridge.com:5432/database_name',
             'terminal_command': 'psql "postgres://username:password@db.crunchybridge.com:5432/database_name"',
-            'notes': 'Requires a Crunchy Bridge database connection string.'
+            'notes': 'Requires a Crunchy Bridge database connection string.',
+            'env_variables': [
+                'CRUNCHYBRIDGE_DB_URL=postgres://username:password@db.crunchybridge.com:5432/database_name',
+                'CRUNCHYBRIDGE_USERNAME=username',
+                'CRUNCHYBRIDGE_PASSWORD=your_password',
+                'CRUNCHYBRIDGE_HOST=db.crunchybridge.com',
+                'CRUNCHYBRIDGE_PORT=5432',
+                'CRUNCHYBRIDGE_DATABASE=database_name'
+            ]
         },
         'neon': {
             'fields': ['db_url', 'username', 'password', 'host', 'port', 'database_name'],
@@ -637,7 +724,15 @@ def get_required_credentials():
             'url_field': 'db_url',
             'url_example': 'postgres://username:password@hostname:5432/database_name?sslmode=require',
             'terminal_command': 'psql "postgres://username:password@hostname:5432/database_name?sslmode=require"',
-            'notes': 'Requires a Neon.tech database connection string with SSL enabled.'
+            'notes': 'Requires a Neon.tech database connection string with SSL enabled.',
+            'env_variables': [
+                'NEON_DB_URL=postgres://username:password@hostname:5432/database_name?sslmode=require',
+                'NEON_USERNAME=username',
+                'NEON_PASSWORD=your_password',
+                'NEON_HOST=hostname',
+                'NEON_PORT=5432',
+                'NEON_DATABASE=database_name'
+            ]
         },
         
         # Time Series Databases
@@ -647,7 +742,17 @@ def get_required_credentials():
             'url_field': 'url',
             'url_example': 'http://localhost:8086',
             'terminal_command': 'influx -host localhost -port 8086 -username username -password password',
-            'notes': 'For InfluxDB 2.x, use token + org + bucket. For InfluxDB 1.x, use username + password.'
+            'notes': 'For InfluxDB 2.x, use token + org + bucket. For InfluxDB 1.x, use username + password.',
+            'env_variables': [
+                '# For InfluxDB 2.x',
+                'INFLUXDB_URL=http://localhost:8086',
+                'INFLUXDB_TOKEN=your_api_token',
+                'INFLUXDB_ORG=your_organization',
+                'INFLUXDB_BUCKET=your_bucket',
+                '# For InfluxDB 1.x',
+                'INFLUXDB_USERNAME=username',
+                'INFLUXDB_PASSWORD=your_password'
+            ]
         },
         'timescaledb': {
             'fields': ['host', 'port', 'user', 'password', 'database'],
@@ -655,13 +760,28 @@ def get_required_credentials():
             'url_field': 'connection_string',
             'url_example': 'postgresql://username:password@localhost:5432/database_name',
             'terminal_command': 'psql -h localhost -p 5432 -U username -d database_name',
-            'notes': 'TimescaleDB uses the same connection parameters as PostgreSQL, with added time-series functionality.'
+            'notes': 'TimescaleDB uses the same connection parameters as PostgreSQL, with added time-series functionality.',
+            'env_variables': [
+                'TIMESCALEDB_HOST=localhost',
+                'TIMESCALEDB_PORT=5432',
+                'TIMESCALEDB_USER=username',
+                'TIMESCALEDB_PASSWORD=your_password',
+                'TIMESCALEDB_DATABASE=database_name',
+                'TIMESCALEDB_CONNECTION_STRING=postgresql://username:password@localhost:5432/database_name'
+            ]
         },
         'kdb': {
             'fields': ['host', 'port', 'username', 'password', 'script_path'],
             'url_option': False,
             'terminal_command': 'q script_path.q -p 5000',
-            'notes': 'Kdb+ is a column-oriented database optimized for time-series data. The script_path is required.'
+            'notes': 'Kdb+ is a column-oriented database optimized for time-series data. The script_path is required.',
+            'env_variables': [
+                'KDB_HOST=localhost',
+                'KDB_PORT=5000',
+                'KDB_USERNAME=username',
+                'KDB_PASSWORD=your_password',
+                'KDB_SCRIPT_PATH=/path/to/script.q'
+            ]
         },
         
         # Specialized Systems
@@ -671,7 +791,12 @@ def get_required_credentials():
             'url_field': 'url',
             'url_example': 'http://hostname:9090',
             'terminal_command': 'curl -G \'http://hostname:9090/api/v1/query\' --data-urlencode \'query=up\'',
-            'notes': 'If authentication is enabled, include username and password. URL is in format: http://hostname:9090'
+            'notes': 'If authentication is enabled, include username and password. URL is in format: http://hostname:9090',
+            'env_variables': [
+                'PROMETHEUS_URL=http://hostname:9090',
+                'PROMETHEUS_USERNAME=username',
+                'PROMETHEUS_PASSWORD=your_password'
+            ]
         }
     }
     
