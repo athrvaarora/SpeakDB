@@ -439,13 +439,49 @@ function testConnection(form) {
         submitButton.textContent = originalText;
         
         if (data.success) {
-            // Show success message and redirect to chat
-            showSuccess('Connection successful! Redirecting to chat...');
+            // Clear any previous messages
+            const alertsContainer = document.getElementById('alerts-container');
+            if (alertsContainer) {
+                alertsContainer.innerHTML = '';
+            }
             
-            // Redirect to chat page after a short delay
+            // Show success message with schema analysis feedback
+            if (data.message && data.message.includes("Schema analysis completed")) {
+                showSuccess('Connection successful! Schema analysis completed. Redirecting to chat...');
+            } else {
+                showSuccess('Connection successful! Analyzing database schema... Redirecting to chat...');
+            }
+            
+            // Add a schema analysis indicator near the form
+            const formContainer = document.getElementById('credential-form-container');
+            const analysisIndicator = document.createElement('div');
+            analysisIndicator.className = 'schema-analysis-indicator card p-3 mt-3 border-info';
+            analysisIndicator.innerHTML = `
+                <div class="d-flex align-items-center mb-2">
+                    <div class="me-3">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h6 class="mb-0">AI Schema Analysis</h6>
+                    </div>
+                </div>
+                <div class="small text-muted mb-2">
+                    SpeakDB is analyzing your database schema to improve query accuracy. 
+                    This helps provide more relevant and accurate responses to your questions.
+                </div>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-info" 
+                         role="progressbar" style="width: 100%"></div>
+                </div>
+            `;
+            formContainer.appendChild(analysisIndicator);
+            
+            // Redirect to chat page after a delay
             setTimeout(() => {
                 window.location.href = '/chat';
-            }, 1500);
+            }, 3000);
             
         } else {
             showError(data.message);
