@@ -416,202 +416,239 @@ def get_required_credentials():
     credential_requirements = {
         # Relational Databases
         'postgresql': {
-            'fields': ['host', 'port', 'username', 'password', 'db_name'],
+            'fields': ['host', 'port', 'username', 'password', 'database_name'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'postgresql://username:password@host:port/db_name'
+            'url_example': 'postgresql://username:password@host:5432/database_name',
+            'terminal_command': 'psql -h host -p 5432 -U username -d database_name'
         },
         'mysql': {
-            'fields': ['host', 'port', 'username', 'password', 'db_name'],
+            'fields': ['host', 'port', 'username', 'password', 'database_name'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'mysql://username:password@host:port/db_name'
+            'url_example': 'mysql://username:password@host:3306/database_name',
+            'terminal_command': 'mysql -h host -P 3306 -u username -p database_name'
+        },
+        'mariadb': {
+            'fields': ['host', 'port', 'username', 'password', 'database_name'],
+            'url_option': True,
+            'url_field': 'connection_string',
+            'url_example': 'mysql://username:password@host:3306/database_name',
+            'terminal_command': 'mysql -h host -P 3306 -u username -p database_name'
         },
         'sqlserver': {
-            'fields': ['host', 'port', 'instance', 'username', 'password', 'database'],
+            'fields': ['server_address', 'username', 'password', 'database_name'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'mssql://username:password@host:port/database?instance=instance'
+            'url_example': 'mssql://username:password@server_address/database_name',
+            'terminal_command': 'sqlcmd -S server_address -U username -P password -d database_name'
         },
         'oracle': {
             'fields': ['host', 'port', 'service_name', 'username', 'password'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'oracle://username:password@host:port/service_name'
+            'url_example': 'oracle://username:password@host:1521/service_name',
+            'terminal_command': 'sqlplus username/password@//host:1521/service_name'
         },
         'sqlite': {
-            'fields': ['file_path'],
-            'url_option': False
+            'fields': ['path_to_database_file'],
+            'url_option': False,
+            'terminal_command': 'sqlite3 path_to_database_file'
         },
         'redshift': {
-            'fields': ['cluster_id', 'region', 'username', 'password', 'db_name'],
+            'fields': ['cluster_address', 'username', 'password', 'database_name'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'redshift://username:password@cluster_id.region.redshift.amazonaws.com:5439/db_name'
+            'url_example': 'redshift://username:password@cluster_address:5439/database_name',
+            'terminal_command': 'psql -h cluster_address -p 5439 -U username -d database_name'
         },
         'cloudsql': {
-            'fields': ['project_id', 'region', 'instance', 'username', 'password'],
-            'url_option': False
-        },
-        'mariadb': {
-            'fields': ['host', 'port', 'username', 'password', 'db_name'],
-            'url_option': True,
-            'url_field': 'connection_string',
-            'url_example': 'mariadb://username:password@host:port/db_name'
+            'fields': ['instance_name', 'username', 'password'],
+            'url_option': False,
+            'terminal_command': 'gcloud sql connect instance-name --user=username'
         },
         'db2': {
-            'fields': ['host', 'port', 'username', 'password', 'db_name'],
-            'url_option': False
+            'fields': ['username', 'password', 'database_name'],
+            'url_option': False,
+            'terminal_command': 'db2 connect to database_name user username using password'
         },
         'teradata': {
-            'fields': ['host', 'username', 'password', 'database'],
+            'fields': ['hostname', 'username', 'password'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'jdbc:teradata://host/LOGMECH=LDAP'
+            'url_example': 'teradatasql://username:password@hostname',
+            'terminal_command': 'bteq .logon hostname/username,password'
         },
         'saphana': {
-            'fields': ['host', 'port', 'username', 'password', 'ssl_cert'],
+            'fields': ['host', 'port', 'username', 'password', 'database_name'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'jdbc:sap://host:443/?encrypt=true'
+            'url_example': 'hdb://host:port/?databaseName=database_name',
+            'terminal_command': 'hdbsql -n host:port -u username -p password -d database_name'
         },
         'planetscale': {
-            'fields': ['host', 'username', 'password'],
+            'fields': ['database_name', 'branch_name'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'mysql://aws.connect.psdb.cloud/db?sslaccept=strict'
+            'url_example': 'mysql://username:password@aws.connect.psdb.cloud/database_name',
+            'terminal_command': 'pscale connect database_name branch_name'
         },
         'vertica': {
-            'fields': ['host', 'port', 'username', 'password', 'database'],
-            'url_option': False
+            'fields': ['hostname', 'port', 'username', 'password', 'database_name'],
+            'url_option': True,
+            'url_field': 'connection_string',
+            'url_example': 'vertica://username:password@hostname:5433/database_name',
+            'terminal_command': 'vsql -h hostname -p port -U username -w password -d database_name'
         },
         
         # NoSQL Databases
         'mongodb': {
-            'fields': ['host', 'port', 'username', 'password', 'auth_db'],
+            'fields': ['hostname', 'port', 'username', 'password', 'database_name'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'mongodb://username:password@host:port/auth_db'
+            'url_example': 'mongodb://username:password@hostname:port/database_name',
+            'terminal_command': 'mongo "mongodb://username:password@hostname:port/database_name"'
         },
         'cassandra': {
-            'fields': ['host', 'port', 'username', 'password', 'keyspace'],
-            'url_option': False
+            'fields': ['hostname', 'port', 'username', 'password'],
+            'url_option': False,
+            'terminal_command': 'cqlsh hostname port -u username -p password'
         },
         'redis': {
-            'fields': ['host', 'port', 'password'],
+            'fields': ['hostname', 'port', 'password'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'redis://:password@host:port'
+            'url_example': 'redis://:password@hostname:port',
+            'terminal_command': 'redis-cli -h hostname -p port -a password'
         },
         'elasticsearch': {
-            'fields': ['host', 'port', 'username', 'password'],
+            'fields': ['hostname', 'port', 'username', 'password'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'https://username:password@host:port'
+            'url_example': 'https://username:password@hostname:port',
+            'terminal_command': 'curl -X GET "hostname:port/_search" -H "Content-Type: application/json" -d\'{"query": {"match_all": {}}}\''
         },
         'dynamodb': {
-            'fields': ['access_key', 'secret_key', 'region'],
-            'url_option': False
+            'fields': ['access_key', 'secret_key', 'region', 'endpoint_url'],
+            'url_option': False,
+            'terminal_command': 'aws dynamodb list-tables --endpoint-url endpoint_url'
         },
         'couchbase': {
-            'fields': ['host', 'username', 'password', 'bucket'],
+            'fields': ['hostname', 'username', 'password', 'bucket_name'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'couchbase://username:password@host/bucket'
+            'url_example': 'couchbase://username:password@hostname/bucket_name',
+            'terminal_command': 'cbc-pillowfight -U couchbase://hostname/bucket_name -u username -P password'
         },
         'neo4j': {
-            'fields': ['uri', 'username', 'password'],
+            'fields': ['bolt_url', 'username', 'password'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'bolt://host:7687'
+            'url_example': 'bolt://hostname:7687',
+            'terminal_command': 'cypher-shell -a bolt_url -u username -p password'
         },
         
         # Data Warehouses
         'snowflake': {
-            'fields': ['account', 'username', 'password', 'warehouse', 'db_name'],
+            'fields': ['account_identifier', 'username', 'password', 'database_name', 'schema_name', 'role_name'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'snowflake://username:password@account/db_name/warehouse'
+            'url_example': 'snowflake://username:password@account_identifier/database_name/schema_name?role=role_name',
+            'terminal_command': 'snowsql -a account_identifier -u username -d database_name -s schema_name -r role_name'
         },
         'bigquery': {
             'fields': ['project_id', 'dataset'],
-            'url_option': False
+            'url_option': False,
+            'terminal_command': 'bq query --use_legacy_sql=false \'SELECT * FROM project_id.dataset.table LIMIT 10\''
         },
         'synapse': {
-            'fields': ['server', 'username', 'password', 'db_name'],
-            'url_option': False
+            'fields': ['server_name', 'database_name', 'username', 'password'],
+            'url_option': False,
+            'terminal_command': 'sqlcmd -S server_name.sql.azuresynapse.net -d database_name -U username -P password'
         },
         
         # Graph Databases
         'tigergraph': {
-            'fields': ['host', 'graph_name', 'username', 'password'],
-            'url_option': False
+            'fields': ['graph_name', 'username', 'password'],
+            'url_option': False,
+            'terminal_command': 'gsql -g graph_name'
         },
         'neptune': {
-            'fields': ['endpoint', 'region', 'aws_access_key_id', 'aws_secret_access_key'],
+            'fields': ['neptune_endpoint', 'aws_credentials'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'wss://neptune-db.amazonaws.com:8182/gremlin'
+            'url_example': 'wss://your-neptune-endpoint:8182/gremlin',
+            'terminal_command': 'curl -X POST https://your-neptune-endpoint:port/sparql -d "query=SELECT ?s ?p ?o WHERE {?s ?p ?o} LIMIT 10"'
         },
         
         # Cloud Databases
         'cosmosdb': {
-            'fields': ['account_uri', 'primary_key'],
-            'url_option': False
+            'fields': ['account_name', 'database_name', 'container_name'],
+            'url_option': False,
+            'terminal_command': 'az cosmosdb sql query --account-name account_name --database-name database_name --container-name container_name --query-text "SELECT * FROM c"'
         },
         'firestore': {
             'fields': ['project_id', 'collection'],
-            'url_option': False
+            'url_option': False,
+            'terminal_command': 'firebase firestore:get --project project_id collections/documents'
         },
         'supabase': {
             'fields': ['supabase_url', 'supabase_key'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'postgres://postgres:[YOUR-PASSWORD]@db.supabase.co:5432/postgres'
+            'url_example': 'postgres://postgres:[YOUR-PASSWORD]@db.supabase.co:5432/postgres',
+            'terminal_command': 'psql "postgres://postgres:password@db.supabase.co:5432/postgres"'
         },
         'heroku': {
-            'fields': ['database_url'],
+            'fields': ['app_name'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'postgres://user:pass@ec2-123.compute-1.amazonaws.com:5432/db'
+            'url_example': 'postgres://user:pass@ec2-123.compute-1.amazonaws.com:5432/db',
+            'terminal_command': 'heroku pg:psql postgresql-shaped-12345 --app app_name'
         },
         'crunchybridge': {
             'fields': ['connection_string'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'postgresql://user@host:5432/db?password=pass'
+            'url_example': 'postgresql://username:password@db.crunchybridge.com:5432/database_name',
+            'terminal_command': 'psql "postgresql://username:password@db.crunchybridge.com:5432/database_name"'
         },
         'neon': {
-            'fields': ['host', 'user', 'password', 'project_id'],
+            'fields': ['connection_string'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'postgres://user:pass@ep-cool-darkness-123.us-east-2.aws.neon.tech/db'
+            'url_example': 'postgres://username:password@hostname:5432/database_name?sslmode=require',
+            'terminal_command': 'psql "postgres://username:password@hostname:5432/database_name?sslmode=require"'
         },
         
         # Time Series Databases
         'influxdb': {
-            'fields': ['host', 'port', 'token', 'org', 'bucket'],
+            'fields': ['host', 'port', 'username', 'password'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'http://host:8086?token=xxx&org=yyy'
+            'url_example': 'http://host:8086?token=xxx&org=yyy',
+            'terminal_command': 'influx -host host -port 8086 -username username -password password'
         },
         'timescaledb': {
-            'fields': ['host', 'port', 'username', 'password', 'database'],
+            'fields': ['host', 'port', 'username', 'password', 'database_name'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'postgresql://tsdbadmin:pass@host:5432/tsdb'
+            'url_example': 'postgresql://username:password@host:5432/database_name',
+            'terminal_command': 'psql -h host -p 5432 -U username -d database_name'
         },
         'kdb': {
-            'fields': ['host', 'port', 'username', 'password'],
-            'url_option': False
+            'fields': ['path_to_script', 'port'],
+            'url_option': False,
+            'terminal_command': 'q path_to_script.q -p port'
         },
         
         # Specialized Systems
         'prometheus': {
-            'fields': ['url', 'username', 'password'],
+            'fields': ['hostname', 'port'],
             'url_option': True,
             'url_field': 'connection_string',
-            'url_example': 'https://user:pass@host:9090'
+            'url_example': 'http://hostname:9090',
+            'terminal_command': 'curl -G \'http://hostname:9090/api/v1/query\' --data-urlencode \'query=up\''
         }
     }
     
