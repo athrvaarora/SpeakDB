@@ -871,6 +871,381 @@ class Neo4jConnector(BaseNoSQLConnector):
             return value
 
 
+class NeptuneConnector(BaseNoSQLConnector):
+    """Connector for Amazon Neptune graph databases"""
+    
+    def __init__(self, credentials):
+        super().__init__(credentials)
+        self.client = None
+        
+    def connect(self):
+        """Connect to an Amazon Neptune database"""
+        if not self.client:
+            try:
+                import boto3
+                import requests
+                import json
+                
+                self.neptune_endpoint = self.credentials.get("neptune_endpoint")
+                self.aws_region = self.credentials.get("aws_region", "us-east-1")
+                self.aws_access_key = self.credentials.get("aws_access_key_id")
+                self.aws_secret_key = self.credentials.get("aws_secret_access_key")
+                
+                # Neptune supports multiple query languages: SPARQL for RDF and Gremlin for Property Graph
+                # We'll use the requests library to communicate with the HTTP endpoints
+                self.client = requests
+                
+                # Configure AWS session for IAM authentication if credentials are provided
+                if self.aws_access_key and self.aws_secret_key:
+                    self.session = boto3.Session(
+                        aws_access_key_id=self.aws_access_key,
+                        aws_secret_access_key=self.aws_secret_key,
+                        region_name=self.aws_region
+                    )
+                    
+                    # Store the credentials for signing requests
+                    self.credentials_obj = self.session.get_credentials()
+                    
+                else:
+                    self.session = None
+                    self.credentials_obj = None
+                
+            except ImportError:
+                logger.exception("Required libraries not installed")
+                raise Exception("The 'boto3' and 'requests' libraries are required for Neptune connection")
+            except Exception as e:
+                logger.exception("Error connecting to Neptune")
+                raise Exception(f"Error connecting to Neptune: {str(e)}")
+    
+    def disconnect(self):
+        """Disconnect from the Neptune database"""
+        # No persistent connection to close
+        self.client = None
+        self.session = None
+        self.credentials_obj = None
+    
+    def test_connection(self):
+        """Test the connection to the Neptune database"""
+        try:
+            self.connect()
+            
+            # Make a simple SPARQL query to check if the endpoint is reachable
+            sparql_endpoint = f"https://{self.neptune_endpoint}:8182/sparql"
+            
+            # Simple query to check if the database is accessible
+            test_query = "SELECT ?s ?p ?o WHERE { ?s ?p ?o } LIMIT 1"
+            
+            # Sign the request if AWS credentials are provided
+            headers = {"Content-Type": "application/x-www-form-urlencoded"}
+            data = {"query": test_query}
+            
+            if self.credentials_obj:
+                from botocore.auth import SigV4Auth
+                from botocore.awsrequest import AWSRequest
+                
+                request = AWSRequest(
+                    method="POST",
+                    url=sparql_endpoint,
+                    data=data,
+                    headers=headers
+                )
+                
+                auth = SigV4Auth(self.credentials_obj, "neptune-db", self.aws_region)
+                auth.add_auth(request)
+                
+                # Update headers with signed values
+                headers = request.headers
+            
+            response = self.client.post(
+                sparql_endpoint,
+                headers=headers,
+                data=data,
+                verify=False  # May need to be adjusted based on Neptune setup
+            )
+            
+            if response.status_code == 200:
+                return True, "Connection successful"
+            else:
+                return False, f"Connection failed: {response.text}"
+                
+        except Exception as e:
+            return False, f"Connection failed: {str(e)}"
+        finally:
+            self.disconnect()
+    
+    def get_schema(self):
+        """Get the schema of the Neptune database"""
+        try:
+            self.connect()
+            
+            # For RDF data (SPARQL), we can get the schema by querying for predicates and classes
+            sparql_endpoint = f"https://{self.neptune_endpoint}:8182/sparql"
+            
+            # Query to get classes
+            class_query = """
+            SELECT DISTINCT ?class (COUNT(?s) as ?count)
+            WHERE {
+                ?s a ?class .
+            }
+            GROUP BY ?class
+            ORDER BY DESC(?count)
+            """
+            
+            # Query to get predicates
+            predicate_query = """
+            SELECT DISTINCT ?predicate (COUNT(*) as ?count)
+            WHERE {
+                ?s ?predicate ?o .
+            }
+            GROUP BY ?predicate
+            ORDER BY DESC(?count)
+            """
+            
+            schema_info = {
+                "rdf_classes": [],
+                "predicates": []
+            }
+            
+            # Function to execute a SPARQL query
+            def execute_sparql(query):
+                headers = {"Content-Type": "application/x-www-form-urlencoded"}
+                data = {"query": query}
+                
+                if self.credentials_obj:
+                    from botocore.auth import SigV4Auth
+                    from botocore.awsrequest import AWSRequest
+                    
+                    request = AWSRequest(
+                        method="POST",
+                        url=sparql_endpoint,
+                        data=data,
+                        headers=headers
+                    )
+                    
+                    auth = SigV4Auth(self.credentials_obj, "neptune-db", self.aws_region)
+                    auth.add_auth(request)
+                    
+                    # Update headers with signed values
+                    headers = request.headers
+                
+                response = self.client.post(
+                    sparql_endpoint,
+                    headers=headers,
+                    data=data,
+                    verify=False
+                )
+                
+                if response.status_code != 200:
+                    raise Exception(f"Query failed: {response.text}")
+                
+                return response.json()
+            
+            # Execute the class query
+            try:
+                class_results = execute_sparql(class_query)
+                
+                if "results" in class_results and "bindings" in class_results["results"]:
+                    for binding in class_results["results"]["bindings"]:
+                        if "class" in binding and "value" in binding["class"]:
+                            schema_info["rdf_classes"].append({
+                                "name": binding["class"]["value"],
+                                "count": int(binding["count"]["value"]) if "count" in binding else 0
+                            })
+            except Exception as e:
+                logger.warning(f"Error getting RDF classes: {str(e)}")
+            
+            # Execute the predicate query
+            try:
+                predicate_results = execute_sparql(predicate_query)
+                
+                if "results" in predicate_results and "bindings" in predicate_results["results"]:
+                    for binding in predicate_results["results"]["bindings"]:
+                        if "predicate" in binding and "value" in binding["predicate"]:
+                            schema_info["predicates"].append({
+                                "name": binding["predicate"]["value"],
+                                "count": int(binding["count"]["value"]) if "count" in binding else 0
+                            })
+            except Exception as e:
+                logger.warning(f"Error getting predicates: {str(e)}")
+            
+            return schema_info
+            
+        except Exception as e:
+            logger.exception("Error getting Neptune schema")
+            return {"error": f"Error getting schema: {str(e)}"}
+        finally:
+            self.disconnect()
+    
+    def execute_query(self, query):
+        """
+        Execute a query against Neptune (SPARQL or Gremlin)
+        
+        Args:
+            query (str): A query string or a JSON string with query parameters
+            
+        Returns:
+            tuple: (result, success, error_message)
+        """
+        try:
+            self.connect()
+            
+            # Check if the query is a JSON string
+            try:
+                query_data = json.loads(query)
+                is_json_query = True
+            except json.JSONDecodeError:
+                is_json_query = False
+            
+            if is_json_query:
+                # Handle the JSON query format
+                query_language = query_data.get("language", "sparql").lower()
+                query_text = query_data.get("query", "")
+                
+                if query_language == "sparql":
+                    # Execute a SPARQL query
+                    endpoint = f"https://{self.neptune_endpoint}:8182/sparql"
+                    headers = {"Content-Type": "application/x-www-form-urlencoded"}
+                    data = {"query": query_text}
+                    
+                    # Sign the request if AWS credentials are provided
+                    if self.credentials_obj:
+                        from botocore.auth import SigV4Auth
+                        from botocore.awsrequest import AWSRequest
+                        
+                        request = AWSRequest(
+                            method="POST",
+                            url=endpoint,
+                            data=data,
+                            headers=headers
+                        )
+                        
+                        auth = SigV4Auth(self.credentials_obj, "neptune-db", self.aws_region)
+                        auth.add_auth(request)
+                        
+                        # Update headers with signed values
+                        headers = request.headers
+                    
+                    response = self.client.post(
+                        endpoint,
+                        headers=headers,
+                        data=data,
+                        verify=False
+                    )
+                
+                elif query_language == "gremlin":
+                    # Execute a Gremlin query
+                    endpoint = f"https://{self.neptune_endpoint}:8182/gremlin"
+                    headers = {"Content-Type": "application/json"}
+                    data = {"gremlin": query_text}
+                    
+                    # Sign the request if AWS credentials are provided
+                    if self.credentials_obj:
+                        from botocore.auth import SigV4Auth
+                        from botocore.awsrequest import AWSRequest
+                        
+                        request = AWSRequest(
+                            method="POST",
+                            url=endpoint,
+                            data=json.dumps(data),
+                            headers=headers
+                        )
+                        
+                        auth = SigV4Auth(self.credentials_obj, "neptune-db", self.aws_region)
+                        auth.add_auth(request)
+                        
+                        # Update headers with signed values
+                        headers = request.headers
+                    
+                    response = self.client.post(
+                        endpoint,
+                        headers=headers,
+                        json=data,
+                        verify=False
+                    )
+                
+                else:
+                    raise Exception(f"Unsupported query language: {query_language}")
+                
+            else:
+                # Try to determine the query language from the query text
+                if query.strip().upper().startswith(("SELECT", "ASK", "CONSTRUCT", "DESCRIBE", "PREFIX")):
+                    # Looks like a SPARQL query
+                    endpoint = f"https://{self.neptune_endpoint}:8182/sparql"
+                    headers = {"Content-Type": "application/x-www-form-urlencoded"}
+                    data = {"query": query}
+                    
+                    # Sign the request if AWS credentials are provided
+                    if self.credentials_obj:
+                        from botocore.auth import SigV4Auth
+                        from botocore.awsrequest import AWSRequest
+                        
+                        request = AWSRequest(
+                            method="POST",
+                            url=endpoint,
+                            data=data,
+                            headers=headers
+                        )
+                        
+                        auth = SigV4Auth(self.credentials_obj, "neptune-db", self.aws_region)
+                        auth.add_auth(request)
+                        
+                        # Update headers with signed values
+                        headers = request.headers
+                    
+                    response = self.client.post(
+                        endpoint,
+                        headers=headers,
+                        data=data,
+                        verify=False
+                    )
+                else:
+                    # Assume it's a Gremlin query
+                    endpoint = f"https://{self.neptune_endpoint}:8182/gremlin"
+                    headers = {"Content-Type": "application/json"}
+                    data = {"gremlin": query}
+                    
+                    # Sign the request if AWS credentials are provided
+                    if self.credentials_obj:
+                        from botocore.auth import SigV4Auth
+                        from botocore.awsrequest import AWSRequest
+                        
+                        request = AWSRequest(
+                            method="POST",
+                            url=endpoint,
+                            data=json.dumps(data),
+                            headers=headers
+                        )
+                        
+                        auth = SigV4Auth(self.credentials_obj, "neptune-db", self.aws_region)
+                        auth.add_auth(request)
+                        
+                        # Update headers with signed values
+                        headers = request.headers
+                    
+                    response = self.client.post(
+                        endpoint,
+                        headers=headers,
+                        json=data,
+                        verify=False
+                    )
+            
+            # Check the response
+            if response.status_code >= 200 and response.status_code < 300:
+                try:
+                    result = response.json()
+                    return result, True, None
+                except json.JSONDecodeError:
+                    return response.text, True, None
+            else:
+                return None, False, f"Query failed with status {response.status_code}: {response.text}"
+                
+        except Exception as e:
+            logger.exception(f"Error executing Neptune query: {query}")
+            return None, False, f"Error executing query: {str(e)}"
+        finally:
+            self.disconnect()
+
+
 class TigerGraphConnector(BaseNoSQLConnector):
     """Connector for TigerGraph graph databases"""
     
