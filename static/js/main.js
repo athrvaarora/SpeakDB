@@ -119,7 +119,7 @@ function selectDatabase(dbType) {
 }
 
 // Show credential form for the selected database
-function showCredentialForm(dbType, requiredCredentials) {
+function showCredentialForm(dbType, credentialInfo) {
     const dbSelectionContainer = document.getElementById('database-selection');
     const credentialFormContainer = document.getElementById('credential-form-container');
     
@@ -135,58 +135,219 @@ function showCredentialForm(dbType, requiredCredentials) {
     const credentialForm = document.getElementById('credential-form');
     credentialForm.innerHTML = '';
     
-    // Create form fields for each required credential
-    requiredCredentials.forEach(credential => {
-        const formGroup = document.createElement('div');
-        formGroup.className = 'form-group mb-3';
+    // Check if the credential info is in the new format (object) or old format (array)
+    const useIndividualFields = Array.isArray(credentialInfo) || (credentialInfo && credentialInfo.fields);
+    const requiredFields = Array.isArray(credentialInfo) ? credentialInfo : (credentialInfo ? credentialInfo.fields : []);
+    const supportsConnectionString = credentialInfo && credentialInfo.url_option;
+    
+    // If connection string is supported, create a toggle switch
+    if (supportsConnectionString) {
+        const connectionStringToggleGroup = document.createElement('div');
+        connectionStringToggleGroup.className = 'form-group mb-4';
         
-        const label = document.createElement('label');
-        label.setAttribute('for', `credential-${credential}`);
-        label.textContent = formatCredentialLabel(credential);
-        formGroup.appendChild(label);
+        const toggleLabel = document.createElement('label');
+        toggleLabel.className = 'form-label d-block mb-3';
+        toggleLabel.textContent = 'Connection Method:';
+        connectionStringToggleGroup.appendChild(toggleLabel);
         
-        const input = document.createElement('input');
-        input.type = credential.includes('password') ? 'password' : 'text';
-        input.className = 'form-control';
-        input.id = `credential-${credential}`;
-        input.name = credential;
-        input.required = true;
+        const buttonGroup = document.createElement('div');
+        buttonGroup.className = 'btn-group w-100 mb-3';
+        buttonGroup.role = 'group';
         
-        // Set default values or placeholders based on credential type
-        if (credential === 'port') {
-            switch (dbType) {
-                case 'postgresql':
-                    input.placeholder = '5432';
-                    break;
-                case 'mysql':
-                case 'mariadb':
-                    input.placeholder = '3306';
-                    break;
-                case 'mongodb':
-                    input.placeholder = '27017';
-                    break;
-                case 'redis':
-                    input.placeholder = '6379';
-                    break;
-                case 'elasticsearch':
-                    input.placeholder = '9200';
-                    break;
-                case 'cassandra':
-                    input.placeholder = '9042';
-                    break;
-                case 'influxdb':
-                    input.placeholder = '8086';
-                    break;
-                default:
-                    input.placeholder = 'Enter port...';
-            }
-        } else if (credential === 'host') {
-            input.placeholder = 'localhost';
+        const individualButton = document.createElement('button');
+        individualButton.type = 'button';
+        individualButton.className = 'btn btn-outline-primary active';
+        individualButton.id = 'toggle-individual';
+        individualButton.textContent = 'Individual Fields';
+        
+        const urlButton = document.createElement('button');
+        urlButton.type = 'button';
+        urlButton.className = 'btn btn-outline-primary';
+        urlButton.id = 'toggle-url';
+        urlButton.textContent = 'Connection String';
+        
+        buttonGroup.appendChild(individualButton);
+        buttonGroup.appendChild(urlButton);
+        connectionStringToggleGroup.appendChild(buttonGroup);
+        
+        // Create container divs for each mode
+        const individualFieldsContainer = document.createElement('div');
+        individualFieldsContainer.id = 'individual-fields-container';
+        individualFieldsContainer.style.display = 'block';
+        
+        const urlFieldContainer = document.createElement('div');
+        urlFieldContainer.id = 'url-field-container';
+        urlFieldContainer.style.display = 'none';
+        
+        // Create connection string field
+        const urlFormGroup = document.createElement('div');
+        urlFormGroup.className = 'form-group mb-3';
+        
+        const urlLabel = document.createElement('label');
+        urlLabel.setAttribute('for', `credential-${credentialInfo.url_field}`);
+        urlLabel.textContent = formatCredentialLabel(credentialInfo.url_field);
+        urlFormGroup.appendChild(urlLabel);
+        
+        const urlInput = document.createElement('input');
+        urlInput.type = 'text';
+        urlInput.className = 'form-control';
+        urlInput.id = `credential-${credentialInfo.url_field}`;
+        urlInput.name = credentialInfo.url_field;
+        if (credentialInfo.url_example) {
+            urlInput.placeholder = credentialInfo.url_example;
+        }
+        urlFormGroup.appendChild(urlInput);
+        
+        // Add example if provided
+        if (credentialInfo.url_example) {
+            const exampleText = document.createElement('small');
+            exampleText.className = 'form-text text-muted';
+            exampleText.textContent = `Example: ${credentialInfo.url_example}`;
+            urlFormGroup.appendChild(exampleText);
         }
         
-        formGroup.appendChild(input);
-        credentialForm.appendChild(formGroup);
-    });
+        urlFieldContainer.appendChild(urlFormGroup);
+        
+        // Add event listeners for toggle buttons
+        individualButton.addEventListener('click', function() {
+            individualButton.classList.add('active');
+            urlButton.classList.remove('active');
+            individualFieldsContainer.style.display = 'block';
+            urlFieldContainer.style.display = 'none';
+            
+            // Make individual fields required and URL field not required
+            const individualInputs = individualFieldsContainer.querySelectorAll('input');
+            const urlInputs = urlFieldContainer.querySelectorAll('input');
+            
+            individualInputs.forEach(input => input.required = true);
+            urlInputs.forEach(input => input.required = false);
+        });
+        
+        urlButton.addEventListener('click', function() {
+            urlButton.classList.add('active');
+            individualButton.classList.remove('active');
+            urlFieldContainer.style.display = 'block';
+            individualFieldsContainer.style.display = 'none';
+            
+            // Make URL field required and individual fields not required
+            const individualInputs = individualFieldsContainer.querySelectorAll('input');
+            const urlInputs = urlFieldContainer.querySelectorAll('input');
+            
+            individualInputs.forEach(input => input.required = false);
+            urlInputs.forEach(input => input.required = true);
+        });
+        
+        credentialForm.appendChild(connectionStringToggleGroup);
+        credentialForm.appendChild(individualFieldsContainer);
+        credentialForm.appendChild(urlFieldContainer);
+        
+        // Create form fields for each required credential
+        requiredFields.forEach(credential => {
+            const formGroup = document.createElement('div');
+            formGroup.className = 'form-group mb-3';
+            
+            const label = document.createElement('label');
+            label.setAttribute('for', `credential-${credential}`);
+            label.textContent = formatCredentialLabel(credential);
+            formGroup.appendChild(label);
+            
+            const input = document.createElement('input');
+            input.type = credential.includes('password') ? 'password' : 'text';
+            input.className = 'form-control';
+            input.id = `credential-${credential}`;
+            input.name = credential;
+            input.required = true;
+            
+            // Set default values or placeholders based on credential type
+            if (credential === 'port') {
+                switch (dbType) {
+                    case 'postgresql':
+                        input.placeholder = '5432';
+                        break;
+                    case 'mysql':
+                    case 'mariadb':
+                        input.placeholder = '3306';
+                        break;
+                    case 'mongodb':
+                        input.placeholder = '27017';
+                        break;
+                    case 'redis':
+                        input.placeholder = '6379';
+                        break;
+                    case 'elasticsearch':
+                        input.placeholder = '9200';
+                        break;
+                    case 'cassandra':
+                        input.placeholder = '9042';
+                        break;
+                    case 'influxdb':
+                        input.placeholder = '8086';
+                        break;
+                    default:
+                        input.placeholder = 'Enter port...';
+                }
+            } else if (credential === 'host') {
+                input.placeholder = 'localhost';
+            }
+            
+            formGroup.appendChild(input);
+            individualFieldsContainer.appendChild(formGroup);
+        });
+    } else {
+        // Standard form without connection string option
+        // Create form fields for each required credential
+        requiredFields.forEach(credential => {
+            const formGroup = document.createElement('div');
+            formGroup.className = 'form-group mb-3';
+            
+            const label = document.createElement('label');
+            label.setAttribute('for', `credential-${credential}`);
+            label.textContent = formatCredentialLabel(credential);
+            formGroup.appendChild(label);
+            
+            const input = document.createElement('input');
+            input.type = credential.includes('password') ? 'password' : 'text';
+            input.className = 'form-control';
+            input.id = `credential-${credential}`;
+            input.name = credential;
+            input.required = true;
+            
+            // Set default values or placeholders based on credential type
+            if (credential === 'port') {
+                switch (dbType) {
+                    case 'postgresql':
+                        input.placeholder = '5432';
+                        break;
+                    case 'mysql':
+                    case 'mariadb':
+                        input.placeholder = '3306';
+                        break;
+                    case 'mongodb':
+                        input.placeholder = '27017';
+                        break;
+                    case 'redis':
+                        input.placeholder = '6379';
+                        break;
+                    case 'elasticsearch':
+                        input.placeholder = '9200';
+                        break;
+                    case 'cassandra':
+                        input.placeholder = '9042';
+                        break;
+                    case 'influxdb':
+                        input.placeholder = '8086';
+                        break;
+                    default:
+                        input.placeholder = 'Enter port...';
+                }
+            } else if (credential === 'host') {
+                input.placeholder = 'localhost';
+            }
+            
+            formGroup.appendChild(input);
+            credentialForm.appendChild(formGroup);
+        });
+    }
     
     // Add hidden input for database type
     const dbTypeInput = document.createElement('input');
@@ -197,7 +358,7 @@ function showCredentialForm(dbType, requiredCredentials) {
     
     // Add submit and cancel buttons
     const buttonGroup = document.createElement('div');
-    buttonGroup.className = 'd-flex justify-content-between';
+    buttonGroup.className = 'd-flex justify-content-between mt-4';
     
     const cancelButton = document.createElement('button');
     cancelButton.type = 'button';
