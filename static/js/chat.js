@@ -301,8 +301,50 @@ function addMessageToChat(content, sender, timestamp = null) {
     if (sender === 'user') {
         messageContent.textContent = content;
     } else {
-        // For system messages, parse any markdown or HTML
-        messageContent.innerHTML = content;
+        // For system messages, parse markdown with marked.js
+        // Add markdown-body class for GitHub-styled markdown
+        messageContent.className += ' markdown-body';
+        
+        // Configure marked.js options
+        marked.setOptions({
+            highlight: function(code, lang) {
+                if (lang && hljs.getLanguage(lang)) {
+                    return hljs.highlight(code, { language: lang }).value;
+                }
+                return hljs.highlightAuto(code).value;
+            },
+            breaks: true,
+            gfm: true
+        });
+        
+        // Parse markdown and sanitize HTML
+        try {
+            const parsedContent = marked.parse(content);
+            messageContent.innerHTML = DOMPurify.sanitize(parsedContent);
+            
+            // Initialize highlight.js on code blocks after content is added
+            setTimeout(() => {
+                messageContent.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                });
+                
+                // Format JSON in code blocks with class="language-json"
+                messageContent.querySelectorAll('code.language-json').forEach((block) => {
+                    try {
+                        // Check if the content is JSON
+                        const jsonObj = JSON.parse(block.textContent);
+                        block.textContent = JSON.stringify(jsonObj, null, 2);
+                        hljs.highlightElement(block);
+                    } catch (e) {
+                        // Not valid JSON, leave as is
+                        console.log('Invalid JSON in code block', e);
+                    }
+                });
+            }, 0);
+        } catch (e) {
+            console.error('Error parsing markdown:', e);
+            messageContent.innerHTML = DOMPurify.sanitize(content);
+        }
     }
     
     messageElement.appendChild(messageContent);

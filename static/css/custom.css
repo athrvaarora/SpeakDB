@@ -1,5 +1,66 @@
 /* Custom styles for DB Chat application */
 
+/* Apply GitHub Markdown styling to our chat messages */
+.markdown-body {
+    background-color: transparent !important;
+    color: inherit !important;
+    font-size: 0.95rem;
+}
+
+/* Enhance table styling */
+.markdown-body table {
+    width: 100%;
+    margin-bottom: 1rem;
+    border-collapse: collapse;
+    display: table;
+    overflow: auto;
+}
+
+.markdown-body table th,
+.markdown-body table td {
+    padding: 0.5rem;
+    border: 1px solid var(--bs-gray-700);
+    text-align: left;
+}
+
+.markdown-body table th {
+    background-color: rgba(255, 255, 255, 0.05);
+    font-weight: 600;
+}
+
+.markdown-body table tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.markdown-body table tr:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Ensure all code blocks are visible and can scroll */
+.markdown-body pre {
+    max-height: 600px;
+    overflow: auto;
+}
+
+.markdown-body pre code {
+    display: block;
+    padding: 1rem;
+    overflow-x: auto;
+    background-color: var(--bs-gray-800) !important;
+    border-radius: 6px;
+}
+
+/* JSON styling for database results */
+.json-result {
+    font-family: monospace;
+    white-space: pre-wrap;
+    background-color: var(--bs-gray-800);
+    padding: 1rem;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin-top: 1rem;
+}
+
 /* Main layout */
 html, body {
     height: 100%;
