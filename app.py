@@ -993,10 +993,27 @@ def get_schema_info():
     """Get detailed database schema information for the explorer"""
     # Check if database credentials are stored in session
     if 'database_credentials' not in session:
-        return jsonify({
-            'success': False,
-            'message': 'No database connection found. Please connect to a database first.'
-        }), 400
+        # Try to use environment variables if no session credentials
+        logger.info("No database credentials in session, checking environment variables")
+        try:
+            if os.environ.get("DATABASE_URL"):
+                # Initialize session with the PostgreSQL database from environment
+                session['database_credentials'] = {
+                    'type': 'postgresql',
+                    'credentials': {}  # Empty dict will trigger use of DATABASE_URL
+                }
+                logger.info("Using PostgreSQL database from environment variables")
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': 'No database connection found. Please connect to a database first.'
+                }), 400
+        except Exception as e:
+            logger.error(f"Error initializing database credentials from environment: {str(e)}")
+            return jsonify({
+                'success': False,
+                'message': 'No database connection found. Please connect to a database first.'
+            }), 400
     
     db_credentials = session.get('database_credentials', {})
     db_type = db_credentials.get('type')
