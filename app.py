@@ -568,10 +568,21 @@ def get_required_credentials():
         },
         
         # Graph Databases
+        'neo4j': {
+            'fields': ['uri', 'username', 'password', 'database'],
+            'url_option': True,
+            'url_field': 'uri',
+            'url_example': 'bolt://hostname:7687',
+            'terminal_command': 'cypher-shell -a bolt://hostname:7687 -u username -p password -d database',
+            'notes': 'Neo4j database connection requires the Bolt URL (neo4j:// or bolt://), username, and password. Database name is optional.'
+        },
         'tigergraph': {
-            'fields': ['graph_name', 'username', 'password'],
-            'url_option': False,
-            'terminal_command': 'gsql -g graph_name'
+            'fields': ['endpoint', 'token', 'graph_name', 'username', 'password', 'secret'],
+            'url_option': True,
+            'url_field': 'endpoint',
+            'url_example': 'https://your-instance.i.tgcloud.io',
+            'terminal_command': 'gadmin config get Authentication.TokenSecret && curl -X GET "https://your-instance.i.tgcloud.io:9000/echo" -H "Authorization: Bearer YOUR_TOKEN"',
+            'notes': 'TigerGraph requires an endpoint URL. Provide either a token, username/password, or secret for authentication.'
         },
         'neptune': {
             'fields': ['neptune_endpoint', 'aws_credentials'],
