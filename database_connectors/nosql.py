@@ -846,10 +846,25 @@ class CouchbaseConnector(BaseNoSQLConnector):
         """Connect to a Couchbase database"""
         if not self.client:
             try:
-                host = self.credentials.get("host", "localhost")
-                username = self.credentials.get("username")
-                password = self.credentials.get("password")
-                bucket = self.credentials.get("bucket")
+                # Get credentials from credentials dict or environment variables
+                host = self.credentials.get("host") or os.environ.get("COUCHBASE_HOST", "localhost")
+                username = self.credentials.get("username") or os.environ.get("COUCHBASE_USERNAME")
+                password = self.credentials.get("password") or os.environ.get("COUCHBASE_PASSWORD")
+                bucket = self.credentials.get("bucket") or os.environ.get("COUCHBASE_BUCKET")
+                
+                # Log if using environment variables
+                if os.environ.get("COUCHBASE_HOST") and not self.credentials.get("host"):
+                    logger.info("Using COUCHBASE_HOST environment variable")
+                if os.environ.get("COUCHBASE_USERNAME") and not self.credentials.get("username"):
+                    logger.info("Using COUCHBASE_USERNAME environment variable")
+                if os.environ.get("COUCHBASE_PASSWORD") and not self.credentials.get("password"):
+                    logger.info("Using COUCHBASE_PASSWORD environment variable")
+                if os.environ.get("COUCHBASE_BUCKET") and not self.credentials.get("bucket"):
+                    logger.info("Using COUCHBASE_BUCKET environment variable")
+                
+                # Check for required credentials
+                if not username or not password or not bucket:
+                    raise ValueError("Username, password, and bucket are required for Couchbase connection")
                 
                 # Connect to the cluster
                 authenticator = PasswordAuthenticator(username, password)
