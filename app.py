@@ -988,5 +988,186 @@ def get_required_credentials():
             'message': f"Unknown database type: {db_type}"
         })
 
+@app.route('/get_schema_info', methods=['GET'])
+def get_schema_info():
+    """Get detailed database schema information for the explorer"""
+    # Check if database credentials are stored in session
+    if 'database_credentials' not in session:
+        return jsonify({
+            'success': False,
+            'message': 'No database connection found. Please connect to a database first.'
+        }), 400
+    
+    db_credentials = session.get('database_credentials', {})
+    db_type = db_credentials.get('type')
+    credentials = db_credentials.get('credentials', {})
+    
+    # Get connector for the database
+    connector = get_connector(db_type, credentials)
+    
+    try:
+        # Connect to the database
+        success = connector.connect()
+        if not success:
+            return jsonify({
+                'success': False,
+                'message': 'Failed to connect to the database.'
+            }), 500
+        
+        # Get detailed schema information
+        schema_info = connector.get_schema()
+        
+        # Format the schema information for the explorer
+        formatted_schema = format_schema_for_explorer(db_type, schema_info)
+        
+        return jsonify({
+            'success': True,
+            'schema': formatted_schema,
+            'db_type': db_type
+        })
+    except Exception as e:
+        logger.error(f"Error getting schema info: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': f'Error retrieving schema information: {str(e)}'
+        }), 500
+    finally:
+        # Disconnect from the database
+        connector.disconnect()
+
+def format_schema_for_explorer(db_type, schema_info):
+    """Format the schema information for the explorer based on database type"""
+    formatted_schema = []
+    
+    # Format based on database type
+    if db_type in ['postgresql', 'mysql', 'sqlserver', 'oracle', 'sqlite', 'mariadb', 
+                  'db2', 'redshift', 'timescaledb', 'neon', 'crunchybridge', 'heroku', 'cloudsql']:
+        # Relational databases
+        if 'tables' in schema_info:
+            for table_name, table_info in schema_info['tables'].items():
+                table_data = {
+                    'name': table_name,
+                    'type': 'table',
+                    'columns': []
+                }
+                
+                if 'columns' in table_info:
+                    for col_name, col_info in table_info['columns'].items():
+                        col_data = {
+                            'name': col_name,
+                            'type': col_info.get('type', 'unknown'),
+                            'primary_key': col_info.get('primary_key', False),
+                            'foreign_key': col_info.get('foreign_key', False),
+                            'reference': col_info.get('references', None)
+                        }
+                        table_data['columns'].append(col_data)
+                    
+                formatted_schema.append(table_data)
+    
+    elif db_type in ['mongodb', 'cassandra', 'dynamodb', 'couchbase']:
+        # NoSQL document and wide-column databases
+        if 'collections' in schema_info or 'tables' in schema_info:
+            collections = schema_info.get('collections', {}) or schema_info.get('tables', {})
+            for coll_name, coll_info in collections.items():
+                coll_data = {
+                    'name': coll_name,
+                    'type': 'collection',
+                    'fields': []
+                }
+                
+                if 'fields' in coll_info:
+                    for field_name, field_info in coll_info['fields'].items():
+                        field_data = {
+                            'name': field_name,
+                            'type': field_info.get('type', 'unknown'),
+                        }
+                        coll_data['fields'].append(field_data)
+                
+                formatted_schema.append(coll_data)
+                
+    elif db_type in ['neo4j', 'tigergraph']:
+        # Graph databases
+        if 'nodes' in schema_info:
+            for node_type, node_info in schema_info['nodes'].items():
+                node_data = {
+                    'name': node_type,
+                    'type': 'node',
+                    'properties': []
+                }
+                
+                if 'properties' in node_info:
+                    for prop_name, prop_info in node_info['properties'].items():
+                        prop_data = {
+                            'name': prop_name,
+                            'type': prop_info.get('type', 'unknown'),
+                        }
+                        node_data['properties'].append(prop_data)
+                
+                formatted_schema.append(node_data)
+                
+        if 'relationships' in schema_info:
+            for rel_type, rel_info in schema_info['relationships'].items():
+                rel_data = {
+                    'name': rel_type,
+                    'type': 'relationship',
+                    'start_node': rel_info.get('start_node', ''),
+                    'end_node': rel_info.get('end_node', ''),
+                    'properties': []
+                }
+                
+                if 'properties' in rel_info:
+                    for prop_name, prop_info in rel_info['properties'].items():
+                        prop_data = {
+                            'name': prop_name,
+                            'type': prop_info.get('type', 'unknown'),
+                        }
+                        rel_data['properties'].append(prop_data)
+                
+                formatted_schema.append(rel_data)
+    
+    elif db_type in ['influxdb', 'prometheus', 'kdb']:
+        # Time series databases
+        if 'measurements' in schema_info:
+            for meas_name, meas_info in schema_info['measurements'].items():
+                meas_data = {
+                    'name': meas_name,
+                    'type': 'measurement',
+                    'fields': [],
+                    'tags': []
+                }
+                
+                if 'fields' in meas_info:
+                    for field_name, field_info in meas_info['fields'].items():
+                        field_data = {
+                            'name': field_name,
+                            'type': field_info.get('type', 'unknown'),
+                        }
+                        meas_data['fields'].append(field_data)
+                
+                if 'tags' in meas_info:
+                    for tag_name, tag_info in meas_info['tags'].items():
+                        tag_data = {
+                            'name': tag_name,
+                            'type': 'tag',
+                        }
+                        meas_data['tags'].append(tag_data)
+                
+                formatted_schema.append(meas_data)
+    
+    else:
+        # Generic fallback for other database types
+        # Just pass through whatever structure we have
+        if isinstance(schema_info, dict):
+            for key, value in schema_info.items():
+                item = {
+                    'name': key,
+                    'type': 'unknown',
+                }
+                if isinstance(value, dict):
+                    item['fields'] = [{'name': k, 'type': 'unknown'} for k in value.keys()]
+                formatted_schema.append(item)
+    
+    return formatted_schema
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

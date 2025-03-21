@@ -32,6 +32,9 @@ function initChatInterface() {
     const newChatButton = document.getElementById('new-chat-btn');
     const exampleContainer = document.getElementById('example-queries');
     const chatMessages = document.getElementById('chat-messages');
+    const toggleSchemaExplorerBtn = document.getElementById('toggle-schema-explorer-btn');
+    const closeSchemaExplorerBtn = document.getElementById('close-schema-explorer-btn');
+    const refreshSchemaBtn = document.getElementById('refresh-schema-btn');
     
     // Get database info from the page
     const dbInfoElement = document.getElementById('db-info');
@@ -61,6 +64,27 @@ function initChatInterface() {
     if (newChatButton) {
         newChatButton.addEventListener('click', function() {
             window.location.href = '/';
+        });
+    }
+    
+    // Schema Explorer Toggle Button
+    if (toggleSchemaExplorerBtn) {
+        toggleSchemaExplorerBtn.addEventListener('click', function() {
+            toggleSchemaExplorer();
+        });
+    }
+    
+    // Close Schema Explorer Button
+    if (closeSchemaExplorerBtn) {
+        closeSchemaExplorerBtn.addEventListener('click', function() {
+            closeSchemaExplorer();
+        });
+    }
+    
+    // Refresh Schema Button
+    if (refreshSchemaBtn) {
+        refreshSchemaBtn.addEventListener('click', function() {
+            loadSchemaInfo(true);
         });
     }
     
@@ -817,4 +841,532 @@ function downloadFile(content, fileName, mimeType) {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     }, 100);
+}
+
+// Schema Explorer Functions
+
+// Toggle schema explorer visibility
+function toggleSchemaExplorer() {
+    const schemaPanel = document.getElementById('schema-explorer-panel');
+    if (!schemaPanel) return;
+    
+    // If panel is already visible, hide it, otherwise show it
+    if (schemaPanel.classList.contains('d-none')) {
+        schemaPanel.classList.remove('d-none');
+        loadSchemaInfo();
+    } else {
+        closeSchemaExplorer();
+    }
+}
+
+// Close schema explorer
+function closeSchemaExplorer() {
+    const schemaPanel = document.getElementById('schema-explorer-panel');
+    if (!schemaPanel) return;
+    
+    // Add closing animation
+    schemaPanel.classList.add('closing');
+    
+    // Wait for animation to complete before hiding
+    setTimeout(() => {
+        schemaPanel.classList.add('d-none');
+        schemaPanel.classList.remove('closing');
+    }, 300);
+}
+
+// Load schema information from the server
+function loadSchemaInfo(forceRefresh = false) {
+    const schemaTree = document.getElementById('schema-tree');
+    const loadingElement = document.querySelector('.schema-loading');
+    
+    if (!schemaTree || !loadingElement) return;
+    
+    // Show loading state
+    schemaTree.innerHTML = '';
+    loadingElement.classList.remove('d-none');
+    
+    // Load schema info from server
+    fetch('/get_schema_info' + (forceRefresh ? '?refresh=true' : ''))
+        .then(response => response.json())
+        .then(data => {
+            // Hide loading indicator
+            loadingElement.classList.add('d-none');
+            
+            if (data.success) {
+                renderSchemaTree(data.schema, data.db_type);
+            } else {
+                schemaTree.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        ${data.message || 'Failed to load schema information'}
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading schema info:', error);
+            loadingElement.classList.add('d-none');
+            schemaTree.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    Error loading schema information. Please try again.
+                </div>
+            `;
+        });
+}
+
+// Render schema tree based on database type
+function renderSchemaTree(schema, dbType) {
+    const schemaTree = document.getElementById('schema-tree');
+    if (!schemaTree) return;
+    
+    // Check if schema is empty
+    if (!schema || schema.length === 0) {
+        schemaTree.innerHTML = `
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                No schema information available for this database.
+            </div>
+        `;
+        return;
+    }
+    
+    // Create schema tree based on database type
+    if (['postgresql', 'mysql', 'sqlserver', 'oracle', 'sqlite', 'mariadb',
+         'db2', 'redshift', 'timescaledb', 'heroku', 'neon', 'crunchybridge'].includes(dbType)) {
+        // Relational databases - show tables and columns
+        renderRelationalSchema(schema, schemaTree);
+    } else if (['mongodb', 'cassandra', 'dynamodb', 'couchbase'].includes(dbType)) {
+        // NoSQL databases - show collections/tables and fields
+        renderNoSQLSchema(schema, schemaTree);
+    } else if (['neo4j', 'tigergraph'].includes(dbType)) {
+        // Graph databases - show nodes, relationships, and properties
+        renderGraphSchema(schema, schemaTree);
+    } else if (['influxdb', 'prometheus', 'kdb'].includes(dbType)) {
+        // Time series databases - show measurements, fields, and tags
+        renderTimeSeriesSchema(schema, schemaTree);
+    } else {
+        // Generic rendering for other database types
+        renderGenericSchema(schema, schemaTree);
+    }
+}
+
+// Render relational database schema
+function renderRelationalSchema(schema, container) {
+    container.innerHTML = '';
+    
+    schema.forEach(table => {
+        const tableEl = document.createElement('div');
+        tableEl.className = 'schema-table';
+        
+        // Create table header
+        const tableHeader = document.createElement('div');
+        tableHeader.className = 'schema-table-header';
+        tableHeader.innerHTML = `
+            <div class="schema-table-icon">
+                <i class="fas fa-table"></i>
+            </div>
+            <div class="schema-table-name">${escapeHtml(table.name)}</div>
+        `;
+        
+        // Add click handler to toggle columns
+        tableHeader.addEventListener('click', function() {
+            tableEl.classList.toggle('schema-table-expanded');
+        });
+        
+        tableEl.appendChild(tableHeader);
+        
+        // Create columns container
+        const columnsContainer = document.createElement('div');
+        columnsContainer.className = 'schema-table-columns';
+        
+        // Add columns
+        if (table.columns && table.columns.length > 0) {
+            table.columns.forEach(column => {
+                const columnEl = document.createElement('div');
+                columnEl.className = 'schema-column';
+                
+                // Column name and type
+                columnEl.innerHTML = `
+                    <div class="schema-column-name">${escapeHtml(column.name)}</div>
+                    <div class="schema-column-type">${escapeHtml(column.type)}</div>
+                `;
+                
+                // Add primary key indicator
+                if (column.primary_key) {
+                    const pkBadge = document.createElement('div');
+                    pkBadge.className = 'schema-column-pk';
+                    pkBadge.innerHTML = '<i class="fas fa-key me-1"></i> PK';
+                    columnEl.appendChild(pkBadge);
+                }
+                
+                // Add foreign key indicator
+                if (column.foreign_key) {
+                    const fkBadge = document.createElement('div');
+                    fkBadge.className = 'schema-column-fk';
+                    fkBadge.innerHTML = '<i class="fas fa-link me-1"></i> FK';
+                    if (column.reference) {
+                        fkBadge.innerHTML += ` → ${escapeHtml(column.reference)}`;
+                    }
+                    columnEl.appendChild(fkBadge);
+                }
+                
+                columnsContainer.appendChild(columnEl);
+            });
+        } else {
+            columnsContainer.innerHTML = '<div class="text-muted small">No columns information available</div>';
+        }
+        
+        tableEl.appendChild(columnsContainer);
+        container.appendChild(tableEl);
+    });
+}
+
+// Render NoSQL database schema
+function renderNoSQLSchema(schema, container) {
+    container.innerHTML = '';
+    
+    schema.forEach(collection => {
+        const collectionEl = document.createElement('div');
+        collectionEl.className = 'schema-table';
+        
+        // Create collection header
+        const collectionHeader = document.createElement('div');
+        collectionHeader.className = 'schema-table-header';
+        collectionHeader.innerHTML = `
+            <div class="schema-table-icon">
+                <i class="fas fa-cubes"></i>
+            </div>
+            <div class="schema-table-name">${escapeHtml(collection.name)}</div>
+        `;
+        
+        // Add click handler to toggle fields
+        collectionHeader.addEventListener('click', function() {
+            collectionEl.classList.toggle('schema-table-expanded');
+        });
+        
+        collectionEl.appendChild(collectionHeader);
+        
+        // Create fields container
+        const fieldsContainer = document.createElement('div');
+        fieldsContainer.className = 'schema-table-columns';
+        
+        // Add fields
+        if (collection.fields && collection.fields.length > 0) {
+            collection.fields.forEach(field => {
+                const fieldEl = document.createElement('div');
+                fieldEl.className = 'schema-column';
+                
+                // Field name and type
+                fieldEl.innerHTML = `
+                    <div class="schema-column-name">${escapeHtml(field.name)}</div>
+                    <div class="schema-column-type">${escapeHtml(field.type)}</div>
+                `;
+                
+                fieldsContainer.appendChild(fieldEl);
+            });
+        } else {
+            fieldsContainer.innerHTML = '<div class="text-muted small">No fields information available</div>';
+        }
+        
+        collectionEl.appendChild(fieldsContainer);
+        container.appendChild(collectionEl);
+    });
+}
+
+// Render graph database schema
+function renderGraphSchema(schema, container) {
+    container.innerHTML = '';
+    
+    // Group schema elements by type (nodes and relationships)
+    const nodes = schema.filter(item => item.type === 'node');
+    const relationships = schema.filter(item => item.type === 'relationship');
+    
+    // Create sections
+    if (nodes.length > 0) {
+        const nodesSection = document.createElement('div');
+        nodesSection.className = 'mb-3';
+        
+        const nodesSectionHeader = document.createElement('h6');
+        nodesSectionHeader.className = 'schema-section-header';
+        nodesSectionHeader.innerHTML = '<i class="fas fa-circle me-2"></i> Nodes';
+        nodesSection.appendChild(nodesSectionHeader);
+        
+        // Add each node
+        nodes.forEach(node => {
+            const nodeEl = document.createElement('div');
+            nodeEl.className = 'schema-table';
+            
+            // Create node header
+            const nodeHeader = document.createElement('div');
+            nodeHeader.className = 'schema-table-header';
+            nodeHeader.innerHTML = `
+                <div class="schema-table-icon">
+                    <i class="fas fa-circle"></i>
+                </div>
+                <div class="schema-table-name">${escapeHtml(node.name)}</div>
+            `;
+            
+            // Add click handler to toggle properties
+            nodeHeader.addEventListener('click', function() {
+                nodeEl.classList.toggle('schema-table-expanded');
+            });
+            
+            nodeEl.appendChild(nodeHeader);
+            
+            // Create properties container
+            const propsContainer = document.createElement('div');
+            propsContainer.className = 'schema-table-columns';
+            
+            // Add properties
+            if (node.properties && node.properties.length > 0) {
+                node.properties.forEach(prop => {
+                    const propEl = document.createElement('div');
+                    propEl.className = 'schema-column';
+                    
+                    // Property name and type
+                    propEl.innerHTML = `
+                        <div class="schema-column-name">${escapeHtml(prop.name)}</div>
+                        <div class="schema-column-type">${escapeHtml(prop.type)}</div>
+                    `;
+                    
+                    propsContainer.appendChild(propEl);
+                });
+            } else {
+                propsContainer.innerHTML = '<div class="text-muted small">No properties information available</div>';
+            }
+            
+            nodeEl.appendChild(propsContainer);
+            nodesSection.appendChild(nodeEl);
+        });
+        
+        container.appendChild(nodesSection);
+    }
+    
+    if (relationships.length > 0) {
+        const relsSection = document.createElement('div');
+        relsSection.className = 'mb-3';
+        
+        const relsSectionHeader = document.createElement('h6');
+        relsSectionHeader.className = 'schema-section-header';
+        relsSectionHeader.innerHTML = '<i class="fas fa-project-diagram me-2"></i> Relationships';
+        relsSection.appendChild(relsSectionHeader);
+        
+        // Add each relationship
+        relationships.forEach(rel => {
+            const relEl = document.createElement('div');
+            relEl.className = 'schema-table';
+            
+            // Create relationship header
+            const relHeader = document.createElement('div');
+            relHeader.className = 'schema-table-header';
+            relHeader.innerHTML = `
+                <div class="schema-table-icon">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+                <div class="schema-table-name">${escapeHtml(rel.name)}</div>
+            `;
+            
+            // Add click handler to toggle details
+            relHeader.addEventListener('click', function() {
+                relEl.classList.toggle('schema-table-expanded');
+            });
+            
+            relEl.appendChild(relHeader);
+            
+            // Create details container
+            const detailsContainer = document.createElement('div');
+            detailsContainer.className = 'schema-table-columns';
+            
+            // Add connection info
+            if (rel.start_node && rel.end_node) {
+                const connectionEl = document.createElement('div');
+                connectionEl.className = 'schema-relation-path mb-2';
+                connectionEl.innerHTML = `
+                    <div class="text-muted mb-1">Connection:</div>
+                    <div class="d-flex align-items-center">
+                        <span class="me-2">${escapeHtml(rel.start_node)}</span>
+                        <i class="fas fa-long-arrow-alt-right text-primary mx-2"></i>
+                        <span>${escapeHtml(rel.end_node)}</span>
+                    </div>
+                `;
+                detailsContainer.appendChild(connectionEl);
+            }
+            
+            // Add properties
+            if (rel.properties && rel.properties.length > 0) {
+                const propsTitle = document.createElement('div');
+                propsTitle.className = 'text-muted mb-1 mt-2';
+                propsTitle.textContent = 'Properties:';
+                detailsContainer.appendChild(propsTitle);
+                
+                rel.properties.forEach(prop => {
+                    const propEl = document.createElement('div');
+                    propEl.className = 'schema-column';
+                    
+                    // Property name and type
+                    propEl.innerHTML = `
+                        <div class="schema-column-name">${escapeHtml(prop.name)}</div>
+                        <div class="schema-column-type">${escapeHtml(prop.type)}</div>
+                    `;
+                    
+                    detailsContainer.appendChild(propEl);
+                });
+            } else {
+                detailsContainer.innerHTML += '<div class="text-muted small mt-2">No properties information available</div>';
+            }
+            
+            relEl.appendChild(detailsContainer);
+            relsSection.appendChild(relEl);
+        });
+        
+        container.appendChild(relsSection);
+    }
+    
+    if (nodes.length === 0 && relationships.length === 0) {
+        container.innerHTML = '<div class="alert alert-info">No graph schema information available</div>';
+    }
+}
+
+// Render time series database schema
+function renderTimeSeriesSchema(schema, container) {
+    container.innerHTML = '';
+    
+    schema.forEach(measurement => {
+        const measurementEl = document.createElement('div');
+        measurementEl.className = 'schema-table';
+        
+        // Create measurement header
+        const measurementHeader = document.createElement('div');
+        measurementHeader.className = 'schema-table-header';
+        measurementHeader.innerHTML = `
+            <div class="schema-table-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="schema-table-name">${escapeHtml(measurement.name)}</div>
+        `;
+        
+        // Add click handler to toggle details
+        measurementHeader.addEventListener('click', function() {
+            measurementEl.classList.toggle('schema-table-expanded');
+        });
+        
+        measurementEl.appendChild(measurementHeader);
+        
+        // Create details container
+        const detailsContainer = document.createElement('div');
+        detailsContainer.className = 'schema-table-columns';
+        
+        // Add fields
+        if (measurement.fields && measurement.fields.length > 0) {
+            const fieldsTitle = document.createElement('div');
+            fieldsTitle.className = 'text-muted mb-1';
+            fieldsTitle.innerHTML = '<i class="fas fa-hashtag me-1"></i> Fields:';
+            detailsContainer.appendChild(fieldsTitle);
+            
+            measurement.fields.forEach(field => {
+                const fieldEl = document.createElement('div');
+                fieldEl.className = 'schema-column';
+                
+                // Field name and type
+                fieldEl.innerHTML = `
+                    <div class="schema-column-name">${escapeHtml(field.name)}</div>
+                    <div class="schema-column-type">${escapeHtml(field.type)}</div>
+                `;
+                
+                detailsContainer.appendChild(fieldEl);
+            });
+        }
+        
+        // Add tags
+        if (measurement.tags && measurement.tags.length > 0) {
+            const tagsTitle = document.createElement('div');
+            tagsTitle.className = 'text-muted mb-1 mt-3';
+            tagsTitle.innerHTML = '<i class="fas fa-tag me-1"></i> Tags:';
+            detailsContainer.appendChild(tagsTitle);
+            
+            measurement.tags.forEach(tag => {
+                const tagEl = document.createElement('div');
+                tagEl.className = 'schema-column';
+                
+                // Tag name
+                tagEl.innerHTML = `
+                    <div class="schema-column-name">${escapeHtml(tag.name)}</div>
+                `;
+                
+                detailsContainer.appendChild(tagEl);
+            });
+        }
+        
+        if ((!measurement.fields || measurement.fields.length === 0) && 
+            (!measurement.tags || measurement.tags.length === 0)) {
+            detailsContainer.innerHTML = '<div class="text-muted small">No fields or tags information available</div>';
+        }
+        
+        measurementEl.appendChild(detailsContainer);
+        container.appendChild(measurementEl);
+    });
+}
+
+// Render generic schema for other database types
+function renderGenericSchema(schema, container) {
+    container.innerHTML = '';
+    
+    schema.forEach(item => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'schema-table';
+        
+        // Create item header
+        const itemHeader = document.createElement('div');
+        itemHeader.className = 'schema-table-header';
+        itemHeader.innerHTML = `
+            <div class="schema-table-icon">
+                <i class="fas fa-database"></i>
+            </div>
+            <div class="schema-table-name">${escapeHtml(item.name)}</div>
+        `;
+        
+        // Add click handler to toggle fields
+        itemHeader.addEventListener('click', function() {
+            itemEl.classList.toggle('schema-table-expanded');
+        });
+        
+        itemEl.appendChild(itemHeader);
+        
+        // Create fields container
+        const fieldsContainer = document.createElement('div');
+        fieldsContainer.className = 'schema-table-columns';
+        
+        // Add fields
+        if (item.fields && item.fields.length > 0) {
+            item.fields.forEach(field => {
+                const fieldEl = document.createElement('div');
+                fieldEl.className = 'schema-column';
+                
+                // Field name and type
+                fieldEl.innerHTML = `
+                    <div class="schema-column-name">${escapeHtml(field.name)}</div>
+                    <div class="schema-column-type">${field.type ? escapeHtml(field.type) : ''}</div>
+                `;
+                
+                fieldsContainer.appendChild(fieldEl);
+            });
+        } else {
+            fieldsContainer.innerHTML = '<div class="text-muted small">No fields information available</div>';
+        }
+        
+        itemEl.appendChild(fieldsContainer);
+        container.appendChild(itemEl);
+    });
+}
+
+// Helper function to escape HTML
+function escapeHtml(unsafe) {
+    if (unsafe === null || unsafe === undefined) return '';
+    return String(unsafe)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
