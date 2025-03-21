@@ -99,19 +99,31 @@ class MongoDBConnector(BaseNoSQLConnector):
         """Connect to a MongoDB database"""
         if not self.client:
             try:
-                host = self.credentials.get("host", "localhost")
-                port = self.credentials.get("port", 27017)
-                username = self.credentials.get("username")
-                password = self.credentials.get("password")
-                auth_db = self.credentials.get("auth_db", "admin")
+                # Check if direct connection string is provided
+                if self.credentials.get("connection_string"):
+                    logger.info("Using provided connection string")
+                    connection_string = self.credentials.get("connection_string")
+                    self.client = pymongo.MongoClient(connection_string)
+                # Check if individual credentials are provided
+                elif self.credentials.get("host"):
+                    logger.info("Using individual credentials")
+                    host = self.credentials.get("host", "localhost")
+                    port = self.credentials.get("port", 27017)
+                    username = self.credentials.get("username")
+                    password = self.credentials.get("password")
+                    auth_db = self.credentials.get("auth_db", "admin")
+                    
+                    connection_string = f"mongodb://"
+                    if username and password:
+                        connection_string += f"{username}:{password}@"
+                    
+                    connection_string += f"{host}:{port}/{auth_db}"
+                    
+                    self.client = pymongo.MongoClient(connection_string)
+                else:
+                    logger.error("No valid MongoDB credentials provided")
+                    raise Exception("No valid MongoDB credentials provided")
                 
-                connection_string = f"mongodb://"
-                if username and password:
-                    connection_string += f"{username}:{password}@"
-                
-                connection_string += f"{host}:{port}/{auth_db}"
-                
-                self.client = pymongo.MongoClient(connection_string)
                 # Force connection to verify it works
                 self.client.server_info()
                 

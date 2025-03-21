@@ -159,8 +159,14 @@ class PostgreSQLConnector(BaseRelationalConnector):
         """Connect to a PostgreSQL database"""
         if not self.connection:
             try:
-                # First try using provided credentials
-                if all(self.credentials.get(key) for key in ["host", "username", "password", "db_name"]):
+                # Check if direct connection string is provided
+                if self.credentials.get("connection_string"):
+                    logger.info("Using provided connection string")
+                    self.connection = psycopg2.connect(self.credentials.get("connection_string"))
+                    self.engine = create_engine(self.credentials.get("connection_string"))
+                # Check if individual credentials are provided
+                elif all(self.credentials.get(key) for key in ["host", "username", "password", "db_name"]):
+                    logger.info("Using individual credentials")
                     self.connection = psycopg2.connect(
                         host=self.credentials.get("host"),
                         port=self.credentials.get("port", 5432),
@@ -192,16 +198,28 @@ class MySQLConnector(BaseRelationalConnector):
         """Connect to a MySQL database"""
         if not self.connection:
             try:
-                self.connection = mysql.connector.connect(
-                    host=self.credentials.get("host"),
-                    user=self.credentials.get("username"),
-                    password=self.credentials.get("password"),
-                    database=self.credentials.get("db_name")
-                )
-                
-                # Create SQLAlchemy engine for schema inspection
-                conn_string = f"mysql+mysqlconnector://{self.credentials.get('username')}:{self.credentials.get('password')}@{self.credentials.get('host')}/{self.credentials.get('db_name')}"
-                self.engine = create_engine(conn_string)
+                # Check if direct connection string is provided
+                if self.credentials.get("connection_string"):
+                    logger.info("Using provided connection string")
+                    # Using SQLAlchemy for both connection and schema inspection
+                    self.engine = create_engine(self.credentials.get("connection_string"))
+                    self.connection = self.engine.connect().connection
+                # Check if individual credentials are provided
+                elif all(self.credentials.get(key) for key in ["host", "username", "password", "db_name"]):
+                    logger.info("Using individual credentials")
+                    self.connection = mysql.connector.connect(
+                        host=self.credentials.get("host"),
+                        user=self.credentials.get("username"),
+                        password=self.credentials.get("password"),
+                        database=self.credentials.get("db_name")
+                    )
+                    
+                    # Create SQLAlchemy engine for schema inspection
+                    conn_string = f"mysql+mysqlconnector://{self.credentials.get('username')}:{self.credentials.get('password')}@{self.credentials.get('host')}/{self.credentials.get('db_name')}"
+                    self.engine = create_engine(conn_string)
+                else:
+                    logger.error("No valid MySQL credentials provided")
+                    raise Exception("No valid MySQL credentials provided")
                 
             except Exception as e:
                 logger.exception("Error connecting to MySQL")
