@@ -420,85 +420,177 @@ def get_required_credentials():
             'url_option': True,
             'url_field': 'connection_string',
             'url_example': 'postgresql://username:password@host:5432/database_name',
-            'terminal_command': 'psql -h host -p 5432 -U username -d database_name'
+            'terminal_command': 'psql -h host -p 5432 -U username -d database_name',
+            'env_variables': [
+                'POSTGRES_HOST=host',
+                'POSTGRES_PORT=5432',
+                'POSTGRES_USER=username',
+                'POSTGRES_PASSWORD=your_password',
+                'POSTGRES_DB=database_name',
+                'DATABASE_URL=postgresql://username:password@host:5432/database_name'
+            ]
         },
         'mysql': {
             'fields': ['host', 'port', 'username', 'password', 'database_name'],
             'url_option': True,
             'url_field': 'connection_string',
             'url_example': 'mysql://username:password@host:3306/database_name',
-            'terminal_command': 'mysql -h host -P 3306 -u username -p database_name'
+            'terminal_command': 'mysql -h host -P 3306 -u username -p database_name',
+            'env_variables': [
+                'MYSQL_HOST=host',
+                'MYSQL_PORT=3306',
+                'MYSQL_USER=username',
+                'MYSQL_PASSWORD=your_password',
+                'MYSQL_DATABASE=database_name',
+                'MYSQL_URL=mysql://username:password@host:3306/database_name'
+            ]
         },
         'mariadb': {
             'fields': ['host', 'port', 'username', 'password', 'database_name'],
             'url_option': True,
             'url_field': 'connection_string',
             'url_example': 'mysql://username:password@host:3306/database_name',
-            'terminal_command': 'mysql -h host -P 3306 -u username -p database_name'
+            'terminal_command': 'mysql -h host -P 3306 -u username -p database_name',
+            'env_variables': [
+                'MARIADB_HOST=host',
+                'MARIADB_PORT=3306',
+                'MARIADB_USER=username',
+                'MARIADB_PASSWORD=your_password',
+                'MARIADB_DATABASE=database_name',
+                'MARIADB_URL=mysql://username:password@host:3306/database_name'
+            ]
         },
         'sqlserver': {
             'fields': ['server_address', 'username', 'password', 'database_name'],
             'url_option': True,
             'url_field': 'connection_string',
             'url_example': 'mssql://username:password@server_address/database_name',
-            'terminal_command': 'sqlcmd -S server_address -U username -P password -d database_name'
+            'terminal_command': 'sqlcmd -S server_address -U username -P password -d database_name',
+            'env_variables': [
+                'MSSQL_SERVER=server_address',
+                'MSSQL_USER=username',
+                'MSSQL_PASSWORD=your_password',
+                'MSSQL_DATABASE=database_name',
+                'MSSQL_CONNECTION_STRING=mssql://username:password@server_address/database_name'
+            ]
         },
         'oracle': {
             'fields': ['host', 'port', 'service_name', 'username', 'password'],
             'url_option': True,
             'url_field': 'connection_string',
             'url_example': 'oracle://username:password@host:1521/service_name',
-            'terminal_command': 'sqlplus username/password@//host:1521/service_name'
+            'terminal_command': 'sqlplus username/password@//host:1521/service_name',
+            'env_variables': [
+                'ORACLE_HOST=host',
+                'ORACLE_PORT=1521',
+                'ORACLE_SERVICE_NAME=service_name',
+                'ORACLE_USERNAME=username',
+                'ORACLE_PASSWORD=your_password',
+                'ORACLE_CONNECTION_STRING=oracle://username:password@host:1521/service_name'
+            ]
         },
         'sqlite': {
             'fields': ['path_to_database_file'],
             'url_option': False,
-            'terminal_command': 'sqlite3 path_to_database_file'
+            'terminal_command': 'sqlite3 path_to_database_file',
+            'env_variables': [
+                'SQLITE_DATABASE_PATH=/path/to/database_file.db'
+            ]
         },
         'redshift': {
             'fields': ['cluster_address', 'username', 'password', 'database_name'],
             'url_option': True,
             'url_field': 'connection_string',
             'url_example': 'redshift://username:password@cluster_address:5439/database_name',
-            'terminal_command': 'psql -h cluster_address -p 5439 -U username -d database_name'
+            'terminal_command': 'psql -h cluster_address -p 5439 -U username -d database_name',
+            'env_variables': [
+                'REDSHIFT_CLUSTER=cluster_address',
+                'REDSHIFT_USER=username',
+                'REDSHIFT_PASSWORD=your_password',
+                'REDSHIFT_DATABASE=database_name',
+                'REDSHIFT_PORT=5439',
+                'REDSHIFT_URL=redshift://username:password@cluster_address:5439/database_name'
+            ]
         },
         'cloudsql': {
             'fields': ['instance_name', 'username', 'password'],
             'url_option': False,
-            'terminal_command': 'gcloud sql connect instance-name --user=username'
+            'terminal_command': 'gcloud sql connect instance-name --user=username',
+            'env_variables': [
+                'CLOUDSQL_INSTANCE=instance-name',
+                'CLOUDSQL_USER=username',
+                'CLOUDSQL_PASSWORD=your_password',
+                'GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json'
+            ],
+            'auth_popup': True,
+            'auth_type': 'google'
         },
         'db2': {
             'fields': ['username', 'password', 'database_name'],
             'url_option': False,
-            'terminal_command': 'db2 connect to database_name user username using password'
+            'terminal_command': 'db2 connect to database_name user username using password',
+            'env_variables': [
+                'DB2_USERNAME=username',
+                'DB2_PASSWORD=your_password',
+                'DB2_DATABASE=database_name'
+            ]
         },
         'teradata': {
             'fields': ['hostname', 'username', 'password'],
             'url_option': True,
             'url_field': 'connection_string',
             'url_example': 'teradatasql://username:password@hostname',
-            'terminal_command': 'bteq .logon hostname/username,password'
+            'terminal_command': 'bteq .logon hostname/username,password',
+            'env_variables': [
+                'TERADATA_HOST=hostname',
+                'TERADATA_USERNAME=username',
+                'TERADATA_PASSWORD=your_password',
+                'TERADATA_URL=teradatasql://username:password@hostname'
+            ]
         },
         'saphana': {
             'fields': ['host', 'port', 'username', 'password', 'database_name'],
             'url_option': True,
             'url_field': 'connection_string',
             'url_example': 'hdb://host:port/?databaseName=database_name',
-            'terminal_command': 'hdbsql -n host:port -u username -p password -d database_name'
+            'terminal_command': 'hdbsql -n host:port -u username -p password -d database_name',
+            'env_variables': [
+                'SAPHANA_HOST=host',
+                'SAPHANA_PORT=port',
+                'SAPHANA_USERNAME=username',
+                'SAPHANA_PASSWORD=your_password',
+                'SAPHANA_DATABASE=database_name',
+                'SAPHANA_URL=hdb://host:port/?databaseName=database_name'
+            ]
         },
         'planetscale': {
             'fields': ['database_name', 'branch_name'],
             'url_option': True,
             'url_field': 'connection_string',
             'url_example': 'mysql://username:password@aws.connect.psdb.cloud/database_name',
-            'terminal_command': 'pscale connect database_name branch_name'
+            'terminal_command': 'pscale connect database_name branch_name',
+            'env_variables': [
+                'PLANETSCALE_DATABASE=database_name',
+                'PLANETSCALE_BRANCH=branch_name',
+                'PLANETSCALE_USERNAME=username',
+                'PLANETSCALE_PASSWORD=your_password',
+                'PLANETSCALE_URL=mysql://username:password@aws.connect.psdb.cloud/database_name'
+            ]
         },
         'vertica': {
             'fields': ['hostname', 'port', 'username', 'password', 'database_name'],
             'url_option': True,
             'url_field': 'connection_string',
             'url_example': 'vertica://username:password@hostname:5433/database_name',
-            'terminal_command': 'vsql -h hostname -p port -U username -w password -d database_name'
+            'terminal_command': 'vsql -h hostname -p port -U username -w password -d database_name',
+            'env_variables': [
+                'VERTICA_HOST=hostname',
+                'VERTICA_PORT=5433',
+                'VERTICA_USERNAME=username',
+                'VERTICA_PASSWORD=your_password',
+                'VERTICA_DATABASE=database_name',
+                'VERTICA_URL=vertica://username:password@hostname:5433/database_name'
+            ]
         },
         
         # NoSQL Databases
@@ -507,45 +599,93 @@ def get_required_credentials():
             'url_option': True,
             'url_field': 'connection_string',
             'url_example': 'mongodb://username:password@hostname:port/database_name',
-            'terminal_command': 'mongo "mongodb://username:password@hostname:port/database_name"'
+            'terminal_command': 'mongo "mongodb://username:password@hostname:port/database_name"',
+            'env_variables': [
+                'MONGODB_HOST=hostname',
+                'MONGODB_PORT=port',
+                'MONGODB_USERNAME=username',
+                'MONGODB_PASSWORD=your_password',
+                'MONGODB_DATABASE=database_name',
+                'MONGODB_URI=mongodb://username:password@hostname:port/database_name'
+            ]
         },
         'cassandra': {
             'fields': ['hostname', 'port', 'username', 'password'],
             'url_option': False,
-            'terminal_command': 'cqlsh hostname port -u username -p password'
+            'terminal_command': 'cqlsh hostname port -u username -p password',
+            'env_variables': [
+                'CASSANDRA_HOST=hostname',
+                'CASSANDRA_PORT=port',
+                'CASSANDRA_USERNAME=username',
+                'CASSANDRA_PASSWORD=your_password',
+                'CASSANDRA_KEYSPACE=your_keyspace'
+            ]
         },
         'redis': {
             'fields': ['hostname', 'port', 'password'],
             'url_option': True,
             'url_field': 'connection_string',
             'url_example': 'redis://:password@hostname:port',
-            'terminal_command': 'redis-cli -h hostname -p port -a password'
+            'terminal_command': 'redis-cli -h hostname -p port -a password',
+            'env_variables': [
+                'REDIS_HOST=hostname',
+                'REDIS_PORT=port',
+                'REDIS_PASSWORD=your_password',
+                'REDIS_URL=redis://:password@hostname:port'
+            ]
         },
         'elasticsearch': {
             'fields': ['hostname', 'port', 'username', 'password'],
             'url_option': True,
             'url_field': 'connection_string',
             'url_example': 'https://username:password@hostname:port',
-            'terminal_command': 'curl -X GET "hostname:port/_search" -H "Content-Type: application/json" -d\'{"query": {"match_all": {}}}\''
+            'terminal_command': 'curl -X GET "hostname:port/_search" -H "Content-Type: application/json" -d\'{"query": {"match_all": {}}}\'',
+            'env_variables': [
+                'ELASTICSEARCH_HOST=hostname',
+                'ELASTICSEARCH_PORT=port',
+                'ELASTICSEARCH_USERNAME=username',
+                'ELASTICSEARCH_PASSWORD=your_password',
+                'ELASTICSEARCH_URL=https://username:password@hostname:port'
+            ]
         },
         'dynamodb': {
             'fields': ['access_key', 'secret_key', 'region', 'endpoint_url'],
             'url_option': False,
-            'terminal_command': 'aws dynamodb list-tables --endpoint-url endpoint_url'
+            'terminal_command': 'aws dynamodb list-tables --endpoint-url endpoint_url',
+            'env_variables': [
+                'AWS_ACCESS_KEY_ID=your_access_key',
+                'AWS_SECRET_ACCESS_KEY=your_secret_key',
+                'AWS_REGION=your_region',
+                'DYNAMODB_ENDPOINT=endpoint_url'
+            ],
+            'auth_popup': True,
+            'auth_type': 'aws'
         },
         'couchbase': {
             'fields': ['hostname', 'username', 'password', 'bucket_name'],
             'url_option': True,
             'url_field': 'connection_string',
             'url_example': 'couchbase://username:password@hostname/bucket_name',
-            'terminal_command': 'cbc-pillowfight -U couchbase://hostname/bucket_name -u username -P password'
+            'terminal_command': 'cbc-pillowfight -U couchbase://hostname/bucket_name -u username -P password',
+            'env_variables': [
+                'COUCHBASE_HOST=hostname',
+                'COUCHBASE_USERNAME=username',
+                'COUCHBASE_PASSWORD=your_password',
+                'COUCHBASE_BUCKET=bucket_name',
+                'COUCHBASE_URL=couchbase://username:password@hostname/bucket_name'
+            ]
         },
         'neo4j': {
             'fields': ['bolt_url', 'username', 'password'],
             'url_option': True,
             'url_field': 'connection_string',
             'url_example': 'bolt://hostname:7687',
-            'terminal_command': 'cypher-shell -a bolt_url -u username -p password'
+            'terminal_command': 'cypher-shell -a bolt_url -u username -p password',
+            'env_variables': [
+                'NEO4J_BOLT_URL=bolt://hostname:7687',
+                'NEO4J_USERNAME=username',
+                'NEO4J_PASSWORD=your_password'
+            ]
         },
         
         # Data Warehouses
