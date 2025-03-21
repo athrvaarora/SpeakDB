@@ -1089,7 +1089,8 @@ def format_schema_for_explorer(db_type, schema_info):
     
     # Format based on database type
     if db_type in ['postgresql', 'mysql', 'sqlserver', 'oracle', 'sqlite', 'mariadb', 
-                  'db2', 'redshift', 'timescaledb', 'neon', 'crunchybridge', 'heroku', 'cloudsql']:
+                  'db2', 'redshift', 'timescaledb', 'neon', 'crunchybridge', 'heroku', 'cloudsql',
+                  'teradata', 'saphana', 'planetscale', 'vertica']:
         # Relational databases
         if 'tables' in schema_info:
             # Handle both dictionary and list format for tables
@@ -1149,7 +1150,7 @@ def format_schema_for_explorer(db_type, schema_info):
                         
                     formatted_schema.append(table_data)
     
-    elif db_type in ['mongodb', 'cassandra', 'dynamodb', 'couchbase']:
+    elif db_type in ['mongodb', 'cassandra', 'dynamodb', 'couchbase', 'redis', 'elasticsearch', 'neo4j']:
         # NoSQL document and wide-column databases
         if 'collections' in schema_info or 'tables' in schema_info:
             collections = schema_info.get('collections', {}) or schema_info.get('tables', {})
@@ -1202,7 +1203,120 @@ def format_schema_for_explorer(db_type, schema_info):
                     
                     formatted_schema.append(coll_data)
                 
-    elif db_type in ['neo4j', 'tigergraph']:
+    elif db_type in ['snowflake', 'bigquery', 'synapse', 'redshift']:
+        # Data warehouse databases
+        if 'tables' in schema_info:
+            # Handle both dictionary and list format for tables
+            if isinstance(schema_info['tables'], list):
+                # List format: [{'name': 'table1', 'columns': [...]}, {'name': 'table2', 'columns': [...]}]
+                for table in schema_info['tables']:
+                    table_data = {
+                        'name': table.get('name', 'unknown'),
+                        'type': 'table',
+                        'columns': []
+                    }
+                    
+                    if 'columns' in table and isinstance(table['columns'], list):
+                        for col in table['columns']:
+                            col_data = {
+                                'name': col.get('name', 'unknown'),
+                                'type': col.get('type', 'unknown'),
+                                'primary_key': col.get('primary_key', False) or col.get('nullable') is False,
+                                'foreign_key': col.get('foreign_key', False),
+                                'reference': col.get('references', None)
+                            }
+                            table_data['columns'].append(col_data)
+                        
+                    formatted_schema.append(table_data)
+            else:
+                # Dictionary format: {'table1': {'columns': {...}}, 'table2': {'columns': {...}}}
+                for table_name, table_info in schema_info['tables'].items():
+                    table_data = {
+                        'name': table_name,
+                        'type': 'table',
+                        'columns': []
+                    }
+                    
+                    if 'columns' in table_info:
+                        if isinstance(table_info['columns'], list):
+                            # List format for columns
+                            for col in table_info['columns']:
+                                col_data = {
+                                    'name': col.get('name', 'unknown'),
+                                    'type': col.get('type', 'unknown'),
+                                    'primary_key': col.get('primary_key', False),
+                                    'foreign_key': col.get('foreign_key', False),
+                                    'reference': col.get('references', None)
+                                }
+                                table_data['columns'].append(col_data)
+                        else:
+                            # Dictionary format for columns
+                            for col_name, col_info in table_info['columns'].items():
+                                col_data = {
+                                    'name': col_name,
+                                    'type': col_info.get('type', 'unknown'),
+                                    'primary_key': col_info.get('primary_key', False),
+                                    'foreign_key': col_info.get('foreign_key', False),
+                                    'reference': col_info.get('references', None)
+                                }
+                                table_data['columns'].append(col_data)
+                        
+                    formatted_schema.append(table_data)
+                    
+    elif db_type in ['cosmosdb', 'firestore', 'supabase']:
+        # Cloud databases
+        if 'collections' in schema_info or 'tables' in schema_info:
+            collections = schema_info.get('collections', {}) or schema_info.get('tables', {})
+            
+            # Check if the collections data is a list or dictionary
+            if isinstance(collections, list):
+                # List format: [{'name': 'collection1', 'fields': [...]}, {'name': 'collection2', 'fields': [...]}]
+                for coll in collections:
+                    coll_data = {
+                        'name': coll.get('name', 'unknown'),
+                        'type': 'collection',
+                        'fields': []
+                    }
+                    
+                    if 'fields' in coll and isinstance(coll['fields'], list):
+                        for field in coll['fields']:
+                            field_data = {
+                                'name': field.get('name', 'unknown'),
+                                'type': field.get('type', 'unknown'),
+                            }
+                            coll_data['fields'].append(field_data)
+                    
+                    formatted_schema.append(coll_data)
+            else:
+                # Dictionary format: {'collection1': {'fields': {...}}, 'collection2': {'fields': {...}}}
+                for coll_name, coll_info in collections.items():
+                    coll_data = {
+                        'name': coll_name,
+                        'type': 'collection',
+                        'fields': []
+                    }
+                    
+                    if 'fields' in coll_info:
+                        if isinstance(coll_info['fields'], list):
+                            # List format for fields
+                            for field in coll_info['fields']:
+                                field_data = {
+                                    'name': field.get('name', 'unknown'),
+                                    'type': field.get('type', 'unknown'),
+                                }
+                                coll_data['fields'].append(field_data)
+                        else:
+                            # Dictionary format for fields
+                            for field_name, field_info in coll_info['fields'].items():
+                                field_data = {
+                                    'name': field_name,
+                                    'type': field_info.get('type', 'unknown'),
+                                }
+                                coll_data['fields'].append(field_data)
+                    
+                    formatted_schema.append(coll_data)
+    
+    elif db_type in ['neo4j', 'tigergraph', 'neptune']:
         # Graph databases
         if 'nodes' in schema_info:
             # Check if nodes is a list or dictionary
@@ -1306,7 +1420,7 @@ def format_schema_for_explorer(db_type, schema_info):
                     
                     formatted_schema.append(rel_data)
     
-    elif db_type in ['influxdb', 'prometheus', 'kdb']:
+    elif db_type in ['influxdb', 'prometheus', 'kdb', 'timescaledb']:
         # Time series databases
         if 'measurements' in schema_info:
             # Check if measurements is a list or dictionary
