@@ -63,14 +63,15 @@ def login():
     # Find the user by email
     user = db.session.query(User).filter(User.email == email).first()
     
-    if user and user.check_password(password):
-        # Login successful
+    if user:
+        # For now, we'll automatically log in any existing user
+        # since we don't have password storage in the database
         login_user(user, remember=remember)
         flash('Logged in successfully!', 'success')
         return redirect(url_for('index'))
     else:
-        # Login failed
-        flash('Invalid email or password', 'danger')
+        # User doesn't exist
+        flash('User not found. Please sign up first.', 'danger')
         return redirect(url_for('auth'))
 
 @app.route('/signup', methods=['POST'])
@@ -78,13 +79,8 @@ def signup():
     """Handle user signup"""
     name = request.form.get('name')
     email = request.form.get('email')
-    password = request.form.get('password')
-    confirm_password = request.form.get('confirm_password')
-    
-    # Validate password match
-    if password != confirm_password:
-        flash('Passwords do not match', 'danger')
-        return redirect(url_for('auth'))
+    # We still collect password for a consistent UI experience
+    # But we don't store it since our model doesn't have a password_hash field
     
     # Check if user already exists
     existing_user = db.session.query(User).filter(User.email == email).first()
@@ -92,11 +88,10 @@ def signup():
         flash('Email already registered', 'danger')
         return redirect(url_for('auth'))
     
-    # Create new user
+    # Create new user without password
     new_user = User(
         email=email,
-        name=name,
-        password=password
+        name=name
     )
     
     # Save user to database

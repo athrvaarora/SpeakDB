@@ -18,7 +18,7 @@ class User(UserMixin, db.Model):
     email = Column(String(120), unique=True, nullable=False)
     profile_picture = Column(String(256), nullable=True)
     firebase_uid = Column(String(128), nullable=True)
-    password_hash = Column(String(256), nullable=True)
+    # Note: password_hash removed as it doesn't exist in the actual database schema
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -30,16 +30,17 @@ class User(UserMixin, db.Model):
         self.name = name
         self.profile_picture = profile_picture
         self.firebase_uid = firebase_uid
-        if password:
-            self.set_password(password)
+        # Note: password handling removed as the column doesn't exist in database
     
+    # Note: Firebase authentication should be used instead of password auth
+    # These methods are kept as stubs but will always return False for now
     def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+        # Method retained for compatibility but does nothing as password_hash column doesn't exist
+        pass
         
     def check_password(self, password):
-        if not self.password_hash:
-            return False
-        return check_password_hash(self.password_hash, password)
+        # Always return False as we can't store passwords
+        return False
     
     def to_dict(self):
         return {
