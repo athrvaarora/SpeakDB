@@ -1,43 +1,198 @@
 {% extends "layout.html" %}
 
-{% block title %}DB Chat - Database Selection{% endblock %}
+{% block title %}SpeakDB - Database Selection{% endblock %}
+
+{% block styles %}
+<style>
+  .dashboard-header {
+    background: linear-gradient(135deg, rgba(110, 157, 228, 0.1) 0%, rgba(157, 224, 173, 0.1) 100%);
+    border-radius: 1rem;
+    padding: 2.5rem 2rem;
+    margin-bottom: 2.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .dashboard-header::before {
+    content: "";
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(110, 157, 228, 0.05) 0%, rgba(110, 157, 228, 0) 70%);
+    top: -100px;
+    left: -100px;
+    z-index: 0;
+  }
+  
+  .dashboard-header::after {
+    content: "";
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(157, 224, 173, 0.05) 0%, rgba(157, 224, 173, 0) 70%);
+    bottom: -50px;
+    right: -50px;
+    z-index: 0;
+  }
+  
+  .dashboard-icon {
+    width: 80px;
+    height: 80px;
+    background-color: white;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 10px 25px rgba(110, 157, 228, 0.1);
+    position: relative;
+    z-index: 1;
+  }
+  
+  .dashboard-title {
+    font-weight: 600;
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .dashboard-subtitle {
+    font-size: 1.1rem;
+    color: var(--pastel-gray-600);
+    max-width: 600px;
+    margin: 0 auto 1.5rem;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .db-category-header {
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--pastel-gray-200);
+    display: flex;
+    align-items: center;
+  }
+  
+  .db-category-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    margin-right: 1rem;
+  }
+  
+  .db-category-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0;
+  }
+  
+  .relational-icon {
+    background-color: rgba(110, 157, 228, 0.15);
+    color: var(--pastel-primary);
+  }
+  
+  .nosql-icon {
+    background-color: rgba(157, 224, 173, 0.15);
+    color: var(--pastel-success);
+  }
+  
+  .warehouse-icon {
+    background-color: rgba(166, 220, 239, 0.15);
+    color: var(--pastel-info);
+  }
+  
+  .cloud-icon {
+    background-color: rgba(255, 211, 182, 0.15);
+    color: var(--pastel-warning);
+  }
+  
+  .db-tile {
+    height: 100%;
+    transition: all 0.3s ease;
+  }
+  
+  .credential-form-card {
+    animation: slideUp 0.5s ease-out;
+  }
+  
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .hover-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    border-color: var(--pastel-primary) !important;
+  }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container">
-    <div class="row">
-        <div class="col-12">
-            <div class="text-center mb-5">
-                <div class="mb-4">
-                    <i class="fas fa-database fa-4x text-primary" style="opacity: 0.8;"></i>
-                </div>
-                <h1 class="display-4 mb-3 fw-semibold">Connect Your Database</h1>
-                <p class="lead text-muted">Choose a database type below to connect and start querying with natural language</p>
-            </div>
-            
-            <!-- Database Selection Section -->
-            <div id="database-selection" class="mb-5 animate__animated animate__fadeIn">
-                <!-- Database categories and tiles will be loaded via JavaScript -->
-            </div>
-            
-            <!-- Credential Form Container (initially hidden) -->
-            <div id="credential-form-container" class="mb-5" style="display: none;">
-                <div class="card credential-form-card">
-                    <div class="card-header">
-                        <h3 class="card-title h5 mb-0 fw-semibold">
-                            <i class="fas fa-key me-2"></i>
-                            <span id="credential-db-name">Database</span> Connection
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        <p class="text-muted mb-4">Please provide the necessary credentials to connect to your database. All data is processed locally and never stored on our servers.</p>
-                        <form id="credential-form">
-                            <!-- Credential fields will be generated dynamically -->
-                        </form>
-                    </div>
-                </div>
-            </div>
+  <div class="row">
+    <div class="col-12">
+      <!-- Dashboard Header -->
+      <div class="dashboard-header text-center mb-5">
+        <div class="dashboard-icon mx-auto">
+          <img src="{{ url_for('static', filename='images/speakdb-logo.svg') }}" alt="SpeakDB Logo" width="50" height="50">
         </div>
+        <h1 class="dashboard-title">Connect Your Database</h1>
+        <p class="dashboard-subtitle">Select the type of database you want to connect to SpeakDB. Your credentials are securely processed and never stored.</p>
+        <div class="d-flex justify-content-center gap-2">
+          <span class="badge bg-light text-secondary px-3 py-2 border">
+            <i class="fas fa-lock-open me-1"></i> End-to-end encryption
+          </span>
+          <span class="badge bg-light text-secondary px-3 py-2 border">
+            <i class="fas fa-shield-alt me-1"></i> Secure connection
+          </span>
+          <span class="badge bg-light text-secondary px-3 py-2 border">
+            <i class="fas fa-brain me-1"></i> AI-powered
+          </span>
+        </div>
+      </div>
+      
+      <!-- Database Selection Section -->
+      <div id="database-selection" class="mb-5 animate__animated animate__fadeIn">
+        <!-- Database categories and tiles will be loaded via JavaScript -->
+      </div>
+      
+      <!-- Credential Form Container (initially hidden) -->
+      <div id="credential-form-container" class="mb-5" style="display: none;">
+        <div class="card credential-form-card">
+          <div class="card-header">
+            <h3 class="card-title h5 mb-0 fw-semibold">
+              <i class="fas fa-key me-2"></i>
+              <span id="credential-db-name">Database</span> Connection
+            </h3>
+          </div>
+          <div class="card-body">
+            <p class="text-muted mb-4">Please provide the necessary credentials to connect to your database. All data is processed locally and never stored on our servers.</p>
+            <form id="credential-form">
+              <!-- Credential fields will be generated dynamically -->
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}
 
