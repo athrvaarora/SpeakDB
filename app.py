@@ -68,6 +68,29 @@ def login():
         # since we don't have password storage in the database
         login_user(user, remember=remember)
         flash('Logged in successfully!', 'success')
+        
+        # Check if the user has any recent chats
+        # We'll look at most recent chats from the database to see if there's an active one
+        recent_chat = db.session.query(Chat).order_by(Chat.updated_at.desc()).first()
+        
+        if recent_chat:
+            # Found a recent chat, set it in the session and redirect to chat page
+            session['chat_id'] = recent_chat.id
+            
+            # Also restore the database credentials
+            if recent_chat.db_credentials:
+                try:
+                    credentials = json.loads(recent_chat.db_credentials)
+                    session['database_credentials'] = {
+                        'type': recent_chat.db_type,
+                        'credentials': credentials
+                    }
+                    return redirect(url_for('chat'))
+                except json.JSONDecodeError:
+                    # If there's an issue with the credentials, still go to index page
+                    pass
+        
+        # No valid recent chat found, go to database selection page
         return redirect(url_for('index'))
     else:
         # User doesn't exist
