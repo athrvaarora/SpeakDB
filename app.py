@@ -41,6 +41,36 @@ def index():
         session.pop('chat_id')
     return render_template('index.html')
 
+@app.route('/test_env_db')
+def test_env_db():
+    """Test the connection to the PostgreSQL database using environment variables"""
+    try:
+        # Create empty credentials dict for PostgreSQL
+        credentials = {}
+        connector = get_connector('postgresql', credentials)
+        connector.connect()
+        
+        # Test a simple query
+        result, success, error = connector.execute_query("SELECT current_database(), current_user;")
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': 'Successfully connected to the database',
+                'result': result
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': f'Failed to execute query: {error}'
+            })
+    except Exception as e:
+        logger.exception("Error testing database connection")
+        return jsonify({
+            'success': False,
+            'message': f'Error connecting to database: {str(e)}'
+        })
+
 @app.route('/test_connection', methods=['POST'])
 def test_db_connection():
     """Test connection to the selected database"""

@@ -159,17 +159,27 @@ class PostgreSQLConnector(BaseRelationalConnector):
         """Connect to a PostgreSQL database"""
         if not self.connection:
             try:
-                self.connection = psycopg2.connect(
-                    host=self.credentials.get("host"),
-                    port=self.credentials.get("port", 5432),
-                    user=self.credentials.get("username"),
-                    password=self.credentials.get("password"),
-                    dbname=self.credentials.get("db_name")
-                )
-                
-                # Create SQLAlchemy engine for schema inspection
-                conn_string = f"postgresql://{self.credentials.get('username')}:{self.credentials.get('password')}@{self.credentials.get('host')}:{self.credentials.get('port', 5432)}/{self.credentials.get('db_name')}"
-                self.engine = create_engine(conn_string)
+                # First try using provided credentials
+                if all(self.credentials.get(key) for key in ["host", "username", "password", "db_name"]):
+                    self.connection = psycopg2.connect(
+                        host=self.credentials.get("host"),
+                        port=self.credentials.get("port", 5432),
+                        user=self.credentials.get("username"),
+                        password=self.credentials.get("password"),
+                        dbname=self.credentials.get("db_name")
+                    )
+                    
+                    # Create SQLAlchemy engine for schema inspection
+                    conn_string = f"postgresql://{self.credentials.get('username')}:{self.credentials.get('password')}@{self.credentials.get('host')}:{self.credentials.get('port', 5432)}/{self.credentials.get('db_name')}"
+                    self.engine = create_engine(conn_string)
+                # Fall back to environment variables if available
+                elif os.environ.get("DATABASE_URL"):
+                    logger.info("Using DATABASE_URL from environment variables")
+                    self.connection = psycopg2.connect(os.environ["DATABASE_URL"])
+                    self.engine = create_engine(os.environ["DATABASE_URL"])
+                else:
+                    logger.error("No valid PostgreSQL credentials provided")
+                    raise Exception("No valid PostgreSQL credentials provided")
                 
             except Exception as e:
                 logger.exception("Error connecting to PostgreSQL")
