@@ -584,8 +584,14 @@ function showWelcomeMessage() {
     
     // Only show if the messages container is empty
     if (messagesContainer.children.length === 0) {
+        // Create a top spacer for better positioning
+        const topSpacer = document.createElement('div');
+        topSpacer.className = 'flex-grow-1'; // Take available space at the top
+        topSpacer.style.minHeight = '50px'; // Minimum height to ensure some space
+        
+        // Create the welcome element
         const welcomeElement = document.createElement('div');
-        welcomeElement.className = 'text-center my-4';
+        welcomeElement.className = 'text-center py-4 mb-auto'; // mb-auto pushes content below it down
         
         // Get database name
         const dbName = document.querySelector('#db-info')?.getAttribute('data-db-name') || 'database';
@@ -607,7 +613,7 @@ function showWelcomeMessage() {
                     </div>
                 </div>
             </div>
-            <div class="mb-3 animate__animated animate__fadeIn animate__delay-1s">
+            <div class="mb-5 animate__animated animate__fadeIn animate__delay-1s">
                 <p class="text-muted small">Try these examples:</p>
                 <div id="welcome-examples" class="d-flex flex-column gap-2">
                     <div class="example-query" onclick="useExample(this)">Show me all tables in this database</div>
@@ -615,8 +621,13 @@ function showWelcomeMessage() {
                     <div class="example-query" onclick="useExample(this)">Show me the schema of a specific table</div>
                 </div>
             </div>
+            <!-- Bottom spacer to ensure proper spacing above the input -->
+            <div style="height: 30px;"></div>
         `;
         
+        // Add top spacer first
+        messagesContainer.appendChild(topSpacer);
+        // Then add welcome element
         messagesContainer.appendChild(welcomeElement);
     }
 }
@@ -634,20 +645,37 @@ function useExample(element) {
 // Scroll the chat to the bottom
 function scrollToBottom() {
     const messagesContainer = document.getElementById('chat-messages');
+    
     if (messagesContainer) {
-        // Smooth scroll to the bottom
-        messagesContainer.scrollTo({
-            top: messagesContainer.scrollHeight,
-            behavior: 'smooth'
-        });
+        // Calculate if scrolling is needed
+        const isScrollNeeded = 
+            messagesContainer.scrollHeight > messagesContainer.clientHeight &&
+            messagesContainer.scrollTop + messagesContainer.clientHeight < messagesContainer.scrollHeight - 50;
+            
+        // Only smooth scroll if necessary
+        if (isScrollNeeded) {
+            messagesContainer.scrollTo({
+                top: messagesContainer.scrollHeight,
+                behavior: 'smooth'
+            });
+        } else {
+            // Immediate scroll if not visible at all
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
         
-        // Also focus the input text area to ensure it's visible
+        // Focus the input text area with a slight delay to ensure it's visible
         setTimeout(() => {
             const queryInput = document.getElementById('query-input');
             if (queryInput) {
                 queryInput.focus();
+                
+                // Make sure the input is fully visible
+                const chatInputContainer = document.querySelector('.chat-input-container');
+                if (chatInputContainer) {
+                    chatInputContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                }
             }
-        }, 100);
+        }, 150);
     }
 }
 

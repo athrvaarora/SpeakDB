@@ -411,7 +411,10 @@ body {
     padding: 1.5rem;
     scrollbar-width: thin;
     scrollbar-color: var(--pastel-gray-300) transparent;
-    padding-bottom: 2rem; /* Add space at bottom for visibility */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* Align content to the top */
+    min-height: 100%;
 }
 
 .chat-messages::-webkit-scrollbar {
@@ -433,9 +436,12 @@ body {
     background-color: var(--bg-card);
     position: sticky;
     bottom: 0;
+    left: 0;
+    right: 0;
     z-index: 100;
     flex-shrink: 0;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    margin-top: auto; /* Push to bottom of flex container */
 }
 
 .message {
