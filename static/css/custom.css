@@ -408,12 +408,13 @@ body {
 .chat-messages {
     flex: 1 1 auto;
     overflow-y: auto;
-    padding: 1.5rem;
+    padding: 1.5rem 1.5rem 0 1.5rem; /* Reduced bottom padding */
     scrollbar-width: thin;
     scrollbar-color: var(--pastel-gray-300) transparent;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start; /* Align content to the top */
+    justify-content: center; /* Center content vertically */
+    align-items: center; /* Center content horizontally */
     min-height: 100%;
 }
 
@@ -751,21 +752,28 @@ textarea.form-control:focus {
 /* Welcome message */
 .welcome-container {
     text-align: center;
-    padding: 2.5rem 1.5rem;
+    padding: 1rem 1.5rem;
+    max-width: 650px; 
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
 }
 
 .welcome-container i {
     color: var(--pastel-primary);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .welcome-container h4 {
     color: var(--pastel-gray-800);
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
     font-weight: 600;
 }
 
 .welcome-examples {
     max-width: 500px;
-    margin: 1.5rem auto;
+    margin: 1rem auto;
 }

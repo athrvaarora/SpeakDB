@@ -584,14 +584,9 @@ function showWelcomeMessage() {
     
     // Only show if the messages container is empty
     if (messagesContainer.children.length === 0) {
-        // Create a top spacer for better positioning
-        const topSpacer = document.createElement('div');
-        topSpacer.className = 'flex-grow-1'; // Take available space at the top
-        topSpacer.style.minHeight = '50px'; // Minimum height to ensure some space
-        
         // Create the welcome element
         const welcomeElement = document.createElement('div');
-        welcomeElement.className = 'text-center py-4 mb-auto'; // mb-auto pushes content below it down
+        welcomeElement.className = 'text-center py-3 welcome-container'; // Added welcome-container class
         
         // Get database name
         const dbName = document.querySelector('#db-info')?.getAttribute('data-db-name') || 'database';
@@ -613,7 +608,7 @@ function showWelcomeMessage() {
                     </div>
                 </div>
             </div>
-            <div class="mb-5 animate__animated animate__fadeIn animate__delay-1s">
+            <div class="mb-3 animate__animated animate__fadeIn animate__delay-1s">
                 <p class="text-muted small">Try these examples:</p>
                 <div id="welcome-examples" class="d-flex flex-column gap-2">
                     <div class="example-query" onclick="useExample(this)">Show me all tables in this database</div>
@@ -621,13 +616,9 @@ function showWelcomeMessage() {
                     <div class="example-query" onclick="useExample(this)">Show me the schema of a specific table</div>
                 </div>
             </div>
-            <!-- Bottom spacer to ensure proper spacing above the input -->
-            <div style="height: 30px;"></div>
         `;
         
-        // Add top spacer first
-        messagesContainer.appendChild(topSpacer);
-        // Then add welcome element
+        // Add welcome element directly (no spacers)
         messagesContainer.appendChild(welcomeElement);
     }
 }
