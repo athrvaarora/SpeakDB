@@ -431,24 +431,19 @@ body {
     padding: 0.85rem;
     border-top: 1px solid var(--border-light);
     background-color: var(--bg-card);
-    position: sticky;
-    bottom: 0;
+    position: relative;
     z-index: 100;
     flex-shrink: 0;
+    margin-top: auto; /* Push to bottom when messages don't fill the space */
     box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    padding-bottom: 1rem; /* Add more padding at the bottom */
 }
 
-/* Specific styling for the repositioned chat input at the top */
-.chat-input-top {
-    border-top: none;
-    border-bottom: 1px solid var(--border-light);
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    position: static;
-}
-
-/* Empty space buffer after examples */
-.example-space-buffer {
-    height: 12px; /* Small buffer space */
+/* Empty space before chat input */
+.chat-message-input-buffer {
+    min-height: 20px; /* Minimum buffer space */
+    height: auto;
+    flex-grow: 1; /* This makes the buffer expand as needed */
 }
 
 .message {
