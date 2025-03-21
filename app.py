@@ -569,11 +569,9 @@ def get_required_credentials():
         
         # Graph Databases
         'tigergraph': {
-            'fields': ['host', 'username', 'password', 'graph', 'secret'],
+            'fields': ['graph_name', 'username', 'password'],
             'url_option': False,
-            'terminal_command': 'gsql -g graph_name',
-            'auth_command': 'gadmin config get Authentication.TokenSecret',
-            'notes': 'First authenticate with "gadmin" to get a token secret, then connect with "gsql". The host is the TigerGraph server hostname.'
+            'terminal_command': 'gsql -g graph_name'
         },
         'neptune': {
             'fields': ['neptune_endpoint', 'aws_credentials'],
@@ -625,26 +623,23 @@ def get_required_credentials():
         
         # Time Series Databases
         'influxdb': {
-            'fields': ['host', 'port', 'token', 'org', 'bucket', 'username', 'password'],
+            'fields': ['host', 'port', 'username', 'password'],
             'url_option': True,
-            'url_field': 'url',
+            'url_field': 'connection_string',
             'url_example': 'http://host:8086?token=xxx&org=yyy',
-            'terminal_command': 'influx -host host -port 8086 -token xxx-token-xxx -org org_name -bucket bucket_name',
-            'notes': 'For InfluxDB 2.x, use token + org + bucket. For InfluxDB 1.x, use username + password.'
+            'terminal_command': 'influx -host host -port 8086 -username username -password password'
         },
         'timescaledb': {
-            'fields': ['host', 'port', 'user', 'password', 'database'],
+            'fields': ['host', 'port', 'username', 'password', 'database_name'],
             'url_option': True,
             'url_field': 'connection_string',
             'url_example': 'postgresql://username:password@host:5432/database_name',
-            'terminal_command': 'psql -h host -p 5432 -U username -d database_name',
-            'notes': 'TimescaleDB uses the same connection parameters as PostgreSQL, with added time-series functionality.'
+            'terminal_command': 'psql -h host -p 5432 -U username -d database_name'
         },
         'kdb': {
-            'fields': ['host', 'port', 'username', 'password', 'script_path'],
+            'fields': ['path_to_script', 'port'],
             'url_option': False,
-            'terminal_command': 'q script_path.q -p port',
-            'notes': 'Kdb+ is a column-oriented database optimized for time-series data. The script_path is optional.'
+            'terminal_command': 'q path_to_script.q -p port'
         },
         
         # Specialized Systems
