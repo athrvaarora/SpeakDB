@@ -1,47 +1,386 @@
-{% extends "layout.html" %}
-
-{% block title %}DB Chat - Database Selection{% endblock %}
-
-{% block content %}
-<div class="container">
-    <div class="row">
-        <div class="col-12">
-            <div class="text-center mb-5">
-                <div class="mb-4">
-                    <i class="fas fa-database fa-4x text-primary" style="opacity: 0.8;"></i>
+<!DOCTYPE html>
+<html data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpeakDB - Natural Language Database Querying</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/custom.css') }}" rel="stylesheet">
+    <style>
+        .hero-section {
+            padding: 6rem 0;
+            background: linear-gradient(135deg, var(--bs-dark) 0%, var(--bs-secondary) 100%);
+        }
+        
+        .feature-icon {
+            font-size: 2rem;
+            color: var(--bs-info);
+            margin-bottom: 1rem;
+        }
+        
+        .card {
+            transition: transform 0.3s ease;
+            margin-bottom: 2rem;
+            height: 100%;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .pricing-card {
+            border: 1px solid var(--bs-border-color);
+            border-radius: 0.5rem;
+        }
+        
+        .pricing-header {
+            padding: 2rem;
+            border-bottom: 1px solid var(--bs-border-color);
+        }
+        
+        .pricing-features {
+            padding: 2rem;
+        }
+        
+        .pricing-cta {
+            padding: 2rem;
+            border-top: 1px solid var(--bs-border-color);
+        }
+        
+        .footer {
+            padding: 4rem 0;
+            background-color: var(--bs-dark);
+        }
+        
+        .database-logo {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+        }
+        
+        .database-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 2rem;
+        }
+        
+        .database-item {
+            display: flex;
+            align-items: center;
+            background-color: var(--bs-dark);
+            padding: 10px 15px;
+            border-radius: 50px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
+                <img src="{{ url_for('static', filename='images/speakdb-logo.svg') }}" alt="SpeakDB Logo" height="30" class="me-2">
+                SpeakDB
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('index') }}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('features') }}">Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('pricing') }}">Pricing</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('select_database') }}" class="btn btn-primary me-2">Dashboard</a>
+                        <a href="{{ url_for('logout') }}" class="btn btn-outline-light">Logout</a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-light me-2">Log In</a>
+                        <a href="{{ url_for('signup') }}" class="btn btn-primary">Sign Up</a>
+                    {% endif %}
                 </div>
-                <h1 class="display-4 mb-3 fw-semibold">Connect Your Database</h1>
-                <p class="lead text-muted">Choose a database type below to connect and start querying with natural language</p>
             </div>
-            
-            <!-- Database Selection Section -->
-            <div id="database-selection" class="mb-5 animate__animated animate__fadeIn">
-                <!-- Database categories and tiles will be loaded via JavaScript -->
-            </div>
-            
-            <!-- Credential Form Container (initially hidden) -->
-            <div id="credential-form-container" class="mb-5" style="display: none;">
-                <div class="card credential-form-card">
-                    <div class="card-header">
-                        <h3 class="card-title h5 mb-0 fw-semibold">
-                            <i class="fas fa-key me-2"></i>
-                            <span id="credential-db-name">Database</span> Connection
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        <p class="text-muted mb-4">Please provide the necessary credentials to connect to your database. All data is processed locally and never stored on our servers.</p>
-                        <form id="credential-form">
-                            <!-- Credential fields will be generated dynamically -->
-                        </form>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section text-center text-white">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <h1 class="display-4 fw-bold mb-4">Query databases with natural language</h1>
+                    <p class="lead mb-5">SpeakDB transforms database querying through AI-powered natural language processing. Just ask questions in plain English, and get instant answers from your database.</p>
+                    <div class="d-flex gap-3 justify-content-center">
+                        <a href="{{ url_for('signup') }}" class="btn btn-primary btn-lg px-5 py-3">Get Started for Free</a>
+                        <a href="{{ url_for('features') }}" class="btn btn-outline-light btn-lg px-5 py-3">Learn More</a>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
-{% endblock %}
+    </section>
 
-{% block scripts %}
-<script src="{{ url_for('static', filename='js/database_connectors.js') }}"></script>
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
-{% endblock %}
+    <!-- Supported Databases -->
+    <section class="py-5 bg-dark">
+        <div class="container">
+            <div class="text-center mb-4">
+                <h2>Supported Databases</h2>
+                <p class="lead text-secondary">Connect to virtually any database system</p>
+            </div>
+            <div class="database-grid">
+                <div class="database-item">
+                    <img src="{{ url_for('static', filename='images/database-logos/postgresql.svg') }}" alt="PostgreSQL" class="database-logo">
+                    PostgreSQL
+                </div>
+                <div class="database-item">
+                    <img src="{{ url_for('static', filename='images/database-logos/mongodb.svg') }}" alt="MongoDB" class="database-logo">
+                    MongoDB
+                </div>
+                <div class="database-item">
+                    <span class="database-logo d-flex align-items-center justify-content-center">
+                        <i class="bi bi-server"></i>
+                    </span>
+                    MySQL
+                </div>
+                <div class="database-item">
+                    <span class="database-logo d-flex align-items-center justify-content-center">
+                        <i class="bi bi-server"></i>
+                    </span>
+                    SQL Server
+                </div>
+                <div class="database-item">
+                    <span class="database-logo d-flex align-items-center justify-content-center">
+                        <i class="bi bi-server"></i>
+                    </span>
+                    Oracle
+                </div>
+                <div class="database-item">
+                    <span class="database-logo d-flex align-items-center justify-content-center">
+                        <i class="bi bi-server"></i>
+                    </span>
+                    Snowflake
+                </div>
+                <div class="database-item">
+                    <span class="database-logo d-flex align-items-center justify-content-center">
+                        <i class="bi bi-server"></i>
+                    </span>
+                    Redis
+                </div>
+                <div class="database-item">
+                    <span class="database-logo d-flex align-items-center justify-content-center">
+                        <i class="bi bi-server"></i>
+                    </span>
+                    Neo4j
+                </div>
+                <div class="database-item">
+                    <span class="database-logo d-flex align-items-center justify-content-center">
+                        <i class="bi bi-plus-lg"></i>
+                    </span>
+                    Many more...
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2>Key Features</h2>
+                <p class="lead text-secondary">Transform your database interaction experience</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="feature-icon">
+                                <i class="bi bi-chat-dots"></i>
+                            </div>
+                            <h3 class="h5">Natural Language Queries</h3>
+                            <p class="text-secondary">Ask questions in plain English, no SQL knowledge required.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="feature-icon">
+                                <i class="bi bi-database"></i>
+                            </div>
+                            <h3 class="h5">Multi-Database Support</h3>
+                            <p class="text-secondary">Connect to SQL, NoSQL, graph, and time-series databases.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="feature-icon">
+                                <i class="bi bi-lightning"></i>
+                            </div>
+                            <h3 class="h5">Instant Results</h3>
+                            <p class="text-secondary">Get immediate responses with formatted results and visualizations.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="feature-icon">
+                                <i class="bi bi-shield-check"></i>
+                            </div>
+                            <h3 class="h5">Safe & Secure</h3>
+                            <p class="text-secondary">Your data never leaves your environment. Secure connection handling.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="feature-icon">
+                                <i class="bi bi-bar-chart"></i>
+                            </div>
+                            <h3 class="h5">Data Visualization</h3>
+                            <p class="text-secondary">Automatically generate charts and graphs from your query results.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="feature-icon">
+                                <i class="bi bi-file-earmark-arrow-down"></i>
+                            </div>
+                            <h3 class="h5">Export Options</h3>
+                            <p class="text-secondary">Export your results to CSV, JSON, or other formats with one click.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="py-5 bg-dark">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2>Pricing Plans</h2>
+                <p class="lead text-secondary">Choose the plan that fits your needs</p>
+            </div>
+            <div class="row justify-content-center g-4">
+                <div class="col-lg-4 col-md-6">
+                    <div class="card h-100 pricing-card">
+                        <div class="pricing-header text-center">
+                            <h3>Free</h3>
+                            <p class="display-4 mb-0">$0</p>
+                            <p class="text-secondary">forever</p>
+                        </div>
+                        <div class="pricing-features">
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> 10 queries per day</li>
+                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Basic database connections</li>
+                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Standard chat interface</li>
+                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Basic export options</li>
+                                <li class="mb-2 text-secondary"><i class="bi bi-x-circle-fill text-danger me-2"></i> Schema exploration</li>
+                                <li class="mb-2 text-secondary"><i class="bi bi-x-circle-fill text-danger me-2"></i> Advanced visualizations</li>
+                            </ul>
+                        </div>
+                        <div class="pricing-cta text-center">
+                            <a href="{{ url_for('signup') }}" class="btn btn-outline-primary btn-lg w-100">Get Started</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <div class="card h-100 pricing-card border-primary">
+                        <div class="pricing-header text-center bg-primary bg-opacity-10">
+                            <h3>Enterprise</h3>
+                            <p class="display-4 mb-0">$29</p>
+                            <p class="text-secondary">per month</p>
+                        </div>
+                        <div class="pricing-features">
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Unlimited queries</li>
+                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> All database connections</li>
+                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Advanced chat interface</li>
+                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> All export options</li>
+                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Schema exploration</li>
+                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Advanced visualizations</li>
+                            </ul>
+                        </div>
+                        <div class="pricing-cta text-center">
+                            <a href="{{ url_for('pricing') }}" class="btn btn-primary btn-lg w-100">Upgrade Now</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <h2 class="mb-4">Ready to transform how you interact with your databases?</h2>
+                    <p class="lead mb-5">Sign up now to start using natural language for all your database queries.</p>
+                    <a href="{{ url_for('signup') }}" class="btn btn-primary btn-lg px-5 py-3">Get Started for Free</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer text-center text-lg-start">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4 mb-lg-0">
+                    <h5>SpeakDB</h5>
+                    <p class="text-secondary">Transforming database querying through AI-powered natural language processing.</p>
+                </div>
+                <div class="col-lg-2 mb-4 mb-lg-0">
+                    <h5>Product</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('features') }}" class="text-secondary">Features</a></li>
+                        <li><a href="{{ url_for('pricing') }}" class="text-secondary">Pricing</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 mb-4 mb-lg-0">
+                    <h5>Company</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-secondary">About Us</a></li>
+                        <li><a href="#" class="text-secondary">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 mb-4 mb-lg-0">
+                    <h5>Resources</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-secondary">Documentation</a></li>
+                        <li><a href="#" class="text-secondary">Support</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2">
+                    <h5>Legal</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-secondary">Privacy Policy</a></li>
+                        <li><a href="#" class="text-secondary">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="text-center mt-4">
+                <p class="text-secondary">© 2025 SpeakDB. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/animations.js') }}"></script>
+</body>
+</html>
