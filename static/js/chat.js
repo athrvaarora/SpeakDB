@@ -3,7 +3,20 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize the chat interface
     initChatInterface();
-    loadChatHistory();
+    
+    // Get chat ID from the URL if present
+    const urlParams = new URLSearchParams(window.location.search);
+    const chatId = urlParams.get('id');
+    
+    if (chatId) {
+        // Load specific chat if ID is in URL
+        loadChat(chatId);
+    } else {
+        // Otherwise load the current chat history
+        loadChatHistory();
+    }
+    
+    // Load the list of previous chats
     loadPreviousChats();
 });
 
@@ -155,6 +168,7 @@ function loadPreviousChats() {
                     data.chats.forEach(chat => {
                         const chatItem = document.createElement('li');
                         chatItem.className = 'chat-list-item';
+                        chatItem.dataset.chatId = chat.id;
                         
                         // Highlight current chat
                         if (chat.id === currentChatId) {
@@ -173,7 +187,7 @@ function loadPreviousChats() {
                         // Add database badge
                         const dbBadge = document.createElement('span');
                         dbBadge.className = `db-badge db-badge-${chat.db_type} small me-2`;
-                        dbBadge.textContent = databases[chat.db_type]?.name || chat.db_type;
+                        dbBadge.textContent = chat.db_type;
                         
                         const chatInfo = document.createElement('div');
                         chatInfo.className = 'd-flex align-items-center mt-1';
@@ -433,6 +447,80 @@ function scrollToBottom() {
     if (messagesContainer) {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
+}
+
+// Load a specific chat by ID
+function loadChat(chatId) {
+    if (!chatId) return;
+    
+    // Store the chat ID
+    currentChatId = chatId;
+    
+    // Update the URL without reloading the page
+    history.pushState({}, '', `/chat?id=${chatId}`);
+    
+    const messagesContainer = document.getElementById('chat-messages');
+    if (!messagesContainer) return;
+    
+    // Show loading state
+    messagesContainer.innerHTML = '<div class="text-center my-4"><div class="spinner-border text-secondary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-3 text-muted">Loading chat...</p></div>';
+    
+    // Fetch the chat
+    fetch(`/load_chat/${chatId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update the database info
+                const dbInfoElement = document.getElementById('db-info');
+                if (dbInfoElement && data.chat.db_type) {
+                    dbInfoElement.setAttribute('data-db-type', data.chat.db_type);
+                    dbInfoElement.setAttribute('data-db-name', data.chat.db_name || data.chat.db_type);
+                    
+                    // Update UI elements
+                    const dbBadge = document.querySelector('.db-badge');
+                    if (dbBadge) {
+                        dbBadge.className = `db-badge db-badge-${data.chat.db_type} me-2`;
+                        dbBadge.textContent = data.chat.db_name || data.chat.db_type;
+                    }
+                    
+                    // Reload example queries for this database type
+                    currentDbType = data.chat.db_type;
+                    const exampleContainer = document.getElementById('example-queries');
+                    if (exampleContainer) {
+                        exampleContainer.innerHTML = '';
+                        loadExampleQueries(currentDbType);
+                    }
+                }
+                
+                // Show warning if there is one
+                if (data.warning) {
+                    showError(data.warning);
+                }
+                
+                // Load chat history
+                loadChatHistory();
+                
+                // Update chat list to highlight current chat
+                const chatItems = document.querySelectorAll('.chat-list-item');
+                chatItems.forEach(item => {
+                    if (item.dataset.chatId === chatId) {
+                        item.classList.add('active');
+                    } else {
+                        item.classList.remove('active');
+                    }
+                });
+            } else {
+                messagesContainer.innerHTML = '';
+                showError(data.message || 'Failed to load chat');
+                showWelcomeMessage();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading chat:', error);
+            messagesContainer.innerHTML = '';
+            showError('Error loading chat. Please try again.');
+            showWelcomeMessage();
+        });
 }
 
 // Format a date string
