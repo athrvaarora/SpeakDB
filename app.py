@@ -5,7 +5,7 @@ import uuid
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from openai_service import generate_query, format_response
 from database_connectors import get_connector, test_connection
-from models import Chat, ChatMessage
+from models import db, Chat, ChatMessage
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -14,6 +14,20 @@ logger = logging.getLogger(__name__)
 # Initialize Flask app
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev_key")
+
+# Configure the database
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+    "pool_recycle": 300,
+    "pool_pre_ping": True,
+}
+
+# Initialize the database
+db.init_app(app)
+
+with app.app_context():
+    db.create_all()
 
 # Routes
 @app.route('/')
@@ -52,9 +66,12 @@ def test_db_connection():
             chat = Chat(
                 id=chat_id,
                 db_type=db_type,
-                db_name=credentials.get('db_name', 'N/A')
+                db_name=credentials.get('db_name', db_type.upper())
             )
-            # In a real application, we would save this to a database
+            
+            # Save the chat to the database
+            db.session.add(chat)
+            db.session.commit()
             
             return jsonify({
                 'success': True,
@@ -86,11 +103,23 @@ def chat():
 def get_chat_history():
     """Get the chat history for the current chat session"""
     try:
-        # In a real application, we would fetch chat history from a database
-        # For this MVP, we'll return an empty history
+        if 'chat_id' not in session:
+            return jsonify({
+                'success': False,
+                'message': "No active chat session"
+            })
+        
+        chat_id = session['chat_id']
+        
+        # Query the database for the chat messages
+        messages = ChatMessage.query.filter_by(chat_id=chat_id).order_by(ChatMessage.created_at).all()
+        
+        # Convert the messages to dictionaries
+        message_list = [message.to_dict() for message in messages]
+        
         return jsonify({
             'success': True,
-            'history': []
+            'history': message_list
         })
     except Exception as e:
         logger.exception("Error getting chat history")
@@ -103,11 +132,15 @@ def get_chat_history():
 def get_previous_chats():
     """Get a list of previous chat sessions"""
     try:
-        # In a real application, we would fetch previous chats from a database
-        # For this MVP, we'll return an empty list
+        # Query the database for all chats, ordered by most recent first
+        chats = Chat.query.order_by(Chat.updated_at.desc()).all()
+        
+        # Convert the chats to dictionaries
+        chat_list = [chat.to_dict() for chat in chats]
+        
         return jsonify({
             'success': True,
-            'chats': []
+            'chats': chat_list
         })
     except Exception as e:
         logger.exception("Error getting previous chats")
@@ -126,11 +159,18 @@ def process_query():
                 'message': "No database connection. Please reconnect."
             })
         
+        if 'chat_id' not in session:
+            return jsonify({
+                'success': False,
+                'message': "No active chat session. Please start a new chat."
+            })
+        
         data = request.json
         user_query = data.get('query')
         db_info = session['database_credentials']
         db_type = db_info['type']
         credentials = db_info['credentials']
+        chat_id = session['chat_id']
         
         # Get the database connector
         connector = get_connector(db_type, credentials)
@@ -139,6 +179,16 @@ def process_query():
         success, query, explanation = generate_query(user_query, db_type, connector.get_schema())
         
         if not success:
+            # Save the error message
+            error_message = ChatMessage(
+                chat_id=chat_id,
+                query=user_query,
+                error=explanation,
+                is_error=True
+            )
+            db.session.add(error_message)
+            db.session.commit()
+            
             return jsonify({
                 'success': False,
                 'message': explanation
@@ -148,6 +198,18 @@ def process_query():
         result, execution_success, error_message = connector.execute_query(query)
         
         if not execution_success:
+            # Save the error to the database
+            error_entry = ChatMessage(
+                chat_id=chat_id,
+                query=user_query,
+                generated_query=query,
+                explanation=explanation,
+                error=error_message,
+                is_error=True
+            )
+            db.session.add(error_entry)
+            db.session.commit()
+            
             return jsonify({
                 'success': False,
                 'message': f"Query generation succeeded, but execution failed: {error_message}",
@@ -158,7 +220,22 @@ def process_query():
         # Format the response
         formatted_result = format_response(result, user_query)
         
-        # In a real application, we would save the message to the chat history
+        # Save the successful query to the database
+        chat_message = ChatMessage(
+            chat_id=chat_id,
+            query=user_query,
+            generated_query=query,
+            explanation=explanation,
+            result=formatted_result,
+            is_error=False
+        )
+        db.session.add(chat_message)
+        
+        # Update the timestamp on the chat
+        chat = Chat.query.get(chat_id)
+        chat.updated_at = datetime.now()
+        
+        db.session.commit()
         
         return jsonify({
             'success': True,
@@ -168,6 +245,21 @@ def process_query():
         })
     except Exception as e:
         logger.exception("Error processing query")
+        
+        # If we have a chat ID, save the error
+        if 'chat_id' in session:
+            try:
+                error_message = ChatMessage(
+                    chat_id=session['chat_id'],
+                    query=user_query if 'user_query' in locals() else "Unknown query",
+                    error=str(e),
+                    is_error=True
+                )
+                db.session.add(error_message)
+                db.session.commit()
+            except Exception as inner_e:
+                logger.exception("Error saving error message")
+        
         return jsonify({
             'success': False,
             'message': f"Error processing query: {str(e)}"

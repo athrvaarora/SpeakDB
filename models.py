@@ -1,37 +1,67 @@
 import uuid
 from datetime import datetime
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, DateTime, Text, Boolean, ForeignKey
+from sqlalchemy.orm import relationship
 
-# Note: In a real application, we would use SQLAlchemy or another ORM to define these models
-# For this MVP, we'll just define the model classes
+# Initialize SQLAlchemy
+db = SQLAlchemy()
 
-class Chat:
+class Chat(db.Model):
+    __tablename__ = 'chats'
+    
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    db_type = Column(String(50), nullable=False)
+    db_name = Column(String(100))
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationship with messages
+    messages = relationship("ChatMessage", back_populates="chat", cascade="all, delete-orphan")
+    
     def __init__(self, id=None, db_type=None, db_name=None):
         self.id = id or str(uuid.uuid4())
         self.db_type = db_type
         self.db_name = db_name
-        self.created_at = datetime.now()
-        self.updated_at = datetime.now()
     
     def to_dict(self):
         return {
             'id': self.id,
             'db_type': self.db_type,
             'db_name': self.db_name,
-            'created_at': self.created_at.isoformat(),
-            'updated_at': self.updated_at.isoformat()
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'message_count': len(self.messages) if self.messages else 0
         }
 
-class ChatMessage:
+
+class ChatMessage(db.Model):
+    __tablename__ = 'chat_messages'
+    
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    chat_id = Column(String(36), ForeignKey('chats.id'), nullable=False)
+    query = Column(Text, nullable=False)
+    generated_query = Column(Text)
+    result = Column(Text)
+    explanation = Column(Text)
+    error = Column(Text)
+    is_error = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationship with chat
+    chat = relationship("Chat", back_populates="messages")
+    
     def __init__(self, id=None, chat_id=None, query=None, generated_query=None, 
-                 result=None, error=None, is_error=False):
+                 result=None, explanation=None, error=None, is_error=False):
         self.id = id or str(uuid.uuid4())
         self.chat_id = chat_id
         self.query = query
         self.generated_query = generated_query
         self.result = result
+        self.explanation = explanation
         self.error = error
         self.is_error = is_error
-        self.created_at = datetime.now()
     
     def to_dict(self):
         return {
@@ -40,7 +70,8 @@ class ChatMessage:
             'query': self.query,
             'generated_query': self.generated_query,
             'result': self.result,
+            'explanation': self.explanation,
             'error': self.error,
             'is_error': self.is_error,
-            'created_at': self.created_at.isoformat()
+            'created_at': self.created_at.isoformat() if self.created_at else None
         }
