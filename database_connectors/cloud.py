@@ -80,31 +80,8 @@ class CosmosDBConnector(BaseCloudConnector):
         """Connect to an Azure Cosmos DB database"""
         if not self.client:
             try:
-                # Get credentials from provided credentials or environment variables
-                account_uri = self.credentials.get("account_uri") or os.environ.get("AZURE_COSMOS_ENDPOINT")
-                primary_key = self.credentials.get("primary_key") or os.environ.get("AZURE_COSMOS_KEY")
-                database_name = self.credentials.get("database_name") or os.environ.get("AZURE_COSMOS_DATABASE")
-                container_name = self.credentials.get("container_name") or os.environ.get("AZURE_COSMOS_CONTAINER")
-                
-                # Log if using environment variables
-                if os.environ.get("AZURE_COSMOS_ENDPOINT") and not self.credentials.get("account_uri"):
-                    logger.info("Using AZURE_COSMOS_ENDPOINT environment variable")
-                    
-                if os.environ.get("AZURE_COSMOS_KEY") and not self.credentials.get("primary_key"):
-                    logger.info("Using AZURE_COSMOS_KEY environment variable")
-                    
-                if os.environ.get("AZURE_COSMOS_DATABASE") and not self.credentials.get("database_name"):
-                    logger.info("Using AZURE_COSMOS_DATABASE environment variable")
-                    
-                if os.environ.get("AZURE_COSMOS_CONTAINER") and not self.credentials.get("container_name"):
-                    logger.info("Using AZURE_COSMOS_CONTAINER environment variable")
-                
-                if not account_uri or not primary_key:
-                    raise ValueError("Cosmos DB endpoint and key are required (either in credentials or as environment variables)")
-                
-                # Store database and container names for use in execute_query
-                self.database_name = database_name
-                self.container_name = container_name
+                account_uri = self.credentials.get("account_uri")
+                primary_key = self.credentials.get("primary_key")
                 
                 self.client = CosmosClient(account_uri, credential=primary_key)
                 
@@ -205,117 +182,39 @@ class FirestoreConnector(BaseCloudConnector):
         """Connect to a Google Firestore database"""
         if not self.client:
             try:
-                # Get project ID - this is the only required field
-                project_id = self.credentials.get("project_id") or os.environ.get("FIREBASE_PROJECT_ID")
+                project_id = self.credentials.get("project_id")
+                service_account_key = self.credentials.get("service_account_key")
                 
-                if not project_id:
-                    raise ValueError("Firebase Project ID is required (either in credentials or as FIREBASE_PROJECT_ID environment variable)")
-                
-                # Log if using environment variables
-                if os.environ.get("FIREBASE_PROJECT_ID") and not self.credentials.get("project_id"):
-                    logger.info("Using FIREBASE_PROJECT_ID environment variable")
-                
-                # Check authentication method
-                auth_method = self.credentials.get("auth_method", "service_account")
-                
-                # Handle different authentication methods
-                if auth_method == "service_account":
-                    # Service account authentication (backend applications)
-                    # Can be provided either as a JSON string or a path to a JSON file
-                    service_account_key = self.credentials.get("service_account_key")
-                    service_account_key_path = self.credentials.get("service_account_key_path") or os.environ.get("FIREBASE_SERVICE_ACCOUNT_KEY_PATH")
-                    
-                    # Load service account key from file if path is provided
-                    if not service_account_key and service_account_key_path and os.path.exists(service_account_key_path):
-                        try:
-                            with open(service_account_key_path, 'r') as key_file:
-                                service_account_key = key_file.read()
-                                logger.info(f"Loaded service account key from {service_account_key_path}")
-                        except Exception as e:
-                            logger.error(f"Failed to load service account key from {service_account_key_path}: {str(e)}")
-                else:
-                    # Web config authentication (testing/frontend)
-                    # These are used with the Firebase Web SDK
-                    service_account_key = None
-                    service_account_key_path = None
-                
-                # These are optional parameters for web config
-                api_key = self.credentials.get("api_key") or os.environ.get("FIREBASE_API_KEY")
-                auth_domain = self.credentials.get("auth_domain") or os.environ.get("FIREBASE_AUTH_DOMAIN")
-                storage_bucket = self.credentials.get("storage_bucket") or os.environ.get("FIREBASE_STORAGE_BUCKET")
-                messaging_sender_id = self.credentials.get("messaging_sender_id") or os.environ.get("FIREBASE_MESSAGING_SENDER_ID")
-                app_id = self.credentials.get("app_id") or os.environ.get("FIREBASE_APP_ID")
-                measurement_id = self.credentials.get("measurement_id") or os.environ.get("FIREBASE_MEASUREMENT_ID")
-                database_url = self.credentials.get("database_url") or os.environ.get("FIREBASE_DATABASE_URL")
-                
-                # Check if the firebase_admin package is installed
+                # Try different connection methods
                 if not firebase_admin:
                     raise ImportError("firebase_admin package is not installed")
                 
-                # Initialize Firebase App if not already initialized
                 if not firebase_admin._apps:
-                    try:
-                        if auth_method == "service_account" and service_account_key:
-                            # Service account auth method
-                            # If provided as a string, convert to dict
-                            if isinstance(service_account_key, str):
-                                try:
-                                    service_account_info = json.loads(service_account_key)
-                                except json.JSONDecodeError:
-                                    raise ValueError("Invalid service account key format: not valid JSON")
-                            else:
-                                service_account_info = service_account_key
-                            
-                            # Create certificate and initialize app
-                            cred = credentials.Certificate(service_account_info)
-                            firebase_admin.initialize_app(cred, {
-                                'projectId': project_id,
-                                'databaseURL': database_url
-                            })
-                            logger.info(f"Connected to Firebase Firestore with service account credentials for project: {project_id}")
-                        
-                        elif auth_method == "web_config" and api_key:
-                            # Web configuration auth method using environment variables
-                            # This is less secure but easier for testing
-                            config = {
-                                'projectId': project_id,
-                                'apiKey': api_key,
-                            }
-                            
-                            # Add optional fields if provided
-                            if auth_domain:
-                                config['authDomain'] = auth_domain
-                            if storage_bucket:
-                                config['storageBucket'] = storage_bucket
-                            if database_url:
-                                config['databaseURL'] = database_url
-                                
-                            firebase_admin.initialize_app(options=config)
-                            logger.info(f"Connected to Firebase Firestore with web config for project: {project_id}")
-                            
+                    # Check if service account key is provided
+                    if service_account_key:
+                        # If provided as a string, convert to dict
+                        if isinstance(service_account_key, str):
+                            try:
+                                service_account_info = json.loads(service_account_key)
+                            except json.JSONDecodeError:
+                                raise ValueError("Invalid service account key format: not valid JSON")
                         else:
-                            # Try to initialize with just project ID
-                            firebase_admin.initialize_app(options={
-                                'projectId': project_id
-                            })
-                            logger.info(f"Connected to Firebase Firestore with minimal credentials for project: {project_id}")
-                            logger.warning("Using minimal authentication. Firestore access may be limited without complete credentials.")
+                            service_account_info = service_account_key
                             
-                    except Exception as e:
-                        logger.error(f"Error initializing Firebase app: {str(e)}")
-                        # Provide specific error guidance based on auth method
-                        if auth_method == "service_account":
-                            raise ValueError("Could not connect to Firebase with service account. " + 
-                                            "Please check your Firebase console and export a service account key from " +
-                                            "Project Settings → Service Accounts.")
-                        else:
-                            raise ValueError("Could not connect to Firebase with web config. " +
-                                            "Please ensure you have provided the correct API key and project ID " +
-                                            "from your Firebase console under Project Settings → General.")
+                        cred = credentials.Certificate(service_account_info)
+                        firebase_admin.initialize_app(cred, {
+                            'projectId': project_id
+                        })
+                    elif project_id:
+                        # Try to initialize with just project ID
+                        firebase_admin.initialize_app(options={
+                            'projectId': project_id
+                        })
+                    else:
+                        # Try to initialize with default credentials
+                        firebase_admin.initialize_app()
                 
-                # Get Firestore client
                 self.client = firestore.client()
-                logger.info("Firebase Firestore client initialized successfully")
                 
             except Exception as e:
                 logger.exception("Error connecting to Firestore")
@@ -479,34 +378,13 @@ class SupabaseConnector(BaseCloudConnector):
         """Connect to a Supabase project"""
         if not self.client:
             try:
-                # Get credentials from provided credentials or environment variables
-                supabase_url = self.credentials.get("supabase_url") or os.environ.get("SUPABASE_URL")
-                supabase_key = self.credentials.get("supabase_key") or os.environ.get("SUPABASE_ANON_KEY") or os.environ.get("SUPABASE_KEY")
-                service_role_key = self.credentials.get("service_role_key") or os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
-                db_url = self.credentials.get("db_url") or os.environ.get("SUPABASE_DB_URL")
-                
-                # Log if using environment variables
-                if os.environ.get("SUPABASE_URL") and not self.credentials.get("supabase_url"):
-                    logger.info("Using SUPABASE_URL environment variable")
-                
-                if os.environ.get("SUPABASE_ANON_KEY") and not self.credentials.get("supabase_key"):
-                    logger.info("Using SUPABASE_ANON_KEY environment variable")
-                elif os.environ.get("SUPABASE_KEY") and not self.credentials.get("supabase_key"):
-                    logger.info("Using SUPABASE_KEY environment variable")
-                
-                if os.environ.get("SUPABASE_SERVICE_ROLE_KEY") and not self.credentials.get("service_role_key"):
-                    logger.info("Using SUPABASE_SERVICE_ROLE_KEY environment variable")
-                
-                if os.environ.get("SUPABASE_DB_URL") and not self.credentials.get("db_url"):
-                    logger.info("Using SUPABASE_DB_URL environment variable")
-                
-                # Store additional credentials for use in operations
-                self.service_role_key = service_role_key
-                self.db_url = db_url
+                # Get credentials
+                supabase_url = self.credentials.get("supabase_url")
+                supabase_key = self.credentials.get("supabase_key")
                 
                 # Validate credentials
                 if not supabase_url or not supabase_key:
-                    raise ValueError("Supabase URL and API key are required (either in credentials or as environment variables)")
+                    raise ValueError("Supabase URL and API key are required")
                 
                 # Check if supabase package is installed
                 if not create_client:

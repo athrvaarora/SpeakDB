@@ -1,6 +1,5 @@
 import logging
 import json
-import os
 
 # Import NoSQL libraries with try/except to handle missing dependencies
 try:
@@ -120,22 +119,6 @@ class MongoDBConnector(BaseNoSQLConnector):
                     
                     connection_string += f"{host}:{port}/{auth_db}"
                     
-                    self.client = pymongo.MongoClient(connection_string)
-                # Check for MongoDB URI environment variable
-                elif os.environ.get("MONGO_URI"):
-                    logger.info("Using MONGO_URI environment variable")
-                    connection_string = os.environ.get("MONGO_URI")
-                    self.client = pymongo.MongoClient(connection_string)
-                # Check for standard MongoDB environment variables
-                elif all(os.environ.get(key) for key in ["MONGO_HOST", "MONGO_USER", "MONGO_PASSWORD", "MONGO_DATABASE"]):
-                    logger.info("Using MongoDB environment variables")
-                    host = os.environ.get("MONGO_HOST")
-                    port = os.environ.get("MONGO_PORT", "27017")
-                    user = os.environ.get("MONGO_USER")
-                    password = os.environ.get("MONGO_PASSWORD")
-                    db_name = os.environ.get("MONGO_DATABASE")
-                    
-                    connection_string = f"mongodb://{user}:{password}@{host}:{port}/{db_name}"
                     self.client = pymongo.MongoClient(connection_string)
                 else:
                     logger.error("No valid MongoDB credentials provided")
@@ -266,40 +249,17 @@ class CassandraConnector(BaseNoSQLConnector):
         """Connect to a Cassandra database"""
         if not self.client:
             try:
-                # Get credentials from credentials dict or environment variables
-                host = self.credentials.get("host") or os.environ.get("CASSANDRA_HOST", "localhost")
-                port = self.credentials.get("port") or os.environ.get("CASSANDRA_PORT", "9042")
-                username = self.credentials.get("username") or os.environ.get("CASSANDRA_USERNAME")
-                password = self.credentials.get("password") or os.environ.get("CASSANDRA_PASSWORD")
-                keyspace = self.credentials.get("keyspace") or os.environ.get("CASSANDRA_KEYSPACE")
-                
-                # Log if using environment variables
-                if os.environ.get("CASSANDRA_HOST") and not self.credentials.get("host"):
-                    logger.info("Using CASSANDRA_HOST environment variable")
-                if os.environ.get("CASSANDRA_PORT") and not self.credentials.get("port"):
-                    logger.info("Using CASSANDRA_PORT environment variable")
-                if os.environ.get("CASSANDRA_USERNAME") and not self.credentials.get("username"):
-                    logger.info("Using CASSANDRA_USERNAME environment variable")
-                if os.environ.get("CASSANDRA_PASSWORD") and not self.credentials.get("password"):
-                    logger.info("Using CASSANDRA_PASSWORD environment variable")
-                if os.environ.get("CASSANDRA_KEYSPACE") and not self.credentials.get("keyspace"):
-                    logger.info("Using CASSANDRA_KEYSPACE environment variable")
-                
-                # Convert port to integer if it's a string
-                if isinstance(port, str):
-                    port = int(port)
+                host = self.credentials.get("host", "localhost")
+                port = self.credentials.get("port", 9042)
+                username = self.credentials.get("username")
+                password = self.credentials.get("password")
                 
                 auth_provider = None
                 if username and password:
                     auth_provider = PlainTextAuthProvider(username=username, password=password)
                 
                 self.client = Cluster([host], port=port, auth_provider=auth_provider)
-                
-                # Connect with keyspace if provided, otherwise connect without keyspace
-                if keyspace:
-                    self.session = self.client.connect(keyspace)
-                else:
-                    self.session = self.client.connect()
+                self.session = self.client.connect()
                 
             except Exception as e:
                 logger.exception("Error connecting to Cassandra")
@@ -415,33 +375,14 @@ class RedisConnector(BaseNoSQLConnector):
         """Connect to a Redis database"""
         if not self.client:
             try:
-                # Get credentials from credentials dict or environment variables
-                host = self.credentials.get("host") or os.environ.get("REDIS_HOST", "localhost")
-                port = self.credentials.get("port") or os.environ.get("REDIS_PORT", "6379")
-                password = self.credentials.get("password") or os.environ.get("REDIS_PASSWORD")
-                db = self.credentials.get("db") or os.environ.get("REDIS_DB", "0")
-                
-                # Log if using environment variables
-                if os.environ.get("REDIS_HOST") and not self.credentials.get("host"):
-                    logger.info("Using REDIS_HOST environment variable")
-                if os.environ.get("REDIS_PORT") and not self.credentials.get("port"):
-                    logger.info("Using REDIS_PORT environment variable")
-                if os.environ.get("REDIS_PASSWORD") and not self.credentials.get("password"):
-                    logger.info("Using REDIS_PASSWORD environment variable")
-                if os.environ.get("REDIS_DB") and not self.credentials.get("db"):
-                    logger.info("Using REDIS_DB environment variable")
-                
-                # Convert port and db to integers if they're strings
-                if isinstance(port, str):
-                    port = int(port)
-                if isinstance(db, str):
-                    db = int(db)
+                host = self.credentials.get("host", "localhost")
+                port = self.credentials.get("port", 6379)
+                password = self.credentials.get("password")
                 
                 self.client = redis.Redis(
                     host=host,
                     port=port,
                     password=password,
-                    db=db,
                     decode_responses=True
                 )
                 
@@ -498,60 +439,21 @@ class ElasticsearchConnector(BaseNoSQLConnector):
         """Connect to an Elasticsearch database"""
         if not self.client:
             try:
-                # Get credentials from credentials dict or environment variables
-                host = self.credentials.get("host") or os.environ.get("ELASTICSEARCH_HOST", "localhost")
-                port = self.credentials.get("port") or os.environ.get("ELASTICSEARCH_PORT", "9200")
-                username = self.credentials.get("username") or os.environ.get("ELASTICSEARCH_USERNAME")
-                password = self.credentials.get("password") or os.environ.get("ELASTICSEARCH_PASSWORD")
-                cloud_id = self.credentials.get("cloud_id") or os.environ.get("ELASTICSEARCH_CLOUD_ID")
-                api_key = self.credentials.get("api_key") or os.environ.get("ELASTICSEARCH_API_KEY")
+                host = self.credentials.get("host", "localhost")
+                port = self.credentials.get("port", 9200)
+                username = self.credentials.get("username")
+                password = self.credentials.get("password")
                 
-                # Log if using environment variables
-                if os.environ.get("ELASTICSEARCH_HOST") and not self.credentials.get("host"):
-                    logger.info("Using ELASTICSEARCH_HOST environment variable")
-                if os.environ.get("ELASTICSEARCH_PORT") and not self.credentials.get("port"):
-                    logger.info("Using ELASTICSEARCH_PORT environment variable")
-                if os.environ.get("ELASTICSEARCH_USERNAME") and not self.credentials.get("username"):
-                    logger.info("Using ELASTICSEARCH_USERNAME environment variable")
-                if os.environ.get("ELASTICSEARCH_PASSWORD") and not self.credentials.get("password"):
-                    logger.info("Using ELASTICSEARCH_PASSWORD environment variable")
-                if os.environ.get("ELASTICSEARCH_CLOUD_ID") and not self.credentials.get("cloud_id"):
-                    logger.info("Using ELASTICSEARCH_CLOUD_ID environment variable")
-                if os.environ.get("ELASTICSEARCH_API_KEY") and not self.credentials.get("api_key"):
-                    logger.info("Using ELASTICSEARCH_API_KEY environment variable")
+                hosts = [f"http://{host}:{port}"]
+                http_auth = None
                 
-                # Convert port to integer if it's a string
-                if isinstance(port, str):
-                    port = int(port)
+                if username and password:
+                    http_auth = (username, password)
                 
-                # Use cloud_id if provided
-                if cloud_id:
-                    if api_key:
-                        self.client = Elasticsearch(
-                            cloud_id=cloud_id,
-                            api_key=api_key
-                        )
-                    elif username and password:
-                        self.client = Elasticsearch(
-                            cloud_id=cloud_id,
-                            basic_auth=(username, password)
-                        )
-                    else:
-                        self.client = Elasticsearch(
-                            cloud_id=cloud_id
-                        )
-                else:
-                    # Use regular host/port configuration
-                    hosts = [f"http://{host}:{port}"]
-                    http_auth = None
-                    
-                    if username and password:
-                        http_auth = (username, password)
-                    
-                    self.client = Elasticsearch(
-                        hosts=hosts,
-                        http_auth=http_auth
-                    )
+                self.client = Elasticsearch(
+                    hosts=hosts,
+                    http_auth=http_auth
+                )
                 
                 # Test connection
                 self.client.info()
@@ -671,42 +573,16 @@ class DynamoDBConnector(BaseNoSQLConnector):
         """Connect to an Amazon DynamoDB database"""
         if not self.client:
             try:
-                # Get credentials from credentials dict or environment variables
-                access_key = self.credentials.get("access_key") or os.environ.get("AWS_ACCESS_KEY_ID")
-                secret_key = self.credentials.get("secret_key") or os.environ.get("AWS_SECRET_ACCESS_KEY")
-                region = self.credentials.get("region") or os.environ.get("AWS_REGION", "us-east-1")
-                endpoint_url = self.credentials.get("endpoint_url") or os.environ.get("AWS_DYNAMODB_ENDPOINT")
+                access_key = self.credentials.get("access_key")
+                secret_key = self.credentials.get("secret_key")
+                region = self.credentials.get("region", "us-east-1")
                 
-                # Log if using environment variables
-                if os.environ.get("AWS_ACCESS_KEY_ID") and not self.credentials.get("access_key"):
-                    logger.info("Using AWS_ACCESS_KEY_ID environment variable")
-                if os.environ.get("AWS_SECRET_ACCESS_KEY") and not self.credentials.get("secret_key"):
-                    logger.info("Using AWS_SECRET_ACCESS_KEY environment variable")
-                if os.environ.get("AWS_REGION") and not self.credentials.get("region"):
-                    logger.info("Using AWS_REGION environment variable")
-                if os.environ.get("AWS_DYNAMODB_ENDPOINT") and not self.credentials.get("endpoint_url"):
-                    logger.info("Using AWS_DYNAMODB_ENDPOINT environment variable")
-                
-                # Check for required credentials
-                if not access_key or not secret_key:
-                    raise ValueError("Access key and secret key are required for DynamoDB connection")
-                
-                # Create client with endpoint URL if specified
-                if endpoint_url:
-                    self.client = boto3.resource(
-                        'dynamodb',
-                        aws_access_key_id=access_key,
-                        aws_secret_access_key=secret_key,
-                        region_name=region,
-                        endpoint_url=endpoint_url
-                    )
-                else:
-                    self.client = boto3.resource(
-                        'dynamodb',
-                        aws_access_key_id=access_key,
-                        aws_secret_access_key=secret_key,
-                        region_name=region
-                    )
+                self.client = boto3.resource(
+                    'dynamodb',
+                    aws_access_key_id=access_key,
+                    aws_secret_access_key=secret_key,
+                    region_name=region
+                )
                 
                 # Test connection by listing tables
                 self.client.tables.all()
@@ -846,25 +722,10 @@ class CouchbaseConnector(BaseNoSQLConnector):
         """Connect to a Couchbase database"""
         if not self.client:
             try:
-                # Get credentials from credentials dict or environment variables
-                host = self.credentials.get("host") or os.environ.get("COUCHBASE_HOST", "localhost")
-                username = self.credentials.get("username") or os.environ.get("COUCHBASE_USERNAME")
-                password = self.credentials.get("password") or os.environ.get("COUCHBASE_PASSWORD")
-                bucket = self.credentials.get("bucket") or os.environ.get("COUCHBASE_BUCKET")
-                
-                # Log if using environment variables
-                if os.environ.get("COUCHBASE_HOST") and not self.credentials.get("host"):
-                    logger.info("Using COUCHBASE_HOST environment variable")
-                if os.environ.get("COUCHBASE_USERNAME") and not self.credentials.get("username"):
-                    logger.info("Using COUCHBASE_USERNAME environment variable")
-                if os.environ.get("COUCHBASE_PASSWORD") and not self.credentials.get("password"):
-                    logger.info("Using COUCHBASE_PASSWORD environment variable")
-                if os.environ.get("COUCHBASE_BUCKET") and not self.credentials.get("bucket"):
-                    logger.info("Using COUCHBASE_BUCKET environment variable")
-                
-                # Check for required credentials
-                if not username or not password or not bucket:
-                    raise ValueError("Username, password, and bucket are required for Couchbase connection")
+                host = self.credentials.get("host", "localhost")
+                username = self.credentials.get("username")
+                password = self.credentials.get("password")
+                bucket = self.credentials.get("bucket")
                 
                 # Connect to the cluster
                 authenticator = PasswordAuthenticator(username, password)
@@ -917,30 +778,11 @@ class Neo4jConnector(BaseNoSQLConnector):
         """Connect to a Neo4j database"""
         if not self.client:
             try:
-                # Get credentials from credentials dict or environment variables
-                uri = self.credentials.get("uri") or os.environ.get("NEO4J_URI", "bolt://localhost:7687")
-                username = self.credentials.get("username") or os.environ.get("NEO4J_USERNAME")
-                password = self.credentials.get("password") or os.environ.get("NEO4J_PASSWORD")
-                database = self.credentials.get("database") or os.environ.get("NEO4J_DATABASE")
+                uri = self.credentials.get("uri", "bolt://localhost:7687")
+                username = self.credentials.get("username")
+                password = self.credentials.get("password")
                 
-                # Log if using environment variables
-                if os.environ.get("NEO4J_URI") and not self.credentials.get("uri"):
-                    logger.info("Using NEO4J_URI environment variable")
-                if os.environ.get("NEO4J_USERNAME") and not self.credentials.get("username"):
-                    logger.info("Using NEO4J_USERNAME environment variable")
-                if os.environ.get("NEO4J_PASSWORD") and not self.credentials.get("password"):
-                    logger.info("Using NEO4J_PASSWORD environment variable")
-                if os.environ.get("NEO4J_DATABASE") and not self.credentials.get("database"):
-                    logger.info("Using NEO4J_DATABASE environment variable")
-                
-                # Connect with auth if credentials are provided
-                if username and password:
-                    self.client = GraphDatabase.driver(uri, auth=(username, password))
-                else:
-                    self.client = GraphDatabase.driver(uri)
-                
-                # Set default database if provided
-                self.database = database
+                self.client = GraphDatabase.driver(uri, auth=(username, password))
                 
             except Exception as e:
                 logger.exception("Error connecting to Neo4j")
@@ -951,12 +793,7 @@ class Neo4jConnector(BaseNoSQLConnector):
         try:
             self.connect()
             
-            # Use the specified database if available
-            session_params = {}
-            if hasattr(self, 'database') and self.database:
-                session_params['database'] = self.database
-            
-            with self.client.session(**session_params) as session:
+            with self.client.session() as session:
                 # Get node labels
                 labels_result = session.run("CALL db.labels()")
                 labels = [record["label"] for record in labels_result]
@@ -991,12 +828,7 @@ class Neo4jConnector(BaseNoSQLConnector):
         try:
             self.connect()
             
-            # Use the specified database if available
-            session_params = {}
-            if hasattr(self, 'database') and self.database:
-                session_params['database'] = self.database
-            
-            with self.client.session(**session_params) as session:
+            with self.client.session() as session:
                 result = session.run(query)
                 
                 # Convert records to dictionaries

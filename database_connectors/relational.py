@@ -159,58 +159,30 @@ class PostgreSQLConnector(BaseRelationalConnector):
         """Connect to a PostgreSQL database"""
         if not self.connection:
             try:
-                # Check if direct connection string is provided in credentials or environment
-                connection_string = self.credentials.get("connection_string") or os.environ.get("DATABASE_URL")
-                
-                if connection_string:
-                    logger.info("Using connection string")
-                    if os.environ.get("DATABASE_URL") and not self.credentials.get("connection_string"):
-                        logger.info("Using DATABASE_URL environment variable")
-                    self.connection = psycopg2.connect(connection_string)
-                    self.engine = create_engine(connection_string)
-                # Check if individual credentials are provided in dictionary or environment
-                else:
-                    # Get credentials from credentials dict or environment variables
-                    host = self.credentials.get("host") or os.environ.get("PGHOST")
-                    port = self.credentials.get("port") or os.environ.get("PGPORT", "5432")
-                    username = self.credentials.get("username") or os.environ.get("PGUSER")
-                    password = self.credentials.get("password") or os.environ.get("PGPASSWORD")
-                    db_name = self.credentials.get("db_name") or os.environ.get("PGDATABASE")
+                # Check if direct connection string is provided
+                if self.credentials.get("connection_string"):
+                    logger.info("Using provided connection string")
+                    self.connection = psycopg2.connect(self.credentials.get("connection_string"))
+                    self.engine = create_engine(self.credentials.get("connection_string"))
+                # Check if individual credentials are provided
+                elif all(self.credentials.get(key) for key in ["host", "username", "password", "db_name"]):
+                    logger.info("Using individual credentials")
+                    self.connection = psycopg2.connect(
+                        host=self.credentials.get("host"),
+                        port=self.credentials.get("port", 5432),
+                        user=self.credentials.get("username"),
+                        password=self.credentials.get("password"),
+                        dbname=self.credentials.get("db_name")
+                    )
                     
-                    # Log if using environment variables
-                    if os.environ.get("PGHOST") and not self.credentials.get("host"):
-                        logger.info("Using PGHOST environment variable")
-                    if os.environ.get("PGPORT") and not self.credentials.get("port"):
-                        logger.info("Using PGPORT environment variable")
-                    if os.environ.get("PGUSER") and not self.credentials.get("username"):
-                        logger.info("Using PGUSER environment variable")
-                    if os.environ.get("PGPASSWORD") and not self.credentials.get("password"):
-                        logger.info("Using PGPASSWORD environment variable")
-                    if os.environ.get("PGDATABASE") and not self.credentials.get("db_name"):
-                        logger.info("Using PGDATABASE environment variable")
-                    
-                    # Check if required credentials are available
-                    if host and username and password and db_name:
-                        logger.info("Using individual credentials")
-                        
-                        # Convert port to integer if it's a string
-                        if isinstance(port, str):
-                            port = int(port)
-                        
-                        self.connection = psycopg2.connect(
-                            host=host,
-                            port=port,
-                            user=username,
-                            password=password,
-                            dbname=db_name
-                        )
-                        
-                        # Create SQLAlchemy engine for schema inspection
-                        conn_string = f"postgresql://{username}:{password}@{host}:{port}/{db_name}"
-                        self.engine = create_engine(conn_string)
-                    else:
-                        raise ValueError("Missing required PostgreSQL credentials")
-
+                    # Create SQLAlchemy engine for schema inspection
+                    conn_string = f"postgresql://{self.credentials.get('username')}:{self.credentials.get('password')}@{self.credentials.get('host')}:{self.credentials.get('port', 5432)}/{self.credentials.get('db_name')}"
+                    self.engine = create_engine(conn_string)
+                # Fall back to environment variables if available
+                elif os.environ.get("DATABASE_URL"):
+                    logger.info("Using DATABASE_URL from environment variables")
+                    self.connection = psycopg2.connect(os.environ["DATABASE_URL"])
+                    self.engine = create_engine(os.environ["DATABASE_URL"])
                 else:
                     logger.error("No valid PostgreSQL credentials provided")
                     raise Exception("No valid PostgreSQL credentials provided")
@@ -227,57 +199,27 @@ class MySQLConnector(BaseRelationalConnector):
         if not self.connection:
             try:
                 # Check if direct connection string is provided
-                connection_string = self.credentials.get("connection_string") or os.environ.get("MYSQL_URL")
-                
-                if connection_string:
-                    logger.info("Using connection string")
-                    if os.environ.get("MYSQL_URL") and not self.credentials.get("connection_string"):
-                        logger.info("Using MYSQL_URL environment variable")
+                if self.credentials.get("connection_string"):
+                    logger.info("Using provided connection string")
                     # Using SQLAlchemy for both connection and schema inspection
-                    self.engine = create_engine(connection_string)
+                    self.engine = create_engine(self.credentials.get("connection_string"))
                     self.connection = self.engine.connect().connection
+                # Check if individual credentials are provided
+                elif all(self.credentials.get(key) for key in ["host", "username", "password", "db_name"]):
+                    logger.info("Using individual credentials")
+                    self.connection = mysql.connector.connect(
+                        host=self.credentials.get("host"),
+                        user=self.credentials.get("username"),
+                        password=self.credentials.get("password"),
+                        database=self.credentials.get("db_name")
+                    )
+                    
+                    # Create SQLAlchemy engine for schema inspection
+                    conn_string = f"mysql+mysqlconnector://{self.credentials.get('username')}:{self.credentials.get('password')}@{self.credentials.get('host')}/{self.credentials.get('db_name')}"
+                    self.engine = create_engine(conn_string)
                 else:
-                    # Get credentials from credentials dict or environment variables
-                    host = self.credentials.get("host") or os.environ.get("MYSQL_HOST")
-                    port = self.credentials.get("port") or os.environ.get("MYSQL_PORT", "3306")
-                    username = self.credentials.get("username") or os.environ.get("MYSQL_USER") 
-                    password = self.credentials.get("password") or os.environ.get("MYSQL_PASSWORD")
-                    db_name = self.credentials.get("db_name") or os.environ.get("MYSQL_DATABASE")
-                    
-                    # Log if using environment variables
-                    if os.environ.get("MYSQL_HOST") and not self.credentials.get("host"):
-                        logger.info("Using MYSQL_HOST environment variable")
-                    if os.environ.get("MYSQL_PORT") and not self.credentials.get("port"):
-                        logger.info("Using MYSQL_PORT environment variable")
-                    if os.environ.get("MYSQL_USER") and not self.credentials.get("username"):
-                        logger.info("Using MYSQL_USER environment variable")
-                    if os.environ.get("MYSQL_PASSWORD") and not self.credentials.get("password"):
-                        logger.info("Using MYSQL_PASSWORD environment variable")
-                    if os.environ.get("MYSQL_DATABASE") and not self.credentials.get("db_name"):
-                        logger.info("Using MYSQL_DATABASE environment variable")
-                    
-                    # Check if required credentials are available
-                    if host and username and password and db_name:
-                        logger.info("Using individual MySQL credentials")
-                        
-                        # Convert port to integer if it's a string
-                        if isinstance(port, str):
-                            port = int(port)
-                            
-                        self.connection = mysql.connector.connect(
-                            host=host,
-                            port=port,
-                            user=username,
-                            password=password,
-                            database=db_name
-                        )
-                        
-                        # Create SQLAlchemy engine for schema inspection
-                        conn_string = f"mysql+mysqlconnector://{username}:{password}@{host}:{port}/{db_name}"
-                        self.engine = create_engine(conn_string)
-                    else:
-                        logger.error("No valid MySQL credentials provided")
-                        raise Exception("No valid MySQL credentials provided")
+                    logger.error("No valid MySQL credentials provided")
+                    raise Exception("No valid MySQL credentials provided")
                 
             except Exception as e:
                 logger.exception("Error connecting to MySQL")
@@ -334,32 +276,10 @@ class SQLiteConnector(BaseRelationalConnector):
         """Connect to a SQLite database"""
         if not self.connection:
             try:
-                # Get database path from credentials dict or environment variables
-                db_path = self.credentials.get("file_path") or os.environ.get("SQLITE_DB_PATH")
-                
-                # Log if using environment variables
-                if os.environ.get("SQLITE_DB_PATH") and not self.credentials.get("file_path"):
-                    logger.info("Using SQLITE_DB_PATH environment variable")
-                
-                # Check if we have a database path
-                if not db_path:
-                    # Try default data directory path as a last resort
-                    if os.path.exists("data"):
-                        for file in os.listdir("data"):
-                            if file.endswith(".db"):
-                                db_path = os.path.join("data", file)
-                                logger.info(f"Found SQLite database in data directory: {db_path}")
-                                break
-                
-                if not db_path:
-                    logger.error("No SQLite database path provided")
-                    raise Exception("No SQLite database path provided")
-                
-                logger.info(f"Connecting to SQLite database at: {db_path}")
-                self.connection = sqlite3.connect(db_path)
+                self.connection = sqlite3.connect(self.credentials.get("file_path"))
                 
                 # Create SQLAlchemy engine for schema inspection
-                conn_string = f"sqlite:///{db_path}"
+                conn_string = f"sqlite:///{self.credentials.get('file_path')}"
                 self.engine = create_engine(conn_string)
                 
             except Exception as e:
