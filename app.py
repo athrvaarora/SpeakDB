@@ -47,7 +47,7 @@ def index():
     """Render the landing page"""
     if current_user.is_authenticated:
         return redirect(url_for('select_database'))
-    return render_template('landing.html')
+    return render_template('index.html')
 
 @app.route('/features')
 def features():
@@ -133,7 +133,7 @@ def select_database():
         session.pop('database_credentials')
     if 'chat_id' in session:
         session.pop('chat_id')
-    return render_template('index.html')
+    return render_template('select_database.html')
 
 @app.route('/test_env_db')
 def test_env_db():
