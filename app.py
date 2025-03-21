@@ -29,6 +29,10 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 # Initialize the database
 db.init_app(app)
 
+# Create all tables if they don't exist
+with app.app_context():
+    db.create_all()
+
 # Initialize Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
