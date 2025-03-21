@@ -623,23 +623,26 @@ def get_required_credentials():
         
         # Time Series Databases
         'influxdb': {
-            'fields': ['host', 'port', 'username', 'password'],
+            'fields': ['host', 'port', 'token', 'org', 'bucket', 'username', 'password'],
             'url_option': True,
-            'url_field': 'connection_string',
+            'url_field': 'url',
             'url_example': 'http://host:8086?token=xxx&org=yyy',
-            'terminal_command': 'influx -host host -port 8086 -username username -password password'
+            'terminal_command': 'influx -host host -port 8086 -token xxx-token-xxx -org org_name -bucket bucket_name',
+            'notes': 'For InfluxDB 2.x, use token + org + bucket. For InfluxDB 1.x, use username + password.'
         },
         'timescaledb': {
-            'fields': ['host', 'port', 'username', 'password', 'database_name'],
+            'fields': ['host', 'port', 'user', 'password', 'database'],
             'url_option': True,
             'url_field': 'connection_string',
             'url_example': 'postgresql://username:password@host:5432/database_name',
-            'terminal_command': 'psql -h host -p 5432 -U username -d database_name'
+            'terminal_command': 'psql -h host -p 5432 -U username -d database_name',
+            'notes': 'TimescaleDB uses the same connection parameters as PostgreSQL, with added time-series functionality.'
         },
         'kdb': {
-            'fields': ['path_to_script', 'port'],
+            'fields': ['host', 'port', 'username', 'password', 'script_path'],
             'url_option': False,
-            'terminal_command': 'q path_to_script.q -p port'
+            'terminal_command': 'q script_path.q -p port',
+            'notes': 'Kdb+ is a column-oriented database optimized for time-series data. The script_path is optional.'
         },
         
         # Specialized Systems

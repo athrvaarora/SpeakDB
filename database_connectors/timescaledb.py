@@ -34,7 +34,7 @@ class TimescaleDBConnector:
                     host = self.credentials.get("host", "localhost")
                     port = self.credentials.get("port", 5432)
                     database = self.credentials.get("database")
-                    user = self.credentials.get("user") or self.credentials.get("username")
+                    user = self.credentials.get("user") 
                     password = self.credentials.get("password")
                     
                     if not database:
