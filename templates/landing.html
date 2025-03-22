@@ -628,79 +628,71 @@ ORDER BY revenue DESC</code></pre>
     </div>
 </section>
 
-<!-- Testimonials Section -->
-<section class="section bg-light">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="fw-bold mb-3">What Our Users Say</h2>
-            <p class="lead text-muted mx-auto" style="max-width: 700px;">SpeakDB is transforming how teams interact with their databases across industries.</p>
-        </div>
-        
-        <div class="row g-4">
-            <div class="col-md-4 animate__animated animate__fadeIn">
-                <div class="testimonial-card">
-                    <div class="d-flex align-items-center mb-4">
-                        <div class="bg-primary text-white rounded-circle p-3 me-3">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div>
-                            <h5 class="mb-0 fw-semibold">Sarah Johnson</h5>
-                            <p class="mb-0 small text-muted">Data Analyst at E-commerce Company</p>
-                        </div>
-                    </div>
-                    <p class="mb-0">"SpeakDB has revolutionized how our team accesses data. We've reduced the time spent writing queries by 70%, allowing us to focus on analyzing insights instead of syntax. The schema analysis automatically detects our complex product catalog relationships."</p>
-                </div>
-            </div>
-            
-            <div class="col-md-4 animate__animated animate__fadeIn" style="animation-delay: 0.2s;">
-                <div class="testimonial-card">
-                    <div class="d-flex align-items-center mb-4">
-                        <div class="bg-primary text-white rounded-circle p-3 me-3">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div>
-                            <h5 class="mb-0 fw-semibold">Michael Chen</h5>
-                            <p class="mb-0 small text-muted">Product Manager at Health Tech Startup</p>
-                        </div>
-                    </div>
-                    <p class="mb-0">"As a non-technical manager, I was always dependent on our data team for insights. With SpeakDB, I can directly get the information I need without waiting for help. I can explore user trends and feature adoption rates through simple conversations."</p>
-                </div>
-            </div>
-            
-            <div class="col-md-4 animate__animated animate__fadeIn" style="animation-delay: 0.4s;">
-                <div class="testimonial-card">
-                    <div class="d-flex align-items-center mb-4">
-                        <div class="bg-primary text-white rounded-circle p-3 me-3">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div>
-                            <h5 class="mb-0 fw-semibold">David Rodriguez</h5>
-                            <p class="mb-0 small text-muted">Database Administrator at Financial Services</p>
-                        </div>
-                    </div>
-                    <p class="mb-0">"The schema analysis feature is brilliant. SpeakDB understands our complex financial database structure and generates accurate queries. It's also reduced the number of support requests I get from colleagues by 85%, freeing me to focus on optimization."</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+
 
 <!-- CTA Section -->
 <section class="section">
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-10">
-                <div class="card border-0 shadow-lg bg-primary text-white p-4 p-md-5 animate__animated animate__fadeIn">
-                    <div class="card-body text-center">
-                        <h2 class="display-5 fw-bold mb-4">Ready to Transform Your Data Experience?</h2>
-                        <p class="lead mb-4">Start speaking to your database in natural language today.</p>
-                        <a href="{{ url_for('auth') }}" class="btn btn-light btn-lg">Get Started Now</a>
+                <div class="card border-0 rounded-4 p-0 overflow-hidden animate__animated animate__fadeIn">
+                    <div class="card-body p-0">
+                        <div class="row g-0">
+                            <div class="col-md-6 bg-gradient-primary text-white p-5 d-flex flex-column justify-content-center">
+                                <h2 class="fw-bold mb-4 display-5">Ready to Transform Your Data Experience?</h2>
+                                <p class="lead mb-4">Start speaking to your database in natural language today.</p>
+                                <div>
+                                    <a href="{{ url_for('auth') }}" class="btn btn-light btn-lg rounded-pill px-4 py-3 fw-semibold">
+                                        <i class="fas fa-rocket me-2"></i>Get Started Now
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-md-6 d-none d-md-block position-relative">
+                                <div class="position-absolute top-0 bottom-0 start-0 end-0 bg-dark overflow-hidden">
+                                    <div class="position-absolute top-0 start-0 end-0 bottom-0 d-flex align-items-center justify-content-center">
+                                        <svg viewBox="0 0 1000 1000" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" style="opacity: 0.3;">
+                                            <!-- Abstract data pattern SVG -->
+                                            <g fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2">
+                                                <path d="M0,500 C200,300 350,100 500,300 C650,500 700,700 1000,500" />
+                                                <path d="M0,600 C250,400 300,200 500,400 C700,600 750,800 1000,600" />
+                                                <path d="M0,300 C200,500 350,700 500,400 C650,200 700,100 1000,300" />
+                                            </g>
+                                            <g fill="none" stroke="rgba(100,200,255,0.5)" stroke-width="3">
+                                                <circle cx="250" cy="350" r="40" />
+                                                <circle cx="650" cy="450" r="60" />
+                                                <circle cx="450" cy="650" r="45" />
+                                                <circle cx="750" cy="250" r="25" />
+                                                <circle cx="250" cy="750" r="30" />
+                                            </g>
+                                            <g fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2">
+                                                <line x1="250" y1="350" x2="650" y2="450" />
+                                                <line x1="650" y1="450" x2="450" y2="650" />
+                                                <line x1="450" y1="650" x2="250" y2="750" />
+                                                <line x1="650" y1="450" x2="750" y2="250" />
+                                            </g>
+                                        </svg>
+                                    </div>
+                                    <div class="position-absolute bottom-0 start-0 end-0 text-center p-5 text-white">
+                                        <h4 class="fw-semibold">Powerful AI • 30+ Database Types</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
+
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #3a6cf4 0%, #5d87ff 100%);
+    }
+    .rounded-4 {
+        border-radius: 1rem !important;
+    }
+</style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
