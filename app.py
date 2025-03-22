@@ -48,6 +48,11 @@ def landing():
     """Render the marketing landing page"""
     return render_template('landing.html')
 
+@app.route('/wizard')
+def wizard():
+    """Render the Quick Start Wizard page"""
+    return render_template('wizard.html')
+
 @app.route('/auth')
 def auth():
     """Render the authentication page"""

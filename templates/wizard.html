@@ -1,0 +1,1092 @@
+{% extends "layout.html" %}
+
+{% block title %}Quick Start Wizard - SpeakDB{% endblock %}
+
+{% block styles %}
+<style>
+    .wizard-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    
+    .wizard-step {
+        display: none;
+    }
+    
+    .wizard-step.active {
+        display: block;
+        animation: fadeIn 0.5s;
+    }
+    
+    .step-indicator {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        position: relative;
+    }
+    
+    .step-indicator::before {
+        content: '';
+        position: absolute;
+        top: 24px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: #e9ecef;
+        z-index: 0;
+    }
+    
+    .step-indicator-progress {
+        position: absolute;
+        top: 24px;
+        left: 0;
+        height: 2px;
+        background: var(--bs-primary);
+        transition: width 0.3s ease;
+        z-index: 1;
+    }
+    
+    .step-dot {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #fff;
+        border: 2px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        position: relative;
+        z-index: 2;
+        transition: all 0.3s;
+    }
+    
+    .step-dot.active {
+        border-color: var(--bs-primary);
+        background: var(--bs-primary);
+        color: white;
+    }
+    
+    .step-dot.completed {
+        border-color: var(--bs-success);
+        background: var(--bs-success);
+        color: white;
+    }
+    
+    .step-title {
+        text-align: center;
+        margin-top: 0.5rem;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .wizard-form-container {
+        min-height: 350px;
+    }
+    
+    .wizard-navigation {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .db-type-card {
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 2px solid transparent;
+    }
+    
+    .db-type-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .db-type-card.selected {
+        border-color: var(--bs-primary);
+    }
+    
+    .sample-db-card {
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 2px solid transparent;
+    }
+    
+    .sample-db-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .sample-db-card.selected {
+        border-color: var(--bs-primary);
+    }
+    
+    .credential-field {
+        position: relative;
+        padding-top: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .credential-field .animated-label {
+        position: absolute;
+        top: 2.1rem;
+        left: 0.75rem;
+        color: #6c757d;
+        transition: all 0.2s;
+        pointer-events: none;
+    }
+    
+    .credential-field input:focus ~ .animated-label,
+    .credential-field input:not(:placeholder-shown) ~ .animated-label {
+        top: 0;
+        left: 0;
+        font-size: 0.85rem;
+        color: var(--bs-primary);
+    }
+    
+    .wizard-help-text {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .success-checkmark {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto;
+        padding: 15px;
+        border-radius: 50%;
+        background-color: var(--bs-success);
+        color: white;
+        font-size: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .connection-success {
+        text-align: center;
+    }
+    
+    .code-sample {
+        background-color: #f8f9fa;
+        border-radius: 6px;
+        padding: 1rem;
+        margin: 1rem 0;
+        font-family: monospace;
+        font-size: 0.9rem;
+    }
+    
+    .highlight {
+        background-color: #fff3cd;
+        padding: 0 3px;
+    }
+
+    .typing-animation::after {
+        content: "|";
+        animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5 wizard-container">
+    <div class="text-center mb-5">
+        <h1 class="fw-bold">SpeakDB Quick Start Wizard</h1>
+        <p class="lead text-muted">Let's get you connected to your first database in just a few simple steps</p>
+    </div>
+    
+    <div class="step-indicator">
+        <div class="step-indicator-progress" id="progressBar"></div>
+        
+        <div class="step-item">
+            <div class="step-dot active" id="step1Dot">1</div>
+            <div class="step-title">Choose Database Type</div>
+        </div>
+        
+        <div class="step-item">
+            <div class="step-dot" id="step2Dot">2</div>
+            <div class="step-title">Database Selection</div>
+        </div>
+        
+        <div class="step-item">
+            <div class="step-dot" id="step3Dot">3</div>
+            <div class="step-title">Connection Details</div>
+        </div>
+        
+        <div class="step-item">
+            <div class="step-dot" id="step4Dot">4</div>
+            <div class="step-title">Test Connection</div>
+        </div>
+        
+        <div class="step-item">
+            <div class="step-dot" id="step5Dot">5</div>
+            <div class="step-title">Start Chatting</div>
+        </div>
+    </div>
+    
+    <div class="card shadow-sm">
+        <div class="card-body p-4">
+            <div class="wizard-form-container">
+                <!-- Step 1: Choose Database Type -->
+                <div class="wizard-step active" id="step1">
+                    <h3 class="mb-4">Choose Database Type</h3>
+                    <p class="text-muted mb-4">Select the type of database you want to connect to. SpeakDB supports all major database types.</p>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="card h-100 db-type-card" data-db-type="relational" onclick="selectDbType(this, 'relational')">
+                                <div class="card-body text-center p-4">
+                                    <div class="mb-3">
+                                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#336791" stroke-width="2">
+                                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                            <line x1="3" y1="9" x2="21" y2="9"/>
+                                            <line x1="9" y1="21" x2="9" y2="9"/>
+                                        </svg>
+                                    </div>
+                                    <h5>Relational Database</h5>
+                                    <p class="small text-muted">PostgreSQL, MySQL, SQL Server, Oracle</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card h-100 db-type-card" data-db-type="nosql" onclick="selectDbType(this, 'nosql')">
+                                <div class="card-body text-center p-4">
+                                    <div class="mb-3">
+                                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#47A248" stroke-width="2">
+                                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+                                            <path d="M12 6v12"/>
+                                            <path d="M6 12h12"/>
+                                        </svg>
+                                    </div>
+                                    <h5>NoSQL Database</h5>
+                                    <p class="small text-muted">MongoDB, Redis, Elasticsearch, DynamoDB</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card h-100 db-type-card" data-db-type="sample" onclick="selectDbType(this, 'sample')">
+                                <div class="card-body text-center p-4">
+                                    <div class="mb-3">
+                                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#4285F4" stroke-width="2">
+                                            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                            <path d="M2 17l10 5 10-5"/>
+                                            <path d="M2 12l10 5 10-5"/>
+                                        </svg>
+                                    </div>
+                                    <h5>Sample Database</h5>
+                                    <p class="small text-muted">Try with pre-configured sample datasets</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 2: Database Selection -->
+                <div class="wizard-step" id="step2">
+                    <h3 class="mb-4">Select Your Database</h3>
+                    <div id="dbTypeRelational" class="db-selection-container">
+                        <p class="text-muted mb-4">Choose the specific relational database system you want to connect to:</p>
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <div class="card h-100 sample-db-card" onclick="selectSpecificDb(this, 'postgresql')">
+                                    <div class="card-body text-center p-3">
+                                        <img src="https://www.postgresql.org/media/img/about/press/elephant.png" alt="PostgreSQL" height="60" class="mb-3">
+                                        <h6>PostgreSQL</h6>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card h-100 sample-db-card" onclick="selectSpecificDb(this, 'mysql')">
+                                    <div class="card-body text-center p-3">
+                                        <img src="https://labs.mysql.com/common/logos/mysql-logo.svg" alt="MySQL" height="60" class="mb-3">
+                                        <h6>MySQL</h6>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card h-100 sample-db-card" onclick="selectSpecificDb(this, 'sqlserver')">
+                                    <div class="card-body text-center p-3">
+                                        <img src="https://www.microsoft.com/en-us/sql-server/img/sql-server-logo.svg" alt="SQL Server" height="60" class="mb-3">
+                                        <h6>SQL Server</h6>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card h-100 sample-db-card" onclick="selectSpecificDb(this, 'sqlite')">
+                                    <div class="card-body text-center p-3">
+                                        <img src="https://sqlite.org/images/sqlite370_banner.gif" alt="SQLite" height="60" class="mb-3">
+                                        <h6>SQLite</h6>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="dbTypeNoSQL" class="db-selection-container" style="display: none;">
+                        <p class="text-muted mb-4">Choose the specific NoSQL database system you want to connect to:</p>
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <div class="card h-100 sample-db-card" onclick="selectSpecificDb(this, 'mongodb')">
+                                    <div class="card-body text-center p-3">
+                                        <img src="https://webassets.mongodb.com/_com_assets/cms/mongodb_logo1-76twgcu2dm.png" alt="MongoDB" height="60" class="mb-3">
+                                        <h6>MongoDB</h6>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card h-100 sample-db-card" onclick="selectSpecificDb(this, 'redis')">
+                                    <div class="card-body text-center p-3">
+                                        <img src="https://redis.io/images/redis-white.png" alt="Redis" height="60" class="mb-3">
+                                        <h6>Redis</h6>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card h-100 sample-db-card" onclick="selectSpecificDb(this, 'elasticsearch')">
+                                    <div class="card-body text-center p-3">
+                                        <img src="https://www.elastic.co/static-res/images/elastic-logo-200.png" alt="Elasticsearch" height="60" class="mb-3">
+                                        <h6>Elasticsearch</h6>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card h-100 sample-db-card" onclick="selectSpecificDb(this, 'cassandra')">
+                                    <div class="card-body text-center p-3">
+                                        <img src="https://cassandra.apache.org/_static/images/logo.png" alt="Cassandra" height="60" class="mb-3">
+                                        <h6>Cassandra</h6>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="dbTypeSample" class="db-selection-container" style="display: none;">
+                        <p class="text-muted mb-4">Choose one of our sample databases to explore SpeakDB's capabilities instantly:</p>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="card h-100 sample-db-card" onclick="selectSpecificDb(this, 'retail')">
+                                    <div class="card-body text-center p-3">
+                                        <div class="my-3 text-primary">
+                                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M3 3h18v18H3z"/>
+                                                <path d="M3 9h18"/>
+                                                <path d="M9 21V9"/>
+                                            </svg>
+                                        </div>
+                                        <h6>Retail Database</h6>
+                                        <p class="small text-muted">Products, customers, orders, and sales data</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card h-100 sample-db-card" onclick="selectSpecificDb(this, 'employees')">
+                                    <div class="card-body text-center p-3">
+                                        <div class="my-3 text-primary">
+                                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                                <circle cx="12" cy="7" r="4"/>
+                                            </svg>
+                                        </div>
+                                        <h6>Employees Database</h6>
+                                        <p class="small text-muted">Employee records, departments, salaries</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card h-100 sample-db-card" onclick="selectSpecificDb(this, 'covid')">
+                                    <div class="card-body text-center p-3">
+                                        <div class="my-3 text-primary">
+                                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <circle cx="12" cy="12" r="10"/>
+                                                <path d="M12 2a4 4 0 0 0 0 8 4 4 0 0 0 0 8 4 4 0 0 0 0-8 4 4 0 0 0 0-8z"/>
+                                                <path d="M2 12h20"/>
+                                            </svg>
+                                        </div>
+                                        <h6>COVID-19 Dataset</h6>
+                                        <p class="small text-muted">COVID-19 cases, deaths, and vaccinations</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 3: Connection Details -->
+                <div class="wizard-step" id="step3">
+                    <h3 class="mb-4">Connection Details</h3>
+                    <div id="connectionDetailsSample" style="display: none;">
+                        <div class="alert alert-info">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <i class="fas fa-info-circle fa-2x"></i>
+                                </div>
+                                <div>
+                                    <h5 class="alert-heading">No credentials needed!</h5>
+                                    <p class="mb-0">You've selected a sample database. No connection details are required as these are pre-configured for demonstration purposes.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card bg-light border-0 mt-4">
+                            <div class="card-body">
+                                <h5 class="mb-3">About this sample database</h5>
+                                <p id="sampleDbDescription" class="mb-4">This sample retail database contains tables for products, categories, customers, orders, and order items with realistic data relationships.</p>
+                                
+                                <h6 class="mb-2">Example Tables:</h6>
+                                <div id="sampleDbSchema">
+                                    <div class="code-sample">
+                                        <p><strong>customers</strong> (id, name, email, address, city, state, zip, country, phone)</p>
+                                        <p><strong>products</strong> (id, name, description, price, category_id, stock_quantity)</p>
+                                        <p><strong>categories</strong> (id, name, description)</p>
+                                        <p><strong>orders</strong> (id, customer_id, order_date, status, total)</p>
+                                        <p><strong>order_items</strong> (id, order_id, product_id, quantity, price)</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="connectionDetailsForm" style="display: none;">
+                        <p class="text-muted mb-4">Enter the details required to connect to your <span id="selectedDbName" class="fw-bold">database</span>:</p>
+                        
+                        <form id="credentialsForm">
+                            <div id="credentialFieldsContainer" class="row">
+                                <!-- Fields will be dynamically added here based on database type -->
+                            </div>
+                            
+                            <div class="mb-3 mt-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="saveCredentials" checked>
+                                    <label class="form-check-label" for="saveCredentials">
+                                        Save these credentials for future sessions
+                                    </label>
+                                </div>
+                                <small class="wizard-help-text d-block mt-2">
+                                    <i class="fas fa-lock me-1"></i> Your credentials are encrypted and stored securely.
+                                </small>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Step 4: Test Connection -->
+                <div class="wizard-step" id="step4">
+                    <h3 class="mb-4">Testing Your Connection</h3>
+                    
+                    <div id="connectionTesting" class="text-center py-4">
+                        <div class="spinner-border text-primary mb-4" role="status">
+                            <span class="visually-hidden">Testing connection...</span>
+                        </div>
+                        <h5 class="mb-3">Testing Connection</h5>
+                        <p class="text-muted mb-0">Please wait while we verify your database connection...</p>
+                    </div>
+                    
+                    <div id="connectionSuccess" class="connection-success py-4" style="display: none;">
+                        <div class="success-checkmark mb-4">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <h4 class="text-success mb-3">Connection Successful!</h4>
+                        <p class="mb-4">Great! We've successfully connected to your database.</p>
+                        
+                        <div class="card bg-light border-0">
+                            <div class="card-body">
+                                <h5 class="mb-3">Database Schema Overview</h5>
+                                <p>We've analyzed your database schema. Here's a summary:</p>
+                                <div id="schemaOverview" class="code-sample"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="connectionError" class="text-center py-4" style="display: none;">
+                        <div class="mb-4 text-danger">
+                            <i class="fas fa-exclamation-circle fa-4x"></i>
+                        </div>
+                        <h4 class="text-danger mb-3">Connection Failed</h4>
+                        <p class="mb-3" id="connectionErrorMessage">We couldn't connect to your database. Please check your credentials and try again.</p>
+                        
+                        <div class="card bg-light border-0 text-start">
+                            <div class="card-body">
+                                <h5 class="mb-3">Troubleshooting Tips:</h5>
+                                <ul class="mb-0">
+                                    <li>Verify that all credentials are correct</li>
+                                    <li>Ensure the database server is running and accessible</li>
+                                    <li>Check if your firewall allows connections to the database port</li>
+                                    <li>Try using the full hostname instead of "localhost"</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 5: Start Chatting -->
+                <div class="wizard-step" id="step5">
+                    <h3 class="mb-4">Ready to Start Chatting!</h3>
+                    
+                    <div class="text-center mb-4">
+                        <img src="{{ url_for('static', filename='images/chat-illustration.svg') }}" alt="Chat illustration" class="img-fluid mb-4" style="max-height: 200px;">
+                        <h4 class="mb-3">Your Database is Connected</h4>
+                        <p class="mb-4">You're all set! Now you can start querying your database using natural language.</p>
+                    </div>
+                    
+                    <div class="card bg-light border-0 mb-4">
+                        <div class="card-body">
+                            <h5 class="mb-3">Try These Example Queries:</h5>
+                            <div id="exampleQueries">
+                                <div class="p-3 mb-2 border rounded bg-white">
+                                    <div class="typing-animation" id="typingQuery"></div>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted">and many more... Just ask in plain English!</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <a href="{{ url_for('chat') }}" class="btn btn-primary btn-lg px-5 py-3 rounded-pill">
+                            <i class="fas fa-comments me-2"></i> Start Chatting Now
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="wizard-navigation">
+                <button type="button" class="btn btn-outline-secondary" id="prevBtn" onclick="prevStep()" disabled>
+                    <i class="fas fa-chevron-left me-2"></i> Previous
+                </button>
+                <button type="button" class="btn btn-primary" id="nextBtn" onclick="nextStep()" disabled>
+                    Next <i class="fas fa-chevron-right ms-2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentStep = 1;
+    const totalSteps = 5;
+    let selectedDbCategory = null;
+    let selectedDbType = null;
+    let selectedSampleDb = null;
+    
+    // Database credential fields templates
+    const credentialFields = {
+        postgresql: [
+            {name: 'host', label: 'Host', placeholder: 'localhost or IP address', required: true},
+            {name: 'port', label: 'Port', placeholder: '5432', required: true, defaultValue: '5432'},
+            {name: 'database', label: 'Database Name', placeholder: 'postgres', required: true},
+            {name: 'user', label: 'Username', placeholder: 'postgres', required: true},
+            {name: 'password', label: 'Password', placeholder: 'Password', required: true, type: 'password'}
+        ],
+        mysql: [
+            {name: 'host', label: 'Host', placeholder: 'localhost or IP address', required: true},
+            {name: 'port', label: 'Port', placeholder: '3306', required: true, defaultValue: '3306'},
+            {name: 'database', label: 'Database Name', placeholder: 'mysql', required: true},
+            {name: 'user', label: 'Username', placeholder: 'root', required: true},
+            {name: 'password', label: 'Password', placeholder: 'Password', required: true, type: 'password'}
+        ],
+        sqlserver: [
+            {name: 'server', label: 'Server', placeholder: 'localhost or IP address', required: true},
+            {name: 'port', label: 'Port', placeholder: '1433', required: true, defaultValue: '1433'},
+            {name: 'database', label: 'Database Name', placeholder: 'master', required: true},
+            {name: 'user', label: 'Username', placeholder: 'sa', required: true},
+            {name: 'password', label: 'Password', placeholder: 'Password', required: true, type: 'password'}
+        ],
+        sqlite: [
+            {name: 'database', label: 'Database File Path', placeholder: '/path/to/database.db', required: true}
+        ],
+        mongodb: [
+            {name: 'connection_string', label: 'Connection String', placeholder: 'mongodb://localhost:27017/mydatabase', required: true},
+            {name: 'database', label: 'Database Name', placeholder: 'mydatabase', required: true}
+        ],
+        redis: [
+            {name: 'host', label: 'Host', placeholder: 'localhost or IP address', required: true},
+            {name: 'port', label: 'Port', placeholder: '6379', required: true, defaultValue: '6379'},
+            {name: 'password', label: 'Password', placeholder: 'Password', required: false, type: 'password'},
+            {name: 'db', label: 'Database Number', placeholder: '0', required: false, defaultValue: '0'}
+        ],
+        elasticsearch: [
+            {name: 'host', label: 'Host', placeholder: 'localhost or IP address', required: true},
+            {name: 'port', label: 'Port', placeholder: '9200', required: true, defaultValue: '9200'},
+            {name: 'username', label: 'Username', placeholder: 'Username', required: false},
+            {name: 'password', label: 'Password', placeholder: 'Password', required: false, type: 'password'}
+        ],
+        cassandra: [
+            {name: 'contact_points', label: 'Contact Points', placeholder: 'localhost', required: true},
+            {name: 'port', label: 'Port', placeholder: '9042', required: true, defaultValue: '9042'},
+            {name: 'keyspace', label: 'Keyspace', placeholder: 'mykeyspace', required: true},
+            {name: 'username', label: 'Username', placeholder: 'Username', required: false},
+            {name: 'password', label: 'Password', placeholder: 'Password', required: false, type: 'password'}
+        ]
+    };
+    
+    // Example queries by database type
+    const exampleQueriesByType = {
+        retail: [
+            "Show me the top 5 most expensive products",
+            "List all orders made in the last month",
+            "What's the total revenue by product category?",
+            "Who are our top 10 customers by order value?",
+            "How many products do we have in each category?"
+        ],
+        employees: [
+            "Show the average salary by department",
+            "List employees hired in the last year",
+            "Which department has the highest average salary?",
+            "How many employees are in each job title?",
+            "Show me the salary history for employee #10004"
+        ],
+        covid: [
+            "Show the countries with highest case count",
+            "What was the peak death rate by country?",
+            "Compare vaccination rates between USA and Canada",
+            "Show the case trend for the past 6 months",
+            "Which countries have the highest vaccination rate?"
+        ],
+        postgresql: [
+            "Show all tables in the current database",
+            "List the first 10 rows from the users table",
+            "How many records are in each table?",
+            "Find all records where status is 'active'",
+            "Calculate the average transaction amount by month"
+        ],
+        mysql: [
+            "Show all tables in the current database",
+            "List the first 10 rows from the customers table",
+            "Count the number of orders per customer",
+            "Show all products with price greater than $100",
+            "Find orders created in the last 30 days"
+        ],
+        sqlserver: [
+            "Show all tables in the current database",
+            "List the first 10 rows from the employees table",
+            "Which departments have more than 5 employees?",
+            "Calculate the total sales by region",
+            "Find all transactions over $1000"
+        ],
+        sqlite: [
+            "Show all tables in the database",
+            "List the first 10 rows from the main table",
+            "Count the number of records in each table",
+            "Find all items created after January 1st, 2023",
+            "Show the schema for the users table"
+        ],
+        mongodb: [
+            "Show all collections in the database",
+            "Find the first 10 documents in the users collection",
+            "Count documents where status is 'active'",
+            "Find all orders with total amount greater than 100",
+            "Group documents by category and count them"
+        ],
+        redis: [
+            "List all keys matching user:*",
+            "Get value of key 'app:config'",
+            "Show all fields in hash 'user:1001'",
+            "Count items in list 'recent:products'",
+            "Get all members of set 'active:sessions'"
+        ],
+        elasticsearch: [
+            "Search for documents containing 'machine learning'",
+            "Find products in the 'electronics' category",
+            "Show documents with price between 100 and 500",
+            "Count documents by status field",
+            "Find all documents created in the last week"
+        ],
+        cassandra: [
+            "Select all rows from users table",
+            "Find user by email 'example@mail.com'",
+            "Count the number of active sessions",
+            "List all products in category 'books'",
+            "Find transactions for user id 'u1001'"
+        ]
+    };
+    
+    // Sample database descriptions
+    const sampleDbDescriptions = {
+        retail: "This sample retail database contains tables for products, categories, customers, orders, and order items with realistic data relationships.",
+        employees: "This sample HR database contains employee records, departments, salaries, titles, and employment history spanning multiple years.",
+        covid: "This COVID-19 dataset contains daily reports of cases, deaths, recoveries, and vaccination rates by country and region."
+    };
+    
+    // Sample database schemas
+    const sampleDbSchemas = {
+        retail: `<p><strong>customers</strong> (id, name, email, address, city, state, zip, country, phone)</p>
+                <p><strong>products</strong> (id, name, description, price, category_id, stock_quantity)</p>
+                <p><strong>categories</strong> (id, name, description)</p>
+                <p><strong>orders</strong> (id, customer_id, order_date, status, total)</p>
+                <p><strong>order_items</strong> (id, order_id, product_id, quantity, price)</p>`,
+        
+        employees: `<p><strong>employees</strong> (emp_no, birth_date, first_name, last_name, gender, hire_date)</p>
+                  <p><strong>departments</strong> (dept_no, dept_name)</p>
+                  <p><strong>dept_emp</strong> (emp_no, dept_no, from_date, to_date)</p>
+                  <p><strong>dept_manager</strong> (dept_no, emp_no, from_date, to_date)</p>
+                  <p><strong>salaries</strong> (emp_no, salary, from_date, to_date)</p>
+                  <p><strong>titles</strong> (emp_no, title, from_date, to_date)</p>`,
+        
+        covid: `<p><strong>cases</strong> (date, country, region, cases, deaths, recoveries)</p>
+              <p><strong>vaccinations</strong> (date, country, total_vaccinations, people_vaccinated, people_fully_vaccinated)</p>
+              <p><strong>demographics</strong> (country, population, median_age, gdp_per_capita, hospital_beds_per_1000)</p>
+              <p><strong>restrictions</strong> (country, date, restriction_type, severity)</p>`
+    };
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        updateStepIndicator();
+        checkNextButtonState();
+    });
+    
+    function updateStepIndicator() {
+        // Update progress bar
+        const progressPercentage = ((currentStep - 1) / (totalSteps - 1)) * 100;
+        document.getElementById('progressBar').style.width = `${progressPercentage}%`;
+        
+        // Update dots
+        for (let i = 1; i <= totalSteps; i++) {
+            const dot = document.getElementById(`step${i}Dot`);
+            if (i < currentStep) {
+                dot.classList.remove('active');
+                dot.classList.add('completed');
+                dot.innerHTML = '<i class="fas fa-check"></i>';
+            } else if (i === currentStep) {
+                dot.classList.add('active');
+                dot.classList.remove('completed');
+                dot.innerHTML = i;
+            } else {
+                dot.classList.remove('active', 'completed');
+                dot.innerHTML = i;
+            }
+        }
+    }
+    
+    function showStep(step) {
+        // Hide all steps
+        document.querySelectorAll('.wizard-step').forEach(el => {
+            el.classList.remove('active');
+        });
+        
+        // Show active step
+        document.getElementById(`step${step}`).classList.add('active');
+        
+        // Update buttons
+        document.getElementById('prevBtn').disabled = (step === 1);
+        
+        if (step === totalSteps) {
+            document.getElementById('nextBtn').style.display = 'none';
+        } else {
+            document.getElementById('nextBtn').style.display = 'block';
+        }
+        
+        // Special handling for certain steps
+        if (step === 4) {
+            if (selectedDbCategory === 'sample') {
+                simulateSampleDbConnection();
+            } else {
+                simulateRealDbConnection();
+            }
+        }
+        
+        if (step === 5) {
+            startTypingAnimation();
+        }
+        
+        currentStep = step;
+        updateStepIndicator();
+    }
+    
+    function nextStep() {
+        if (currentStep < totalSteps) {
+            showStep(currentStep + 1);
+        }
+    }
+    
+    function prevStep() {
+        if (currentStep > 1) {
+            showStep(currentStep - 1);
+        }
+    }
+    
+    function selectDbType(element, type) {
+        // Clear all selections
+        document.querySelectorAll('.db-type-card').forEach(el => {
+            el.classList.remove('selected');
+        });
+        
+        // Mark selected
+        element.classList.add('selected');
+        selectedDbCategory = type;
+        
+        // Show correct container in step 2
+        document.querySelectorAll('.db-selection-container').forEach(el => {
+            el.style.display = 'none';
+        });
+        
+        document.getElementById(`dbType${type.charAt(0).toUpperCase() + type.slice(1)}`).style.display = 'block';
+        
+        // Enable next button
+        document.getElementById('nextBtn').disabled = false;
+    }
+    
+    function selectSpecificDb(element, dbType) {
+        // Clear all selections
+        document.querySelectorAll('.sample-db-card').forEach(el => {
+            el.classList.remove('selected');
+        });
+        
+        // Mark selected
+        element.classList.add('selected');
+        selectedDbType = dbType;
+        
+        // Update for step 3
+        document.getElementById('selectedDbName').textContent = dbType;
+        
+        if (selectedDbCategory === 'sample') {
+            document.getElementById('connectionDetailsSample').style.display = 'block';
+            document.getElementById('connectionDetailsForm').style.display = 'none';
+            
+            // Update sample database description and schema
+            document.getElementById('sampleDbDescription').textContent = sampleDbDescriptions[dbType];
+            document.getElementById('sampleDbSchema').innerHTML = sampleDbSchemas[dbType];
+            selectedSampleDb = dbType;
+        } else {
+            document.getElementById('connectionDetailsSample').style.display = 'none';
+            document.getElementById('connectionDetailsForm').style.display = 'block';
+            
+            // Generate credential fields
+            generateCredentialFields(dbType);
+        }
+        
+        // Enable next button
+        document.getElementById('nextBtn').disabled = false;
+    }
+    
+    function generateCredentialFields(dbType) {
+        const container = document.getElementById('credentialFieldsContainer');
+        container.innerHTML = '';
+        
+        if (!credentialFields[dbType]) {
+            container.innerHTML = '<div class="col-12"><div class="alert alert-warning">No credential template available for this database type.</div></div>';
+            return;
+        }
+        
+        credentialFields[dbType].forEach(field => {
+            const col = document.createElement('div');
+            col.className = 'col-md-6';
+            
+            const fieldDiv = document.createElement('div');
+            fieldDiv.className = 'credential-field';
+            
+            const input = document.createElement('input');
+            input.type = field.type || 'text';
+            input.className = 'form-control';
+            input.id = `${dbType}_${field.name}`;
+            input.name = field.name;
+            input.placeholder = ' ';
+            input.required = field.required;
+            
+            if (field.defaultValue) {
+                input.value = field.defaultValue;
+            }
+            
+            const label = document.createElement('label');
+            label.className = 'animated-label';
+            label.htmlFor = `${dbType}_${field.name}`;
+            label.textContent = field.label;
+            
+            fieldDiv.appendChild(input);
+            fieldDiv.appendChild(label);
+            
+            if (field.help) {
+                const helpText = document.createElement('small');
+                helpText.className = 'form-text text-muted';
+                helpText.textContent = field.help;
+                fieldDiv.appendChild(helpText);
+            }
+            
+            col.appendChild(fieldDiv);
+            container.appendChild(col);
+        });
+    }
+    
+    function checkNextButtonState() {
+        const nextBtn = document.getElementById('nextBtn');
+        
+        switch(currentStep) {
+            case 1:
+                nextBtn.disabled = !selectedDbCategory;
+                break;
+            case 2:
+                nextBtn.disabled = !selectedDbType;
+                break;
+            case 3:
+                if (selectedDbCategory === 'sample') {
+                    nextBtn.disabled = false;
+                } else {
+                    // Check if all required fields are filled
+                    const requiredFields = document.querySelectorAll('#credentialsForm input[required]');
+                    nextBtn.disabled = Array.from(requiredFields).some(field => !field.value);
+                }
+                break;
+            default:
+                nextBtn.disabled = false;
+        }
+    }
+    
+    function simulateSampleDbConnection() {
+        document.getElementById('connectionTesting').style.display = 'block';
+        document.getElementById('connectionSuccess').style.display = 'none';
+        document.getElementById('connectionError').style.display = 'none';
+        
+        // For sample DB, always succeed after a delay
+        setTimeout(() => {
+            document.getElementById('connectionTesting').style.display = 'none';
+            document.getElementById('connectionSuccess').style.display = 'block';
+            
+            // Show schema based on selected sample DB
+            document.getElementById('schemaOverview').innerHTML = sampleDbSchemas[selectedSampleDb];
+            
+            document.getElementById('nextBtn').disabled = false;
+        }, 2000);
+    }
+    
+    function simulateRealDbConnection() {
+        document.getElementById('connectionTesting').style.display = 'block';
+        document.getElementById('connectionSuccess').style.display = 'none';
+        document.getElementById('connectionError').style.display = 'none';
+        
+        // Collect form data
+        const form = document.getElementById('credentialsForm');
+        const formData = new FormData(form);
+        const credentials = {};
+        
+        for (const [key, value] of formData.entries()) {
+            credentials[key] = value;
+        }
+        
+        // Send to server for validation
+        fetch('/api/test_connection', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                db_type: selectedDbType,
+                credentials: credentials
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('connectionTesting').style.display = 'none';
+            
+            if (data.success) {
+                document.getElementById('connectionSuccess').style.display = 'block';
+                document.getElementById('schemaOverview').innerHTML = formatSchemaOverview(data.schema);
+                document.getElementById('nextBtn').disabled = false;
+            } else {
+                document.getElementById('connectionError').style.display = 'block';
+                document.getElementById('connectionErrorMessage').textContent = data.message || 'Connection failed. Please check your credentials and try again.';
+                document.getElementById('nextBtn').disabled = true;
+            }
+        })
+        .catch(error => {
+            document.getElementById('connectionTesting').style.display = 'none';
+            document.getElementById('connectionError').style.display = 'block';
+            document.getElementById('connectionErrorMessage').textContent = 'An error occurred while testing the connection. Please try again.';
+            document.getElementById('nextBtn').disabled = true;
+            console.error('Error:', error);
+        });
+    }
+    
+    function formatSchemaOverview(schema) {
+        if (!schema || typeof schema !== 'object') {
+            return '<p>No schema information available</p>';
+        }
+        
+        let html = '';
+        
+        if (Array.isArray(schema.tables)) {
+            schema.tables.forEach(table => {
+                html += `<p><strong>${table.name}</strong> (`;
+                if (Array.isArray(table.columns)) {
+                    html += table.columns.map(col => col.name).join(', ');
+                }
+                html += ')</p>';
+            });
+        } else if (typeof schema === 'object') {
+            for (const [key, value] of Object.entries(schema)) {
+                html += `<p><strong>${key}</strong>: ${JSON.stringify(value)}</p>`;
+            }
+        }
+        
+        return html || '<p>No schema information available</p>';
+    }
+    
+    function startTypingAnimation() {
+        const queries = exampleQueriesByType[selectedDbType || selectedSampleDb] || [
+            "Show me the top 5 customers by order value",
+            "List all products with price greater than $100",
+            "What was the total revenue last month?",
+            "How many orders do we have by status?",
+            "Find all transactions from customers in New York"
+        ];
+        
+        const typingElement = document.getElementById('typingQuery');
+        let currentQueryIndex = 0;
+        let currentCharIndex = 0;
+        let isDeleting = false;
+        let typingSpeed = 60;
+        
+        function type() {
+            const currentQuery = queries[currentQueryIndex];
+            
+            if (isDeleting) {
+                typingElement.textContent = currentQuery.substring(0, currentCharIndex - 1);
+                currentCharIndex--;
+                typingSpeed = 30;
+                
+                if (currentCharIndex === 0) {
+                    isDeleting = false;
+                    currentQueryIndex = (currentQueryIndex + 1) % queries.length;
+                    typingSpeed = 80;
+                    setTimeout(type, 500);
+                    return;
+                }
+            } else {
+                typingElement.textContent = currentQuery.substring(0, currentCharIndex + 1);
+                currentCharIndex++;
+                typingSpeed = 60;
+                
+                if (currentCharIndex === currentQuery.length) {
+                    isDeleting = true;
+                    setTimeout(type, 1500);
+                    return;
+                }
+            }
+            
+            setTimeout(type, typingSpeed);
+        }
+        
+        type();
+    }
+    
+    // Event listeners for input changes to enable/disable next button
+    document.addEventListener('input', function(e) {
+        if (e.target.matches('#credentialsForm input')) {
+            checkNextButtonState();
+        }
+    });
+</script>
+{% endblock %}
