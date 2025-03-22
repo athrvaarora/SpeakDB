@@ -312,8 +312,11 @@ def get_chat_history():
 def get_previous_chats():
     """Get a list of previous chat sessions"""
     try:
-        # For now, just show chats in the current session
-        if 'chat_id' in session:
+        # If the user is logged in, show all chats for the user
+        if current_user.is_authenticated:
+            chats = db.session.query(Chat).filter(Chat.user_id == current_user.id).order_by(Chat.updated_at.desc()).all()
+        # If not logged in, but there's a chat_id in the session, show that chat
+        elif 'chat_id' in session:
             chats = db.session.query(Chat).filter(Chat.id == session['chat_id']).order_by(Chat.updated_at.desc()).all()
         else:
             chats = []
@@ -350,7 +353,12 @@ def load_chat(chat_id):
                 'message': f"Chat with ID {chat_id} not found"
             })
         
-        # No security check needed for now since user_id isn't in the database schema
+        # Security check: If user is logged in, only allow loading own chats
+        if current_user.is_authenticated and chat.user_id and chat.user_id != current_user.id:
+            return jsonify({
+                'success': False,
+                'message': "You do not have permission to access this chat."
+            })
         
         # Store the chat ID in the session
         session['chat_id'] = chat_id
@@ -460,7 +468,12 @@ def process_query():
                 'message': "Chat not found. Please start a new chat."
             })
             
-        # No security check needed for user_id
+        # Security check: If user is logged in, only allow querying own chats
+        if current_user.is_authenticated and chat.user_id and chat.user_id != current_user.id:
+            return jsonify({
+                'success': False,
+                'message': "You do not have permission to query this chat."
+            })
         
         # Get the database connector
         connector = get_connector(db_type, credentials)
