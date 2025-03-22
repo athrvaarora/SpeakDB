@@ -63,7 +63,7 @@ function initChatInterface() {
     // New chat button
     if (newChatButton) {
         newChatButton.addEventListener('click', function() {
-            window.location.href = '/';
+            window.location.href = '/app';
         });
     }
     
