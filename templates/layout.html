@@ -29,7 +29,9 @@
                     <h1 class="h4 m-0 fw-semibold">Speak<span class="text-primary">DB</span></h1>
                 </div>
                 <div class="d-flex align-items-center animate__animated animate__fadeIn animate__delay-1s">
-                    <span class="text-primary fw-light me-3">Smart Database Conversations</span>
+                    <a href="{{ url_for('wizard') }}" class="btn btn-sm btn-outline-primary rounded-pill me-2" title="Quick Start Wizard">
+                        <i class="fas fa-magic me-1"></i> Wizard
+                    </a>
                     {% if request.path == '/app' or request.path == '/chat' %}
                     <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger rounded-pill" title="Logout">
                         <i class="fas fa-sign-out-alt me-1"></i> Logout
