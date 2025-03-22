@@ -48,11 +48,6 @@ def landing():
     """Render the marketing landing page"""
     return render_template('landing.html')
 
-@app.route('/wizard')
-def wizard():
-    """Render the Quick Start Wizard page"""
-    return render_template('wizard.html')
-
 @app.route('/auth')
 def auth():
     """Render the authentication page"""
@@ -1665,90 +1660,6 @@ def format_schema_for_explorer(db_type, schema_info):
                 formatted_schema.append(item)
     
     return formatted_schema
-
-@app.route('/api/test_connection', methods=['POST'])
-def api_test_connection():
-    """API endpoint for the Quick Start Wizard to test database connections"""
-    try:
-        data = request.json
-        db_type = data.get('db_type')
-        credentials = data.get('credentials')
-        
-        # Handle sample database types specially
-        if db_type in ['retail', 'employees', 'covid']:
-            # For sample databases, prepare a mock schema based on the selected type
-            sample_schemas = {
-                'retail': {
-                    'tables': [
-                        {'name': 'customers', 'columns': [{'name': 'id'}, {'name': 'name'}, {'name': 'email'}, {'name': 'address'}, {'name': 'phone'}]},
-                        {'name': 'products', 'columns': [{'name': 'id'}, {'name': 'name'}, {'name': 'price'}, {'name': 'category_id'}, {'name': 'stock'}]},
-                        {'name': 'categories', 'columns': [{'name': 'id'}, {'name': 'name'}, {'name': 'description'}]},
-                        {'name': 'orders', 'columns': [{'name': 'id'}, {'name': 'customer_id'}, {'name': 'order_date'}, {'name': 'status'}, {'name': 'total'}]},
-                        {'name': 'order_items', 'columns': [{'name': 'id'}, {'name': 'order_id'}, {'name': 'product_id'}, {'name': 'quantity'}, {'name': 'price'}]}
-                    ]
-                },
-                'employees': {
-                    'tables': [
-                        {'name': 'employees', 'columns': [{'name': 'emp_no'}, {'name': 'birth_date'}, {'name': 'first_name'}, {'name': 'last_name'}, {'name': 'gender'}, {'name': 'hire_date'}]},
-                        {'name': 'departments', 'columns': [{'name': 'dept_no'}, {'name': 'dept_name'}]},
-                        {'name': 'dept_emp', 'columns': [{'name': 'emp_no'}, {'name': 'dept_no'}, {'name': 'from_date'}, {'name': 'to_date'}]},
-                        {'name': 'dept_manager', 'columns': [{'name': 'dept_no'}, {'name': 'emp_no'}, {'name': 'from_date'}, {'name': 'to_date'}]},
-                        {'name': 'salaries', 'columns': [{'name': 'emp_no'}, {'name': 'salary'}, {'name': 'from_date'}, {'name': 'to_date'}]},
-                        {'name': 'titles', 'columns': [{'name': 'emp_no'}, {'name': 'title'}, {'name': 'from_date'}, {'name': 'to_date'}]}
-                    ]
-                },
-                'covid': {
-                    'tables': [
-                        {'name': 'cases', 'columns': [{'name': 'date'}, {'name': 'country'}, {'name': 'region'}, {'name': 'cases'}, {'name': 'deaths'}, {'name': 'recoveries'}]},
-                        {'name': 'vaccinations', 'columns': [{'name': 'date'}, {'name': 'country'}, {'name': 'total_vaccinations'}, {'name': 'people_vaccinated'}, {'name': 'people_fully_vaccinated'}]},
-                        {'name': 'demographics', 'columns': [{'name': 'country'}, {'name': 'population'}, {'name': 'median_age'}, {'name': 'gdp_per_capita'}, {'name': 'hospital_beds_per_1000'}]},
-                        {'name': 'restrictions', 'columns': [{'name': 'country'}, {'name': 'date'}, {'name': 'restriction_type'}, {'name': 'severity'}]}
-                    ]
-                }
-            }
-            
-            return jsonify({
-                'success': True,
-                'message': 'Successfully connected to sample database',
-                'schema': sample_schemas.get(db_type, {})
-            })
-        
-        # For real databases, test the connection
-        success, message = test_connection(db_type, credentials)
-        
-        if success:
-            try:
-                # Get schema information if available
-                connector = get_connector(db_type, credentials)
-                schema_info = connector.get_schema()
-                
-                # Format the schema for display
-                formatted_schema = format_schema_for_explorer(db_type, schema_info)
-                
-                return jsonify({
-                    'success': True,
-                    'message': message,
-                    'schema': formatted_schema
-                })
-            except Exception as schema_error:
-                logger.exception("Error getting schema info in API test connection")
-                # Still return success but without schema
-                return jsonify({
-                    'success': True,
-                    'message': f"{message} (Note: Schema information unavailable: {str(schema_error)})",
-                    'schema': {}
-                })
-        else:
-            return jsonify({
-                'success': False,
-                'message': message
-            })
-    except Exception as e:
-        logger.exception("Error in API test connection")
-        return jsonify({
-            'success': False,
-            'message': f"Error testing connection: {str(e)}"
-        })
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
